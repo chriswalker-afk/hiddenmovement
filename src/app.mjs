@@ -569,12 +569,6 @@ function sectorShape(origin,center,half) {
 }
 
 function mapSvg(view) {
-  const terrainNames = {
-    moor: ['BLACKPINE WOODS','ASH RIDGE','HOLLOW MARSHES','THE STANDING STONES'],
-    woodland: ['THORNWOOD FOREST','THE HILL TRAIL','FOXGLOVE MEADOW','THE OLD VALLEY'],
-    marsh: ['SILVER WATER','NORTHERN DELTA','THE REED FIELDS','LOWLAND FOG'],
-    eclipse: ['RUINED HIGHLANDS','ASHEN SKY','DARK CITADEL','THE ECLIPSE'],
-  }[currentMap().theme];
   const isMonster=view.phase==='monster' || view.phase==='monster-setup';
   const actingNode=view.phase==='monster'?view.monster:view.hunter;
   const activeNode=currentMap().nodes[actingNode];
@@ -723,14 +717,8 @@ function mapSvg(view) {
       '<filter id="moor-glow"><feGaussianBlur stdDeviation="11"/></filter>' +
     '</defs>' +
     renderScenery(currentMap().theme) +
-    // Scenic captions belong to the sparsely populated Intro illustration.
-    // On larger maps, reserve this space for genuine named locations.
-    (mapNodeCount<=14 ?
-      '<text x="65" y="70" class="terrain-label">'+esc(terrainNames[0])+'</text>' +
-      '<text x="633" y="53" class="terrain-label">'+esc(terrainNames[1])+'</text>' +
-      '<text x="41" y="691" class="terrain-label">'+esc(terrainNames[2])+'</text>' +
-      '<text x="691" y="691" class="terrain-label">'+esc(terrainNames[3])+'</text>'
-      : '') +
+    // No invented terrain labels: every readable map name belongs to a real
+    // named landmark. The terrain is conveyed by its actual artwork.
     '<g class="roads">'+paths+'</g>' +
     '<g class="river-bridges" pointer-events="none">'+bridgeDecks+'</g>' +
     '<g>'+plotted+'</g>' +
