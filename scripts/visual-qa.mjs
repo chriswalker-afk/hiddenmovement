@@ -331,7 +331,7 @@ try{
     await replay.locator('.replay-screen').waitFor({state:'visible'});
     assert.equal(await replay.locator('[data-replay-actor="hunter"]').count(),1);
     assert.equal(await replay.locator('.hunter-board-piece[data-replay-actor="hunter"]').count(),1,
-      'Replay should keep the player's own outfit as their board piece');
+      "Replay should keep the player's own outfit as their board piece");
     assert.equal(await replay.locator('[data-replay-actor="monster"]').count(),1);
     assert.match(await replay.locator('.replay-heading h1').textContent(),/HUNT, REPLAYED/);
     assert.equal(await replay.locator('#replay-progress').count(),1);
