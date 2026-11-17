@@ -381,7 +381,9 @@ function mapSvg(view) {
     if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
-  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;height:'+Math.round(mapZoom*100)+'%;max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
+  const mapHeightStyle=['hunter','monster'].includes(view.phase)
+    ?'height:'+Math.round(mapZoom*100)+'%;':'height:auto;';
+  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;'+mapHeightStyle+'max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
     '<defs>' +
       '<linearGradient id="moor-bg" x2="1" y2="1"><stop stop-color="#1a353b"/><stop offset=".52" stop-color="#243e3d"/><stop offset="1" stop-color="#172b38"/></linearGradient>' +
       '<pattern id="moor-grain" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1" fill="#b7c8b7" opacity=".075"/><circle cx="25" cy="26" r="1" fill="#b7c8b7" opacity=".08"/></pattern>' +
@@ -440,7 +442,9 @@ function mapFrame(view) {
       ((view.phase==='monster-setup')?'<span><i class="key-spot key-available"></i> Eligible start</span>':'')+
       ((view.scenario==='escape')?'<span><i class="key-spot key-goal"></i> Escape Gate</span>':'')+
       ((view.scenario==='beacons')?'<span><i class="key-spot key-beacon"></i> Signal beacon</span>':'')+
-      ((view.phase==='hunter')?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
+      (protractorVisible && ['hunter','monster'].includes(view.phase)
+        ?'<span class="protractor-help">MEASURE: DRAG GOLD TIP · MOVE: DRAG CENTRE</span>':'')+
+      ((view.phase==='hunter' && view.guided)?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
         '<span><i class="key-spot key-watch"></i> Your suspect</span><span><i class="key-spot key-ruled"></i> Your ruled-out mark</span>':'')+
     '</div>'+index+'</div>';
 }
