@@ -1,6 +1,7 @@
 import { angularDifference, bearingBetween, graphDistance } from './geometry.mjs';
 import { BLACKFEN_SITES } from './blackfen.mjs';
 import { DUSKMERE_SITES, DUSKMERE_LANDMARKS } from './duskmere.mjs';
+import { ROOKGATE_SITES, ROOKGATE_LANDMARKS } from './rookgate.mjs';
 
 /** Blackfen's player-visible names and art are keyed to the stable graph IDs. */
 const points=BLACKFEN_SITES.map(s=>[s.id,s.name,s.x,s.y]);
@@ -155,15 +156,11 @@ const APPRENTICE_MAP = makeRegion(
   DUSKMERE_LANDMARKS
 );
 const TRACKER_MAP = makeRegion(
-  'tracker', 'The Sunken Lowlands', 'Mist carries every whisper.', 'marsh',
+  'tracker', 'Rookgate District',
+  'Every canal carries secrets beneath the city.', 'marsh',
   [4,5,6,6,5],
-  [
-    'Mudflat','North Levee','Pale Reed','Willow Gate',
-    'Tide Stone','Heron Cove','Silver Weir','Brackwater','Rope Bridge',
-    'Silt Bank','Black Fen','Salt House','Floodgate','Ferry Path','Warden Tower',
-    'Mire Cross','Long Quay','Marsh Light','Sedge Lane','Broken Lock','Drowned Oak',
-    'Old Wharf','Wet Hollow','Lagoon Gate','South Levee','Low Beacon'
-  ]
+  ROOKGATE_SITES.map(site=>site.name),
+  ROOKGATE_LANDMARKS
 );
 const EXPERT_MAP = makeRegion(
   'expert', 'The Eclipse Marches', 'The last road leads beyond the light.', 'eclipse',

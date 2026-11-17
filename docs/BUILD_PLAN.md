@@ -200,3 +200,17 @@
 
 **Next planned PR17:** Rookgate District, the 26-location gothic city, with coherent blocks, two real canals, road-aligned stone bridges, dockyards, city gates and workshops. Then Ravenmarch County (PR18).
 
+
+
+## PR17 — Rookgate District, completed Tracker canal city (18 November 2026)
+
+- Rename Tracker to **Rookgate District**, preserving the original **26 nodes, 46 road edges, exact map coordinates, legal bearings, T10 Hunter start, T04 escape and T04/T23 Lanternfall beacon IDs**.
+- Implement one locally generated original illustrated landmark for each site from the World Bible (Bell Tower through Fen Gate), with unique semantic art kinds and stable node IDs.
+- Draw a coherent *inhabited city*, not a swamp: slate roofs, narrow civic lanes, markets, guildhall, city walls and gates, watchtowers, workshops, dockyards, lamps, and stone/cobble texture.
+- Reuse the geometry of the north and south canal waterways in both the SVG illustration and bridge detection. Four connected roads cross the north canal and five cross the south canal. Bridges are granite city bridges aligned with existing roads, not new paths.
+- Place canal steps, piers, ferry, mill wheel and flood-lock gates over the actual water corridor instead of on unrelated dry ground; all named node markers remain safely on shore.
+- Reuse the Hunter Forge map character, original Monster portrait and False Sighting power, clue geometry, missions, active saves and end-of-game replay without gameplay changes.
+- Extend unit regression coverage for art/label matching, shared stream shapes, nine crossings, safe banks, waterfront alignment, map order and mission goals; run full desktop, phone portrait/landscape visual screenshot QA.
+
+**Next PR18:** **Ravenmarch County**, a 36-location regional landscape with mountain passes, forest, ruins, farm fields, Blackwater river valley and frontier outposts; retain its 65-road Expert graph and validate any water crossing against existing bearings.
+
