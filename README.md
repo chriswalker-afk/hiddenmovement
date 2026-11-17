@@ -15,7 +15,7 @@ On the title screen, choose **Solo Hunt**, then one of four difficulty levels. T
 | Intro | 14 — Blackfen Marsh | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
 | Apprentice | 18 — Duskmere Village | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
 | Tracker | 26 — Rookgate District | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
-| Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
+| Expert | 36 — Ravenmarch County | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
 
 **Map readability:** every location now has its full name printed next to the node, including on the Tracker and Expert maps. The larger maps retain their two-digit index references inside each node marker for quick look-up. The three generated networks have been expanded into a consistent board footprint without changing their road connections or distorting the bearings shown to players.
 
@@ -41,7 +41,7 @@ A single illustrated **Blackfen Run** replaces the previous decorative river tha
 
 All 14 node IDs **A–N**, 29 connected roads, exact world coordinates, bearings, Hunter start, secret Monster spawns and scenario objectives are unchanged. The Last Gate still uses node L (**East Fen Gate**); Lanternfall beacons remain at L and G (**Lantern Inn**). Existing saved games use those stable IDs and remain valid. The original illustration uses no remote assets and is layered below the interactive node markers, protractor, clues and the customised moving Hunter.
 
-**Blackfen Marsh, Duskmere Village and Rookgate District** now have completed matching names and artwork. **Ravenmarch County** is the final world awaiting its planned regional-art pass in the [Map World Bible](docs/MAP_WORLD_BIBLE.md). Student review should consider landmark recognisability and place-label legibility at 100% and 300% zoom.
+**All four maps are now complete and geographically coherent:** Blackfen Marsh, Duskmere Village, Rookgate District and Ravenmarch County. Each playable node has an individual original SVG illustration matching its published name; the canonical plans are in the [Map World Bible](docs/MAP_WORLD_BIBLE.md). Student review should consider landmark recognisability and place-label legibility at 100% and 300% zoom.
 
 ## Duskmere Village — illustrated village and millstream (PR16)
 
@@ -59,6 +59,16 @@ The northern deep navigable **Rookgate North Canal** and the southern industrial
 
 **The original 26 nodes, 46 edges, node coordinates and bearings are unchanged.** The Hunter still begins at **T10 West Watch**. The Last Gate objective still uses **T04 North Gate**; Lanternfall still uses **T04 North Gate** and **T23 South Watch**. Existing saved games and postgame replays continue to use the stable location IDs. The revised city scenery sits below roads, numbered nodes, the personal Hunter character and clues, with full-location name labels on all zoom levels.
 
+## Ravenmarch County — the illustrated Expert frontier (PR18)
+
+Ravenmarch County is a **36-location regional landscape**, not another compact village or city. Every approved node now has its own named landmark illustration: highland passes, Crown Ridge peaks, Frostmere, stone cairns, Widow's Wood, Ashen Hamlet, Mourn Abbey, Raven Keep, ranger posts, Iron Mine, farmland, barrows, Hollow Mere, pilgrim shrines, ancient stone circles and the final fortified Frontier Gate. The map has five readable geographical belts: cold northern mountains, forests and historic ruins, inland roads/moors, the Blackwater river valley and the southern frontier. Original inked SVG artwork uses muted forest green, cold slate mountain blue, ochre farmland, plum heath and weathered stone, with atmospheric fog and a matching regional texture.
+
+The wide **Blackwater River** is the same actual Bezier line used to calculate real road crossings and test dry-bank clearance. Six historical roads cross this river: **E19–E26**, **E20–E27**, **E21–E28**, **E22–E29**, **E23–E30** and **E24–E31**. The central E21–E28 crossing has a bespoke, correctly rotated **Blackwater Bridge**, so no generic deck is painted over it; the five remaining crossings have matching grey-stone bridges. The Greywater Mill's millrace feeds the river, Reedmere Marsh and Weeping Willow border its southern floodplain, and Hollow Mere is a separate lowland lake.
+
+The **36 IDs E01–E36, 65 connected roads, all world coordinates and bearings are unchanged**. Hunter starts at **E12 West Ranger Post**. The Last Gate goal remains **E36 Frontier Gate**; Lanternfall goals remain **E36 Frontier Gate** and **E01 North Watch**. The original Eclipse Herald continues using teleportation and decoy rumours without a gameplay rules change. Saves, hidden information, the protractor, Hunter Forge and the postgame replay still operate with the same stable IDs.
+
+Together with PR15 Blackfen, PR16 Duskmere and PR17 Rookgate, this completes the first four-world location-specific visual system. Future work should be a **cross-map readability and playtesting pass**, not another map renaming.
+
 ## Monsters, powers and investigation reports (PR9)
 
 Every Solo Hunt difficulty introduces a different illustrated monster before the first move. Four original portraits are bundled in the site at `assets/monsters/` and reused on the level cards, introductions, search pop-ins and final result.
@@ -68,7 +78,7 @@ Every Solo Hunt difficulty introduces a different illustrated monster before the
 | Intro — Blackfen Marsh | **The Lantern Wisp** | None | A straightforward hunt with ordinary bearings and tracks |
 | Apprentice — Duskmere Village | **The Briar Shade** | Briar Step teleport, 4-turn cooldown | Leaps 2–3 connected roads, but publicly exposes its previous location |
 | Tracker — Rookgate District | **The Mire Mimic** | False Sighting, 4-turn cooldown | Plants an **unconfirmed** reported location that is debunked when the Hunter visits |
-| Expert — Eclipse Marches | **The Eclipse Herald** | Eclipse Shift teleport (5-turn cooldown) and Phantom Echo decoy (4-turn cooldown) | Combines the two fair rules, never both on one Monster turn |
+| Expert — Ravenmarch County | **The Eclipse Herald** | Eclipse Shift teleport (5-turn cooldown) and Phantom Echo decoy (4-turn cooldown) | Combines the two fair rules, never both on one Monster turn |
 
 The powers currently belong to Solo Hunt levels; Pass & Play uses the Intro board and its powerless Lantern Wisp. Existing scenario-specific Veil and Signal Lantern rules are unchanged.
 
@@ -131,7 +141,7 @@ The selected Hunter appears on the **level introduction** alongside that level's
 
 ## Dry riverbank locations (merged PR8)
 
-**Tracker / Rookgate District** and **Expert / The Eclipse Marches** now place their rivers through channels **between** rows of dry land nodes, rather than underneath named locations. The rows adjacent to each watercourse have been moved slightly onto the banks without removing any places or changing a single road connection. All 26 Tracker and 36 Expert locations remain playable with their original IDs, clues and scenario objectives. Routes crossing a watercourse remain connected roads.
+**Tracker / Rookgate District** and **Expert / Ravenmarch County** now place their rivers through channels **between** rows of dry land nodes, rather than underneath named locations. The rows adjacent to each watercourse have been moved slightly onto the banks without removing any places or changing a single road connection. All 26 Tracker and 36 Expert locations remain playable with their original IDs, clues and scenario objectives. Routes crossing a watercourse remain connected roads.
 
 The painted rivers are defined in `src/waterways.mjs`. Automated geometry tests measure the actual Bezier centreline, including the painted bank width and node radius, and require clear land space around every location. Screenshot QA checks all four maps at desktop and mobile sizes.
 
@@ -192,7 +202,7 @@ A save is not tied to a user account, is not synced between devices, and is lost
 
 ## New original scenery and responsive maps
 
-Blackfen Marsh, Duskmere Village and Rookgate District have complete location-specific inked SVG scenery. The final Eclipse Marches map retains its earlier scenery until the planned Ravenmarch County replacement. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
+All four worlds—Blackfen Marsh, Duskmere Village, Rookgate District and Ravenmarch County—have original, location-specific scenery beneath the gameplay graph. Each is visually distinct and all river/bridge alignments are tested against the existing legal roads. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
 
 ## Preview and publishing
 
@@ -251,6 +261,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/blackfen.mjs` — Blackfen's canonical 14 place names, site artwork and hydrology-tied SVG countryside
 - `src/duskmere.mjs` — Duskmere's 18 named village landmarks, market/green, millpond and stream-backed artwork
 - `src/rookgate.mjs` — Rookgate's 26 individual Gothic city landmarks, illustrated quays, rooftops and two true canals
+- `src/ravenmarch.mjs` — Ravenmarch's 36 regional landmarks, five terrain belts and Blackwater river valley
 - `src/persistence.mjs` — validated local saves, Guided setting and safely resealed resume
 - `src/protractor.mjs` — manually rotatable SVG 360° bearings measuring tool
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
@@ -265,7 +276,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR17:** Build Ravenmarch County's 36-location regional map, including its coherent Blackwater river, mountains, farms, ruins and frontier. Then undertake cross-world visual consistency and classroom playtesting. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR18:** Run a complete four-world visual consistency and classroom playtesting pass. Check each icon is recognisable without first reading the name, that the personal Hunter is obvious, that mobile labels never collide, and that geography supports the six-bridge Blackwater and the other named waterways. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 

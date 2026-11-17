@@ -37,6 +37,7 @@ jobs:
           node --check src/blackfen.mjs
           node --check src/duskmere.mjs
           node --check src/rookgate.mjs
+          node --check src/ravenmarch.mjs
           node --check src/waterways.mjs
           node --check src/monsters.mjs
           node --check src/monster-powers.mjs

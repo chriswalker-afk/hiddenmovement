@@ -214,3 +214,17 @@
 
 **Next PR18:** **Ravenmarch County**, a 36-location regional landscape with mountain passes, forest, ruins, farm fields, Blackwater river valley and frontier outposts; retain its 65-road Expert graph and validate any water crossing against existing bearings.
 
+
+
+## PR18 — Ravenmarch County, complete 36-site Expert region (18 November 2026)
+
+- Implement the entire original **36-node / 65-road** Expert graph as **Ravenmarch County** without shifting nodes or changing any three-figure bearings, Monster movement, game saves, replay history, clue maths or abilities.
+- Link 36 exact approved World Bible names (North Watch through Frontier Gate) to 36 distinct original, locally generated SVG landmarks in `src/ravenmarch.mjs`.
+- Build a **county-scale five-belt landscape**: northern mountain passes and snow-capped ridges, forest and monastery ruins, inland moor/farm routes, one wide Blackwater river valley, and a southern agricultural/frontier zone with the final border gate.
+- Reuse the existing `WATERWAYS.eclipse` Bezier geometry as `blackwater-river`, with exactly six crossings on **E19–E26, E20–E27, E21–E28, E22–E29, E23–E30 and E24–E31**. Keep every playable node out of the bank wash.
+- Draw **Blackwater Bridge** bespoke at the actual E21–E28 road intersection, suppressing the overlapping generic deck. Style the other five true crossings as weathered grey-stone spans. Millrace feeds Blackwater, Reedmere Marsh and willow border south bank, isolated Hollow Mere lies in the east lowlands.
+- Preserve Hunter start **E12**, escape **E36**, Lanternfall beacons **E36** and **E01**. The Eclipse Herald retains both existing powers and its secret movement.
+- Verify all landmarks and map names, distinctive SVG art, correct hydrology and bridge geometry, dry-bank clearance, road/bearing integrity, complete mission objectives, responsive HUD, Hunter miniature, privacy and endgame replay with automated unit and desktop/mobile browser tests.
+
+**Next milestone after PR18:** four-map visual consistency and in-class playtest. Focus on recognisability at default size, mobile label readability, zoom and bridge/river alignment before introducing new mechanics.
+

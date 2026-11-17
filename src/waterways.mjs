@@ -63,9 +63,12 @@ export const WATERWAYS = Object.freeze({
       ]
     })
   ]),
+  // The Blackwater divides Ravenmarch's northern lands from its southern
+  // river valley. It crosses six historical connected roads only. The
+  // E21–E28 crossing is Blackwater Bridge's illustrated landmark.
   eclipse: Object.freeze([
     Object.freeze({
-      id: 'eclipse-waterway', width: 46,
+      id: 'blackwater-river', width: 46,
       segments: [
         [[-50,477],[100,473],[231,479],[365,476]],
         [[365,476],[494,474],[615,476],[734,477]],

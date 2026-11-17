@@ -73,7 +73,7 @@ test('all scenarios preserve the historical objective IDs, not art-based guesses
   }
   assert.equal(MAPS.intro.title,'Blackfen Marsh');
   assert.equal(MAPS.tracker.title,'Rookgate District');
-  assert.equal(MAPS.expert.title,'The Eclipse Marches');
+  assert.equal(MAPS.expert.title,'Ravenmarch County');
 });
 
 test('all eighteen named places have unique matching, bundled vector scenery',()=>{

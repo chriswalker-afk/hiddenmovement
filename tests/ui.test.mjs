@@ -42,7 +42,7 @@ test('browser UI: solo selection, hidden AI turns and sealed two-player handoffs
     assert.match(html(),new RegExp('data-difficulty="'+difficulty+'"'));
   click('difficulty-expert');
   assert.match(html(),/SOLO HUNT/);
-  assert.match(html(),/THE ECLIPSE MARCHES/);
+  assert.match(html(),/RAVENMARCH COUNTY/);
   assert.match(html(),/theme-eclipse/);
   assert.match(html(),/LOCATION INDEX/);
   assert.match(html(),/WATCHER SIGHTING/);

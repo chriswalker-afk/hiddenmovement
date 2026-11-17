@@ -587,6 +587,10 @@ function mapSvg(view) {
       // at its stream crossing: do not overlay a second generic bridge deck.
       if(currentMap().theme==='woodland')
         return !(bridge.from==='A13' && bridge.to==='A17');
+      // E21 Blackwater Bridge is bespoke and aligned to E21-E28. Do not
+      // double-paint a generic river bridge on the same crossing.
+      if(currentMap().theme==='eclipse')
+        return !(bridge.from==='E21' && bridge.to==='E28');
       if(currentMap().theme!=='moor')return true;
       const at=currentMap().nodes;
       const near=(node,radius)=>Math.hypot(bridge.x-node.x,bridge.y-node.y)<radius;
@@ -599,7 +603,7 @@ function mapSvg(view) {
     const lo=(-half).toFixed(1),hi=half.toFixed(1);
     // A muted stone/wood footbridge spans the actual painted water,
     // using the bearing of the existing road (not a second game route).
-    return '<g class="river-bridge'+(currentMap().theme==='marsh'?' rookgate-city-bridge':'')+
+    return '<g class="river-bridge'+(currentMap().theme==='marsh'?' rookgate-city-bridge':currentMap().theme==='eclipse'?' ravenmarch-river-bridge':'')+
       '" aria-hidden="true" transform="translate('+
       bridge.x+' '+bridge.y+') rotate('+bridge.angle+')">'+
       '<line x1="'+lo+'" y1="0" x2="'+hi+'" y2="0" class="bridge-shadow"/>'+
@@ -759,7 +763,7 @@ function mapFrame(view) {
     '<span><b>' + esc(n.label) + '</b> ' + esc(n.name) + '</span>').join('') +
     '</div></details>' : '';
   return '<div class="map-section">' +
-    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + (map.id==='intro'||map.id==='apprentice'||map.id==='tracker'?'': 'Map of ') + esc(map.title) + '</h2></div>' +
+    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + '' + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
       (['hunter','monster'].includes(view.phase)?
         '<button type="button" id="protractor-toggle" class="protractor-toggle" aria-pressed="'+protractorVisible+'">'+

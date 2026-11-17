@@ -2,6 +2,7 @@ import { WATERWAYS, waterwayPath } from './waterways.mjs';
 import { renderBlackfenScenery } from './blackfen.mjs';
 import { renderDuskmereScenery } from './duskmere.mjs';
 import { renderRookgateScenery } from './rookgate.mjs';
+import { renderRavenmarchScenery } from './ravenmarch.mjs';
 
 /**
  * Original hand-drawn-in-SVG scenery for each region. Art is intentionally
@@ -50,6 +51,7 @@ export function renderScenery(theme='moor') {
   if(theme==='moor')return renderBlackfenScenery();
   if(theme==='woodland')return renderDuskmereScenery();
   if(theme==='marsh')return renderRookgateScenery();
+  if(theme==='eclipse')return renderRavenmarchScenery();
   const t=TONES[theme]||TONES.moor;
   let extra='';
   const shore='M-60 135 C65 170 120 110 263 175 S515 266 603 315 S814 424 1060 355';

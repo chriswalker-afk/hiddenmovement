@@ -2,6 +2,7 @@ import { angularDifference, bearingBetween, graphDistance } from './geometry.mjs
 import { BLACKFEN_SITES } from './blackfen.mjs';
 import { DUSKMERE_SITES, DUSKMERE_LANDMARKS } from './duskmere.mjs';
 import { ROOKGATE_SITES, ROOKGATE_LANDMARKS } from './rookgate.mjs';
+import { RAVENMARCH_SITES, RAVENMARCH_LANDMARKS } from './ravenmarch.mjs';
 
 /** Blackfen's player-visible names and art are keyed to the stable graph IDs. */
 const points=BLACKFEN_SITES.map(s=>[s.id,s.name,s.x,s.y]);
@@ -163,16 +164,11 @@ const TRACKER_MAP = makeRegion(
   ROOKGATE_LANDMARKS
 );
 const EXPERT_MAP = makeRegion(
-  'expert', 'The Eclipse Marches', 'The last road leads beyond the light.', 'eclipse',
-  [5,6,7,7,6,5],
-  [
-    'Iron Arch','Glass Gate','High Spire','Cold Hearth','North Rift',
-    'Black Tower','Fallen Star','Ash Market','Moon Court','Night Well','Owl Keep',
-    'Wraith Hall','Cinder Path','Obsidian','Raven Bridge','Stone Maw','Echo Chamber','Pale Road',
-    'Sable Cross','Ember Ford','Ruined Forge','Dusk Chapel','Silent Stair','Grave Hill','Veil End',
-    'Crownless','South Rift','Old Crypt','Ghost Lantern','Vale Gate','Lost Garden',
-    'Twilight','Hearthstone','Starfall','Final Gate','Eclipse Point'
-  ]
+  'expert','Ravenmarch County',
+  'From Raven Pass to the Blackwater, every trail hides a threat.',
+  'eclipse',[5,6,7,7,6,5],
+  RAVENMARCH_SITES.map(site=>site.name),
+  RAVENMARCH_LANDMARKS
 );
 
 export const MAPS = Object.freeze({

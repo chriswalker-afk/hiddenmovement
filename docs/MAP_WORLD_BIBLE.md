@@ -1,6 +1,6 @@
 # Shadow Bearings — Map World Bible v1
 
-> **Status: four identities locked; Blackfen Marsh (PR15), Duskmere Village (PR16) and Rookgate District (PR17) now have matching names and original artwork.** Ravenmarch County is the final proposed region. Existing bearings graphs, IDs, monster spawns and goals remain unchanged.
+> **Status: all four identities and matching locations/artwork are implemented.** Blackfen Marsh (PR15), Duskmere Village (PR16), Rookgate District (PR17) and Ravenmarch County (PR18) each use canonical names, original SVG landmarks and correctly aligned waterways. Existing bearings graphs, IDs, Hunter spawns and objective algorithms remain unchanged.
 
 ## Four locked identities
 
@@ -119,6 +119,8 @@ The existing graph IDs, coordinates, edge lists, Hunter spawn and objective algo
 
 ### Ravenmarch County — 36 nodes
 
+**Implementation status: complete in PR18.** All 36 places have original, individual SVG illustrations keyed to their stable node IDs. Five geographic belts make Ravenmarch feel like a whole territory: northern highlands, forests/ruins, old inland roads, Blackwater river valley and southern frontier. The previous horizontal river is now **the Blackwater**, using the same geometry to paint the water and validate crossings. Exactly six old connected roads span the river: **E19–E26**, **E20–E27**, **E21–E28**, **E22–E29**, **E23–E30** and **E24–E31**. E21 is the bespoke **Blackwater Bridge**, drawn at the actual E21–E28 crossing; five smaller grey-stone decks cover the other crossings. Greywater Mill meets the water, Reedmere and the Weeping Willow occupy wet south-bank territory, and Hollow Mere is a distinct lowland lake. All 36 nodes, 65 legal roads, E12 Hunter start, E36 Last Gate and E36/E01 beacons are preserved.
+
 **Scope:** Wide dark-fantasy territory. **Palette:** grey-green forest, cold blue mountains, ochre farmland, river slate, dusky plum and sparse gold.
 
 **Geography:** A county-scale map, not a 36-building city. Use five geographic belts: northern highlands; woods and former settlements; central roads and farms; the Blackwater river valley; and southern frontier. Existing river at approximately y=477 remains the Blackwater. All crossings must coincide with real graph roads. A top-left watch beacon and a bottom-right frontier gateway anchor scenario objectives.
@@ -168,7 +170,7 @@ The existing graph IDs, coordinates, edge lists, Hunter spawn and objective algo
 2. **Landmark art prototype:** implement just Blackfen Marsh and review screenshots at 100–300% zoom, Intro node label geometry, water/bridge alignment, and Hunter token clarity before scaling the system.
 3. **Duskmere Village (completed PR16):** named village centre, 18 illustrated sites, actual southern millstream with matching Stone Bridge, causeways and Mill Pond.
 4. **Rookgate District (completed PR17):** 26 landmark drawings, urban blocks and walls, two joined-by-roads canals, nine real bridges, water-aligned quays and workshops; all nodes remain on dry land.
-5. **Ravenmarch County:** render regional terrain bands, mountain relief, woodlands, river valley, border gates and settlement clusters; ensure water crossings and objective markers line up with their names.
+5. **Ravenmarch County (completed PR18):** all 36 regional landmarks, mountain relief, wooded settlements, Blackwater valley, six true road crossings and coherent frontier gates, retaining 65 legal edges.
 6. **Final QA:** exact node count 14/18/26/36; all labels; collisions at mobile and desktop zoom; all three missions, story briefings, replay, player token and protractor; no bearings / graph / clue / AI regressions.
 
-**Remaining geography work:** Blackfen Run, Duskmere Millstream and Rookgate's two urban canals are now matched to names and real graph crossings. Next complete **Ravenmarch County's** Blackwater river valley, mountain relief, settlements and frontier. Do not rename the final unfinished map until its geography is coherent.
+**Next quality gate:** all four world maps now have geographically justified art. Run a combined mobile/projector/whiteboard legibility review with students, including 100%, 150% and 300% zoom, the Hunter token, bearing input, objective icons, clues and replay. Refine individual SVG art and offsets using feedback without silently changing node coordinates or connectivity.
