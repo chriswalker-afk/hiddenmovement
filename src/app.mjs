@@ -687,6 +687,87 @@ function savePanel() {
     '<p class="muted compact">Saved only on this device. In Pass &amp; Play, resuming always shows the handoff screen.</p></section>';
 }
 
+function monsterPortrait(difficulty,cssClass='') {
+  const m=monsterFor(difficulty);
+  return '<img class="monster-portrait '+cssClass+'" src="'+m.art+
+    '" alt="Illustration of '+esc(m.name)+'" loading="eager"/>';
+}
+
+/** Solo level encounter shown before the first movement. No secret state. */
+function monsterIntroductionHtml(view) {
+  const m=monsterFor(view.difficulty);
+  return '<div class="encounter-backdrop" data-encounter="intro">'+
+    '<section class="encounter-card monster-encounter" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
+      '<div class="encounter-art">'+monsterPortrait(view.difficulty)+'</div>'+
+      '<div class="encounter-copy">'+
+        '<span class="eyebrow">LEVEL '+String(Object.keys(MONSTERS).indexOf(view.difficulty)+1).padStart(2,'0')+
+          ' · '+esc(m.home.toUpperCase())+'</span>'+
+        '<span class="encounter-kicker">YOUR QUARRY</span>'+
+        '<h1 id="monster-intro-title">'+esc(m.name)+'</h1>'+
+        '<p class="encounter-title">'+esc(m.title)+'</p>'+
+        '<p class="encounter-story">'+esc(m.flavour)+'</p>'+
+        '<div class="monster-power-summary"><strong>'+esc(m.powerTitle)+'</strong>'+
+          '<p>'+esc(m.powerText)+'</p></div>'+
+        '<p class="encounter-tip">Bearings are measured clockwise from north. Every claimed location is worth investigating.</p>'+
+        '<button type="button" id="intro-begin" class="primary-button">BEGIN THE HUNT →</button>'+
+      '</div></section></div>';
+}
+
+/** Prominent role-safe search result after each VALID Hunter movement. */
+function searchReportHtml(view) {
+  const report=view.hunterOutcome;
+  if(!report)return '';
+  const m=monsterFor(view.difficulty);
+  const category={
+    empty:'NOTHING FOUND',trace:'A NEW TRAIL',decoy:'FALSE SIGHTING EXPOSED',
+    capture:'MONSTER CAPTURED'
+  }[report.kind]||'SEARCH REPORT';
+  return '<div class="encounter-backdrop" data-encounter="report">'+
+    '<section class="encounter-card report-encounter report-'+esc(report.kind)+
+      '" role="dialog" aria-modal="true" aria-labelledby="search-report-title">'+
+      '<div class="report-art">'+monsterPortrait(view.difficulty)+'</div>'+
+      '<div class="report-copy">'+
+        '<span class="eyebrow">ROUND '+view.round+' · '+esc(nameOf(report.place))+'</span>'+
+        '<span class="encounter-kicker">'+category+'</span>'+
+        '<h2 id="search-report-title">'+esc(report.heading)+'</h2>'+
+        '<p class="report-story">'+esc(report.text)+'</p>'+
+        (report.clueId?'<p class="report-clue-note">The full dated clue is in your notebook.</p>':'')+
+        '<div class="report-actions">'+
+          '<button id="report-continue" type="button" class="primary-button">'+
+            (view.phase==='over'?'SEE HUNT RESULTS →':'CONTINUE HUNT →')+'</button>'+
+          (report.clueId&&view.phase==='hunter'
+            ?'<button id="report-notebook" type="button" class="secondary-button">VIEW FIELD NOTEBOOK</button>':'')+
+        '</div></div></section></div>';
+}
+
+function encounterOverlay(view) {
+  if(monsterIntroOpen && view.mode==='solo' && view.phase==='hunter')
+    return monsterIntroductionHtml(view);
+  if(searchReportOpen && view.hunterOutcome &&
+    ['hunter','over'].includes(view.phase))return searchReportHtml(view);
+  return '';
+}
+
+function bindEncounters() {
+  document.getElementById('intro-begin')?.addEventListener('click',()=>{
+    monsterIntroOpen=false;
+    persistNow();
+    render();
+  });
+  document.getElementById('report-continue')?.addEventListener('click',()=>{
+    searchReportOpen=false;
+    if(game.phase!=='over')persistNow();
+    render();
+  });
+  document.getElementById('report-notebook')?.addEventListener('click',()=>{
+    searchReportOpen=false;
+    hudTab='clues';
+    persistNow();
+    render();
+  });
+  document.getElementById(monsterIntroOpen?'intro-begin':'report-continue')?.focus?.();
+}
+
 function hudMissionSummary(view) {
   if(view.scenario==='escape')
     return 'ESCAPE GATE: '+nameOf(view.objectives.exitNode)+' · OPENS ROUND 5';
@@ -723,7 +804,7 @@ function hudTabsHtml(view) {
 
 function playHtml(view) {
   const isMonster=view.phase==='monster';
-  const mission=esc(hudMissionSummary(view));
+  const mission=esc(monsterFor(view.difficulty).name+' · '+hudMissionSummary(view));
   return '<div class="app-shell hud-screen '+(isMonster?'monster-mode':'hunter-mode')+'">'+
     titleBar(true,view)+
     '<main class="play-content hud-content">'+
@@ -755,7 +836,9 @@ function setupHtml(view) {
       '<p>The hunter starts at the Watchtower. Only locations at least three roads away are available.</p></div></div>' +
       '<div class="game-grid">'+mapFrame(view) +
       '<aside class="sidebar"><section class="panel move-panel"><span class="eyebrow">SECRET LOCATION</span>' +
-      '<h3>Begin in the shadows</h3><p class="muted">Choose a purple location on the map, or use the list below. Keep this location hidden.</p>' +
+      '<h3>Begin in the shadows</h3>'+monsterPortrait(view.difficulty,'setup-monster-art')+
+      '<p class="muted">You are '+esc(monsterFor(view.difficulty).name)+
+      '. Choose a purple location on the map, or use the list below. Keep this location hidden.</p>' +
       '<label class="setup-label" for="spawn-select">Your secret starting location</label>' +
       '<select id="spawn-select">'+spawnOptions+'</select>' +
       '<button id="confirm-spawn" class="primary-button">CONFIRM SECRET START →</button>' +
@@ -766,10 +849,13 @@ function setupHtml(view) {
 function overHtml(view) {
   const hunterWin=view.winner==='hunter';
   const route=view.trail.map(t=>nameOf(t.node)).join(' → ');
+  const creature=monsterFor(view.difficulty);
   return '<div class="app-shell end-mode">'+titleBar(false,view) +
     '<main class="play-content"><div class="end-header">' +
       '<span class="eyebrow">THE HUNT HAS ENDED</span><div class="result-symbol">'+(hunterWin?'✦':'◆')+'</div>' +
       '<h1>'+(hunterWin?'THE HUNTER PREVAILS':'THE MONSTER ESCAPES')+'</h1>' +
+      monsterPortrait(view.difficulty,'end-monster-art')+
+      '<h2 class="end-monster-name">'+esc(creature.name)+'</h2>' +
       '<p>'+(hunterWin?'The monster has been found before the final lantern went dark.':
         view.finishReason==='escape'?'The Monster slipped through the open Escape Gate.':
         view.finishReason==='beacons'?'Both signal beacons were extinguished.':
