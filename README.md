@@ -4,7 +4,7 @@
 
 One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine these with occasional public sightings in solo mode. Bearing values appear as text, not automatically drawn rays or sectors on the map.
 
-## Playable modes (PR1–PR11)
+## Playable modes (PR1–PR12)
 
 ### Solo Hunt — Hunter versus Monster AI
 
@@ -72,6 +72,16 @@ After these steps, the original **four interactive bearings exercises** remain a
 **Guided mode now includes a COACH tab**. It gives contextual, student-friendly instructions at the start of the hunt and after searches, invalid bearing attempts, announced special powers or the final rounds. It can show the bearing of **one connected road as a worked *text-only* example on request**, and offers shortcuts to Clues, the manual protractor and the full guide. The Coach and worked example operate on public Hunter information, not secret Monster state.
 
 **Standard play is unchanged:** it receives the same earned clues, sightings and bearing-entry feedback, but not the Coach or optional combined-clue plotting. Neither mode automatically draws bearing rays or sectors on the map: the optional Guided clue overlay is activated deliberately from Clues.
+
+## The Hunt, Replayed — optional post-game chase reveal (PR12)
+
+After every completed Solo Hunt or Pass & Play game, **The Hunt, Replayed** automatically begins once any final investigation report is dismissed. Both characters' positions become visible on the original illustrated map, starting with their previously hidden initial locations and advancing **in the exact recorded order**. Hunter travel, turns where the Hunter chose to remain in place, optional Signal Lantern use and the Monster's secret movements each have their own replay step. Signature teleports are labelled and drawn as distinct dashed jumps, and the Veil is explained without rewriting the historical movement. Both routes build up as the replay advances; the screen never shows the future portion of either path early.
+
+Two high-contrast **H / M** map pieces identify the Hunter and Monster, including offset pieces when they occupy the same location. The right-hand panel names both current locations and explains the action that just happened. The existing map's zoom controls remain available.
+
+Use **Pause / Play**, **Back**, **Next**, the accessible **timeline scrubber**, **1× / 2× speed**, **From Start**, or **Skip Replay · See Results** at any point. The final move stays on screen until **See Final Results** is chosen. The results screen retains the original outcome, numerical learning stats and full Monster route and adds **Watch the Hunt Again**. Auto-play respects the device's reduced-motion preference (start paused when reduced motion is requested).
+
+Replay data is constructed **only** from the finished game's chronological history; neither an active Hunter or Monster view nor any sealed two-player handoff can access the replay data. Active saved games preserve the same history to allow a complete replay after resuming. Older saves with sparse history display only what was actually recorded, never invented movement. Completing the game still clears the active-game local save as before.
 
 ## Hunter Forge — create your own Monster Hunter (PR11)
 
@@ -168,7 +178,7 @@ See [Deployment Guide](docs/DEPLOYMENT.md) for the exact review, launch and roll
 - Reaching the Monster's current location wins immediately. The Monster wins if the Hunter finishes the final round without capture.
 - Recent visit traces trigger a bearing clue, sometimes worded in reverse (the bearing of the trace location *from* the Monster). Observation rounds are explicitly labelled.
 - In Guided mode, the clue notebook can draw exact rays or sectors, combine evidence from different rounds, and optionally identify candidate locations. On larger maps, use the **Location Index** to match numbered locations to names.
-- At the end of the game, the full Monster trail is revealed.
+- At the end of the game, a skippable chronological replay reveals both actual movement routes before the original results and full Monster trail.
 
 ## Running locally
 
@@ -210,6 +220,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/tutorial.mjs` — four interactive bearings practice activities
 - `src/hunter-guide.mjs` — seven illustrated How to Hunt lessons, level briefings and public-information Guided Coach
 - `src/hunter-forge.mjs` — validated modular SVG hunter artwork, palettes, randomisation and device-local persistence
+- `src/hunt-replay.mjs` — privacy-safe post-game event reconstruction, progressive paths and replay map projections
 - `src/engine.mjs` — game rules and strictly role-specific view projections
 - `src/app.mjs` — screens, movement controls, clues and illustrated SVG maps
 - `scripts/simulate.mjs` — reproducible public-information playtest baseline
@@ -217,7 +228,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR11:** PR12 moving board token integration; classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR12:** Finish Hunter Forge's matching moving board token in a subsequent PR (planned PR13); classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 
