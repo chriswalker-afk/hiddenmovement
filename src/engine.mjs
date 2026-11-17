@@ -63,13 +63,11 @@ export function createGame(config = {}) {
     ? config.difficulty : 'intro';
   const preset = mode === 'solo' ? DIFFICULTIES[difficulty] : {};
   const scenario = Object.hasOwn(SCENARIOS, config.scenario) ? config.scenario : 'classic';
-  // Standard play gives no unsolicited sightings or route-distance hints.
-  // Guided play restores these supports for students practising bearings.
+  // Game evidence and mathematical hints are identical in Standard and
+  // Guided. The guided flag controls *optional visual plotting assistance*,
+  // never whether a player receives a textual bearing clue.
   const guided = config.guided === true;
-  const settings = { ...SETTINGS, ...preset, ...config,
-    guided,
-    ...(guided ? {} : { openingPulse:false, sightingInterval:0, distanceBandHalfWidth:null })
-  };
+  const settings = { ...SETTINGS, ...preset, ...config, guided };
   const mapId = mode === 'solo' ? preset.mapId : 'intro';
   const objectives = computeObjectives(MAPS[mapId], scenario);
   const seed = (Math.trunc(Number(config.seed ?? 18251)) >>> 0) || 1;
@@ -248,10 +246,8 @@ function matchedNeighbour(origin, text, game) {
     .filter(row => row.difference <= game.config.bearingTolerance)
     .sort((a,b) => a.difference - b.difference);
   if (!candidates.length) return {
-    error: game.guided
-      ? 'No connected route is within ±' + game.config.bearingTolerance +
-        '° of ' + formatBearing(typed) + '. Check the compass and try again.'
-      : 'That bearing does not follow a connected road. Measure again and retry.'
+    error: 'No connected route is within ±' + game.config.bearingTolerance +
+      '° of ' + formatBearing(typed) + '. Check the compass and try again.'
   };
   if (candidates.length > 1)
     return { error: 'Ambiguous bearing: choose a more precise direction.' };
@@ -328,7 +324,7 @@ function recordSighting(game,halfWidth,source='watcher') {
 
 /** Scheduled Solo Hunter sightings are time-stamped at the last Monster turn. */
 function addSighting(game,opening=false) {
-  if(game.mode!=='solo' || !game.guided)return null;
+  if(game.mode!=='solo')return null;
   if(opening && !game.config.openingPulse)return null;
   if(!opening && (!game.config.sightingInterval ||
     (game.round-1)%game.config.sightingInterval!==0))return null;
@@ -427,12 +423,10 @@ export function hunterMove(game, inputBearing) {
     return say(game, 'The monster was found at ' + destination + '! The Hunter wins.');
   }
   const clue = collectClue(game, game.hunter);
-  const message = (game.guided
-    ? 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination +
-      ' (error: ' + route.difference.toFixed(1) + '°; '
-    : 'Arrived at ' + destination + ' (')
-    + game.stepsLeft + ' route' + (game.stepsLeft === 1 ? '' : 's') + ' left).'
-    + (clue ? ' A trail clue was found!' : '');
+  const message = 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination +
+    ' (error: ' + route.difference.toFixed(1) + '°; ' +
+    game.stepsLeft + ' route' + (game.stepsLeft === 1 ? '' : 's') + ' left).' +
+    (clue ? ' A trail clue was found!' : '');
   return say(game, message);
 }
 
