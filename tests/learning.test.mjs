@@ -74,6 +74,7 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('tutorial-close');
   assert.match(html(),/SOLO HUNT/);
 
+  click('guided-toggle'); // Enable optional educational hints for this learning flow.
   click('start-solo-select');
   click('difficulty-intro');
   assert.match(html(),/WATCHER SIGHTING/);
@@ -98,6 +99,7 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('clear-marks');
   assert.doesNotMatch(html(),/marked-ruled/);
 
+  click('hud-tab-notes');
   el('field-notes').value='Try the northern crossing';
   const onInput=callbacks.get('field-notes:input');
   assert.equal(typeof onInput,'function');
