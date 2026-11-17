@@ -71,10 +71,14 @@ try{
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="expert"]').click();
     await page.locator('.monster-encounter').waitFor({state:'visible'});
-    assert.match(await page.locator('#monster-intro-title').textContent(),/The Eclipse Herald/);
-    assert.ok(await page.locator('.monster-encounter img').evaluate(async img=>{
-      await img.decode();return img.naturalWidth>200;
-    }),size.name+' monster artwork failed to load');
+    assert.match(await page.locator('#monster-intro-title').textContent(),/You are a Monster Hunter/);
+    assert.match(await page.locator('.briefing-monster-name').textContent(),/THE ECLIPSE HERALD/);
+    assert.match(await page.locator('.briefing-deadline').textContent(),/21 ROUNDS/);
+    for(const selector of ['.briefing-hunter-illustration','.briefing-quarry-portrait img']){
+      assert.ok(await page.locator(selector).evaluate(async img=>{
+        await img.decode();return img.naturalWidth>200;
+      }),size.name+' Hunter or monster artwork failed to load: '+selector);
+    }
     const fullyReadable=await page.locator('.monster-encounter .encounter-copy')
       .evaluate(el=>el.scrollHeight<=el.clientHeight+6);
     assert.ok(fullyReadable,size.name+' monster introduction scrolls or clips its level heading');
@@ -131,10 +135,16 @@ try{
     await page.locator('[data-difficulty="'+difficulty+'"]').click();
     const expectedMonster={intro:'The Lantern Wisp',apprentice:'The Briar Shade',
       tracker:'The Mire Mimic',expert:'The Eclipse Herald'}[difficulty];
-    assert.equal(await page.locator('#monster-intro-title').textContent(),expectedMonster);
-    assert.ok(await page.locator('.monster-encounter img').evaluate(async img=>{
-      await img.decode();return img.naturalWidth>200;
-    }),difficulty+' monster portrait not available from packaged site');
+    assert.equal(await page.locator('#monster-intro-title').textContent(),'You are a Monster Hunter');
+    assert.match(await page.locator('.briefing-monster-name').textContent(),new RegExp(expectedMonster.toUpperCase()));
+    const rounds={intro:13,apprentice:15,tracker:18,expert:21}[difficulty];
+    assert.match(await page.locator('.briefing-deadline').textContent(),new RegExp(rounds+' ROUNDS'));
+    assert.match(await page.locator('.briefing-text').allTextContents().then(x=>x.join(' ')),/evidence/);
+    for(const selector of ['.briefing-hunter-illustration','.briefing-quarry-portrait img']){
+      assert.ok(await page.locator(selector).evaluate(async img=>{
+        await img.decode();return img.naturalWidth>200;
+      }),difficulty+' Hunter or monster portrait unavailable: '+selector);
+    }
     await page.screenshot({path:'visual/monster-intro-'+difficulty+'.png',fullPage:false});
     await page.locator('#intro-begin').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
@@ -184,6 +194,39 @@ try{
     await page.screenshot({path:'visual/map-'+difficulty+'.png',fullPage:false});
   }
   await page.close();
+
+  // Guided Tutorial Help teaches the real game, THEN the existing bearings
+  // exercises. The in-game Coach must never auto-draw a bearing on the map.
+  const help=await browser.newPage({viewport:{width:1366,height:768}});
+  await help.goto(url,{waitUntil:'domcontentloaded'});
+  await help.locator('#guided-toggle').click();
+  await help.locator('#start-solo-select').click();
+  await help.locator('[data-difficulty="intro"]').click();
+  await help.locator('#intro-help').click();
+  await help.locator('#guide-title').waitFor({state:'visible'});
+  assert.match(await help.locator('#guide-title').textContent(),/Monster Hunter/);
+  await help.screenshot({path:'visual/guided-how-to-hunt.png',fullPage:false});
+  for(let i=0;i<6;i++)await help.locator('#guide-next').click();
+  assert.match(await help.locator('#guide-title').textContent(),/turn-by-turn checklist/);
+  await help.locator('#guide-practice').click();
+  assert.match(await help.locator('#lesson-title').textContent(),/Clockwise from north/);
+  await help.screenshot({path:'visual/guided-bearing-practice.png',fullPage:false});
+  await help.locator('#tutorial-close').click();
+  assert.equal(await help.locator('#monster-intro-title').textContent(),'You are a Monster Hunter');
+  await help.locator('#intro-begin').click();
+  assert.equal(await help.locator('#hud-tab-coach').getAttribute('aria-selected'),'true');
+  await help.locator('.coach-panel').waitFor({state:'visible'});
+  await help.screenshot({path:'visual/guided-contextual-coach.png',fullPage:false});
+  await help.locator('#coach-reveal').click();
+  assert.match(await help.locator('.coach-reveal-answer').textContent(),/Correct road bearing:/);
+  assert.equal(await help.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0,
+    'Coach may reveal a worked bearing as text, but must never draw it automatically');
+  await help.locator('#coach-open-protractor').click();
+  assert.equal(await help.locator('#protractor-group').count(),1);
+  await measure(help,'guided-hunt-with-protractor');
+  await help.screenshot({path:'visual/guided-coach-with-protractor.png',fullPage:false});
+  await help.close();
+
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
   console.log('Visual QA succeeded for '+report.length+' layouts');
 }catch(err){
