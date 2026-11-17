@@ -263,10 +263,15 @@ export function renderHunterBoardPiece(raw,options={}){
   const replay=options.replay===true?' data-replay-actor="hunter"':'';
   // Keep the figurine inside the map's boundary, including the outermost
   // expert nodes. Prefer the node's right side, or left near the east edge.
-  const anchored=(px,py)=>[
-    px+(px>905?-26:26),
-    py+(py<96?76:py>665?-12:17)
-  ];
+  const anchored=(px,py)=>{
+    // Below the centre on normal rows: the name is always above the marker.
+    // Bottom rows move the miniature sideways, so its feet stay on the map.
+    const bottom=py>625;
+    return [
+      px+(bottom?(px>850?-78:78):(px>905?-26:26)),
+      py+(bottom?-8:68)
+    ];
+  };
   const fromPoint=anchored(fromX,fromY);
   const toPoint=anchored(x,y);
   const from=fromPoint[0]+' '+fromPoint[1];
