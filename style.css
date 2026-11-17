@@ -563,7 +563,7 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 .hud-screen .map-frame{
   flex:1 1 auto;min-height:0;min-width:0;max-height:none;
   overflow:auto;border-color:#708981;
-  display:flex;justify-content:center;align-items:center;
+  display:flex;justify-content:flex-start;align-items:flex-start;
   scrollbar-width:thin;scrollbar-color:#78978f #172d35
 }
 .hud-screen .world-svg{
@@ -733,7 +733,14 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .hud-content{padding:6px 8px;gap:5px}
   .hud-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,52fr) minmax(0,48fr);gap:6px}
   .hud-screen .map-heading h2{font-size:.78rem}
-  .hud-status .hud-mission-summary{display:none}
+  .hud-status{display:grid;grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"role round" "mission mission";row-gap:2px}
+  .hud-status-main{grid-area:role}
+  .hud-status .turn-marker{grid-area:round}
+  .hud-status .hud-mission-summary{
+    display:block;grid-area:mission;text-align:left;font-size:.55rem;
+    max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
   .hud-sidebar{grid-template-columns:minmax(0,1fr) minmax(170px,1fr);
     grid-template-rows:minmax(0,1fr) auto;gap:6px}
   .hud-move-panel{grid-column:1;grid-row:1;min-height:0;overflow:auto;padding:8px}
