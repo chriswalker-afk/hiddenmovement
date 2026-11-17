@@ -93,7 +93,7 @@ Use **Randomise**, **Reset to Default**, or **Save My Hunter**. Selections have 
 
 The selected Hunter appears on the **level introduction** alongside that level's unique Monster, in the first How to Hunt tutorial step and in the **Hunter's HUD** as a compact, consistent bust. The pass-and-play handoff screen remains fully blank apart from the required instruction and reveal control, preserving role privacy.
 
-**PR12 (next):** add an equally recognisable **moving board token** in the same outfit, with responsive map placement and movement polish. PR11 deliberately retains the original map marker and movement rules.
+**Hunter Forge follow-up (planned PR13):** add an equally recognisable **moving board token** in the same outfit, with responsive map placement and movement polish. PR11 deliberately retained the original map marker and movement rules.
 
 ## Dry riverbank locations (merged PR8)
 
