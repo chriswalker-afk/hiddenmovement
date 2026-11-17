@@ -698,7 +698,7 @@ function mapSvg(view) {
         '<title>'+esc(role==='hunter'?'Hunter at '+nameOf(id):monsterFor(view.difficulty).name+' at '+nameOf(id))+'</title>'+
         '<circle r="16"/><text text-anchor="middle" y="5">'+initial+'</text></g>';
     }).join('') : '';
-  const mapHeightStyle=['hunter','monster'].includes(view.phase)
+  const mapHeightStyle=(['hunter','monster'].includes(view.phase)||view.replay)
     ?'height:'+Math.round(mapZoom*100)+'%;':'height:auto;';
   return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;'+mapHeightStyle+'max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
     '<defs>' +
