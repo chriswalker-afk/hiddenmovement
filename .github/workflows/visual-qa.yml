@@ -1,0 +1,43 @@
+name: Shadow Bearings viewport visual QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/app.mjs'
+      - 'src/protractor.mjs'
+      - 'style.css'
+      - 'scripts/visual-qa.mjs'
+      - '.github/workflows/visual-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install headless browser test dependencies
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Build review site
+        run: npm run build:site
+      - name: Check viewport and capture screenshots
+        run: |
+          python3 -m http.server 8765 --directory _site >/tmp/shadow-bearings-server.log 2>&1 &
+          node scripts/visual-qa.mjs
+      - name: Upload screenshots and layout report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-bearings-ui-review
+          path: visual/
+          if-no-files-found: warn
+          retention-days: 14
