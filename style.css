@@ -817,3 +817,28 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .hud-move-panel .guided-route-help{display:none}
   .hud-footer .feedback{max-height:37px}
 }
+
+
+/* All region nodes now display full location names; miniature marker numbers
+   link visually to the Location Index without replacing or obscuring names. */
+.world-svg .node-number{
+  font:700 9px 'DM Sans',system-ui,sans-serif;
+  fill:#f9edcf;stroke:#152d32;stroke-width:2px;
+  paint-order:stroke;pointer-events:none
+}
+.world-svg .node-label-apprentice{
+  font-size:16px!important;letter-spacing:0;stroke-width:4px
+}
+.world-svg .node-label-tracker{
+  font-size:14px!important;letter-spacing:0;stroke-width:3.8px
+}
+.world-svg .node-label-expert{
+  font-size:12.5px!important;letter-spacing:0;stroke-width:3.5px
+}
+/* Keep readable labels independent of viewport breakpoints and zoom; this
+   overrides the old 18px rule for all maps on very wide screens. */
+@media(min-width:1550px){
+  .world-svg .node-label-apprentice{font-size:16px!important}
+  .world-svg .node-label-tracker{font-size:14px!important}
+  .world-svg .node-label-expert{font-size:12.5px!important}
+}
