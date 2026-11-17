@@ -75,6 +75,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   click('resume-hunt');
   click('hud-tab-notes');
   assert.match(html(),/I should block the bridge/);
+  click('hud-tab-mission');
   assert.match(html(),/The Last Gate/i);
   assert.doesNotMatch(html(),/Your hidden trail/);
 
