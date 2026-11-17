@@ -6,6 +6,10 @@ import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenari
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { MONSTERS, monsterFor } from './monsters.mjs';
 import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
+import {
+  DEFAULT_TOUR_STAGE,advanceTour,reconcileTour,tourStep,nearHunter,
+  initialRulerPosition,validTourStage
+} from './guided-walkthrough.mjs';
 import { buildHuntReplay, replayMapView, replayFrameCaption } from './hunt-replay.mjs';
 import { FORGE_CHOICES, FORGE_PALETTES, FORGE_COMPLEXIONS,
   DEFAULT_HUNTER, normalizeHunter, randomHunter, loadHunter, saveHunter,
@@ -45,6 +49,7 @@ let mapZoom = 1;
 let pendingHunterMotion = null;
 let hudTab = 'clues';
 let guidedSelection = false;
+let tourStage = 'done';
 let protractorVisible = false;
 let protractorBearing = 0;
 let protractorPosition = null;
@@ -84,6 +89,7 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     searchReportOpen=false;
     hudTab=guidedSelection?'coach':'clues';
     coachAnswerVisible=false;
+    tourStage=game.guided?DEFAULT_TOUR_STAGE:'done';
     protractorVisible=false;
     protractorBearing=0;
     protractorPosition=null;
@@ -107,7 +113,8 @@ function persistNow() {
   const state={
     fieldNotes,marks:[...nodeMarks.entries()],plotClue,
     selectedClueIds:selectedClueIds===null?null:[...selectedClueIds],
-    introSeen:!monsterIntroOpen,reportSeen:!searchReportOpen
+    introSeen:!monsterIntroOpen,reportSeen:!searchReportOpen,
+    tourStage
   };
   return persistSaved(storage(),game,state);
 }
@@ -125,6 +132,10 @@ function resumeHunt() {
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
   plotClue=restored.ui.plotClue && game.guided;
   guidedSelection=game.guided;
+  tourStage=game.guided
+    ?(validTourStage(restored.ui.tourStage)?restored.ui.tourStage:
+      (game.round===1?DEFAULT_TOUR_STAGE:'done'))
+    :'done';
   hudTab=game.guided?'coach':'clues';
   coachAnswerVisible=false;
   protractorVisible=false;
@@ -1468,6 +1479,7 @@ function bindCommon() {
       resetReplay();
       monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
+      tourStage='done';
       render();
     }
   });
@@ -1483,6 +1495,7 @@ function saveAndExit() {
   resetReplay();
   monsterIntroOpen=false;searchReportOpen=false;
   nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
+  tourStage='done';
   difficultyPicker=false;scenarioPicker=false;
   resetProtractor();
   render();
@@ -1610,6 +1623,7 @@ function render() {
         resetReplay();
         monsterIntroOpen=false;searchReportOpen=false;
         nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
+      tourStage='done';
         difficultyPicker = false;mapZoom=1;
         render();
       });
