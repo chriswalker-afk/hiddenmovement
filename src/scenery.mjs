@@ -1,3 +1,5 @@
+import { WATERWAYS, waterwayPath } from './waterways.mjs';
+
 /**
  * Original hand-drawn-in-SVG scenery for each region. Art is intentionally
  * below the movement roads and node layer so clarity wins over decoration.
@@ -73,7 +75,9 @@ export function renderScenery(theme='moor') {
       '<path d="M60 640q60-45 123 8m150-560q80-30 140 13m275 523q85-31 142 5"/>'+
       '</g>';
   }else if(theme==='marsh'){
-    extra+=wave(shore,86)+wave(creek,38);
+    // River channels pass between real location rows rather than through
+    // the centre of the game nodes. Every crossing road remains traversable.
+    extra+=WATERWAYS.marsh.map(ch=>wave(waterwayPath(ch),ch.width)).join('');
     for(let i=0;i<22;i++){
       const x=45+(i*139)%920,y=54+(i*167)%615;
       extra+=reeds(x,y);
@@ -89,7 +93,7 @@ export function renderScenery(theme='moor') {
   }else{
     extra+='<path d="M-30 118Q168 45 313 149T659 98T1020 155V-20H-30Z" fill="#795969" opacity=".15"/>';
     extra+='<path d="M-40 595Q158 538 348 618T763 591T1030 636V760H-40Z" fill="#78566b" opacity=".22"/>';
-    extra+=wave(creek,42);
+    extra+=WATERWAYS.eclipse.map(ch=>wave(waterwayPath(ch),ch.width)).join('');
     extra+='<g transform="translate(893 112)" opacity=".32"><circle r="49" fill="#dfc0ad"/>'+
       '<circle cx="20" cy="-17" r="44" fill="#372b46"/></g>';
     for(const [x,y,sc] of [[90,90,.7],[238,94,.62],[493,68,1.2],[883,215,.95],
