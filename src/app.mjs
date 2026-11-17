@@ -4,6 +4,7 @@ import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
+import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
 import {
   SETTINGS, DIFFICULTIES, beginGame, createGame, endHunterTurn, hunterMove,
@@ -26,6 +27,11 @@ let difficultyPicker = false;
 let scenarioPicker = false;
 let pendingScenario = 'classic';
 let mapZoom = 1;
+let hudTab = 'clues';
+let guidedSelection = false;
+let protractorVisible = false;
+let protractorBearing = 0;
+let protractorPosition = null;
 const storage = () => globalThis.localStorage || null;
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
@@ -35,11 +41,15 @@ const roundCaption = round => round === 0 ? 'at the beginning of the hunt' : 'at
 
 function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
   const seed=((Date.now() ^ Math.floor(Math.random()*0xffffffff))>>>0)||1;
-  Object.assign(game,createGame({mode,difficulty,scenario,seed}));
+  Object.assign(game,createGame({mode,difficulty,scenario,guided:guidedSelection,seed}));
   const result=beginGame(game);
   if(result.ok) {
     plotClue=false;
     selectedClueIds=null;
+    hudTab='clues';
+    protractorVisible=false;
+    protractorBearing=0;
+    protractorPosition=null;
     nodeMarks.clear();
     fieldNotes='';
     tutorialOpen=false;
@@ -69,7 +79,12 @@ function resumeHunt() {
   fieldNotes=restored.ui.fieldNotes;
   nodeMarks.clear();
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
-  plotClue=restored.ui.plotClue;
+  plotClue=restored.ui.plotClue && game.guided;
+  guidedSelection=game.guided;
+  hudTab='clues';
+  protractorVisible=false;
+  protractorPosition=null;
+  protractorBearing=0;
   selectedClueIds=restored.ui.selectedClueIds===null?null:new Set(restored.ui.selectedClueIds);
   difficultyPicker=false;
   scenarioPicker=false;
@@ -83,6 +98,7 @@ function scenarioHtml() {
     '<span class="eyebrow">THREE STORIES · TWO WAYS TO PLAY</span>'+
     '<h1>CHOOSE YOUR <em>MISSION</em></h1>'+
     '<p>Each mission uses the same mathematical movement rules, but changes what the Monster is trying to achieve.</p>'+
+    guidedChoiceHtml() +
     '<div class="scenario-grid">'+Object.values(SCENARIOS).map(mission=>
       '<article class="scenario-card scenario-'+esc(mission.id)+'">'+
       '<div class="scenario-card-symbol" aria-hidden="true">'+esc(mission.icon)+'</div>'+
@@ -107,7 +123,7 @@ function selectedClues(view) {
   return selectedClueIds === null ? view.clues : view.clues.filter(c=>selectedClueIds.has(c.id));
 }
 function currentAnalysis(view) {
-  if (view.phase!=='hunter' || !plotClue) return null;
+  if (view.phase!=='hunter' || !view.guided || !plotClue) return null;
   const clues=selectedClues(view);
   if(!clues.length) return null;
   return analyseClues(currentMap(), clues, view.round, {hunterLocation:view.hunter});
@@ -164,6 +180,18 @@ function bindTutorial() {
   if(!lessonOutcome?.correct) document.getElementById('lesson-answer')?.focus();
 }
 
+
+function guidedChoiceHtml() {
+  return '<div class="guidance-choice" aria-label="Choose the amount of bearings assistance">' +
+    '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
+    '<small>'+(guidedSelection
+      ?'Periodic watcher clues, distance help, plotted deductions and bearing feedback'
+      :'No free sightings or automatic answers. Measure with the optional protractor.')+
+    '</small></div>' +
+    '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
+      (guidedSelection?'SWITCH TO STANDARD':'ENABLE TUTORIAL HELP')+'</button></div>';
+}
+
 function difficultyHtml() {
   const cards = Object.values(DIFFICULTIES).map((preset, i) =>
     '<button class="difficulty-card difficulty-' + esc(preset.id) + '" data-difficulty="' + esc(preset.id) + '">' +
@@ -178,6 +206,7 @@ function difficultyHtml() {
     '<span class="eyebrow">SOLO HUNT · '+esc(SCENARIOS[pendingScenario].name.toUpperCase())+'</span>' +
     '<h1>FOUR PATHS INTO <em>THE DARK</em></h1>' +
     '<p>Each level changes the size of the map, the monster’s instincts and the strength of the clues you uncover.</p>' +
+    guidedChoiceHtml() +
     '<div class="difficulty-grid">' + cards + '</div>' +
     '<p class="difficulty-footer">The monster moves automatically after each Hunter turn. Its position is never shown.</p>' +
     '</div></main>';
@@ -211,6 +240,7 @@ function homeHtml() {
       '<div class="home-crest" aria-hidden="true"><span>N</span><b>✦</b><span>S</span></div>' +
       '<h1>SHADOW<br><i>BEARINGS</i></h1>' +
       '<p class="home-subtitle">One hunter. One hidden monster. A trail of bearings through the Hollow Moor.</p>' +
+      guidedChoiceHtml() +
       '<div class="mode-grid">' +
         '<button id="start-two" class="mode-card">' +
           '<span class="mode-icon" aria-hidden="true">⚔</span><strong>PASS &amp; PLAY</strong>' +
@@ -284,7 +314,7 @@ function mapSvg(view) {
   }).join('');
   const trees = [[115,92],[280,90],[505,70],[675,110],[930,190],[125,510],[320,660],[515,535],[735,635],[885,675]]
     .map((pt,i)=>treeCluster(pt[0],pt[1],i)).join('');
-  const clues = view.phase==='hunter' && plotClue ? selectedClues(view) : [];
+  const clues = view.phase==='hunter' && view.guided && plotClue ? selectedClues(view) : [];
   const analysis = currentAnalysis(view);
   const candidateSet = new Set(analysis?.candidates || []);
   const plotted=clues.map(clue => {
@@ -308,7 +338,7 @@ function mapSvg(view) {
   const monsterPath=monsterTrail.length>1 ?
     '<polyline class="monster-trail" points="'+monsterTrail.map(t=>currentMap().nodes[t.node].x+','+currentMap().nodes[t.node].y).join(' ')+'"/>' : '';
   const eligible=new Set(view.eligibleSpawns||[]);
-  const monsterNeighbours = view.phase==='monster' ? new Set(currentMap().adjacency[view.monster]) : new Set();
+  const monsterNeighbours = view.phase==='monster' && view.guided ? new Set(currentMap().adjacency[view.monster]) : new Set();
   const dots=Object.values(currentMap().nodes).map(n=>{
     const isHunter=view.hunter===n.id;
     const isMonsterHere=(view.phase==='monster'||isOver)&&view.monster===n.id;
@@ -471,7 +501,7 @@ function notebook(view) {
       c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
     return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':c.type==='beacon'?'beacon-card':'')+'">' +
       '<div class="clue-meta"><span>'+label+'</span><span>'+visit+'</span></div>' +
-      (plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
+      (view.guided && plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
         '" '+(chosen?'checked':'')+'/> INCLUDE IN DEDUCTION</label>':'') +
       '<p>'+clueSentence(c)+'</p>'+routeDistance+
       '<small>Discovered round '+c.foundRound+
@@ -484,11 +514,12 @@ function notebook(view) {
     '<div class="panel-top"><span class="eyebrow">YOUR EVIDENCE</span><span class="steps-badge">'+
       view.clues.length+' '+(view.clues.length===1?'CLUE':'CLUES')+'</span></div>' +
     '<h3>Field notebook</h3>' +
-    (view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+
+    (view.guided && view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+
       (plotClue?'HIDE DEDUCTION OVERLAY':'COMBINE CLUES ON THE MAP')+
       ' <span aria-hidden="true">↗</span></button>' +
       overview+'<div class="clue-list">'+cards+'</div>' :
-      '<p class="muted empty-evidence">No traces yet. Follow the old roads and search locations where the monster may have been.</p>')+
+      (view.clues.length ? '<div class="clue-list">'+cards+'</div>' :
+      '<p class="muted empty-evidence">No clues yet. Search the Monster’s recent trail.</p>'))+
     '</section>';
 }
 
@@ -674,6 +705,10 @@ function render() {
   }
   if(view.phase==='home') {
     mount.innerHTML=homeHtml();
+    document.getElementById('guided-toggle')?.addEventListener('click',()=>{
+      guidedSelection=!guidedSelection;
+      render();
+    });
     if(scenarioPicker) {
       document.getElementById('scenario-back').addEventListener('click',()=>{
         scenarioPicker=false;render();
