@@ -1,6 +1,6 @@
 # Shadow Bearings — Map World Bible v1
 
-> **Status: four identities locked; Blackfen Marsh's 14 names and matching landmark artwork implemented in PR15.** Duskmere Village, Rookgate District and Ravenmarch County remain proposals for later art/naming passes. The existing game graph, bearings, road IDs and spawn/objective algorithms are deliberately unchanged.
+> **Status: four identities locked; Blackfen Marsh (PR15) and Duskmere Village (PR16) are implemented with matching names and artwork.** Rookgate District and Ravenmarch County remain proposals for later art/naming passes. Original bearings graphs, location IDs, spawns and goal algorithms remain unchanged.
 
 ## Four locked identities
 
@@ -52,6 +52,8 @@ The existing graph IDs, coordinates, edge lists, Hunter spawn and objective algo
 | `N` | **Stone Quarry** | small hand-cut stone pit and stacked blocks | south central dry ground |
 
 ### Duskmere Village — 18 nodes
+
+**Implementation status: complete in PR16.** All 18 approved names correspond to distinctive original SVG village landmarks. The shared-geometry southern **Duskmere Millstream** is drawn beneath the row-three nodes with safe shore clearance. Exactly three existing roads cross the water: **A12–A16** (small footbridge), **A13–A17** (the named, road-aligned **Stone Bridge**) and **A14–A18** (small bridge/causeway). **Mill Pond** expands the connected water east of the A14–A18 road; Willow Bank visibly borders the same stream. Village Green and Market Cross anchor the centre, with northern houses/chapel and southern orchard/smithy. The original 18 nodes, 33 edges, bearings, A08 start and A03/A18 goal markers remain intact.
 
 **Scope:** Haunted village. **Palette:** warm grey stone, smoky blue, oak brown, apple green and dim copper lanterns.
 
@@ -162,9 +164,9 @@ The existing graph IDs, coordinates, edge lists, Hunter spawn and objective algo
 
 1. **Naming and metadata pass:** store each final player-visible name and a semantic landmark type/zone keyed by stable node ID. Update map titles, intro, scenario texts and tests. Keep geometry unchanged and ensure old saves use the same node IDs.
 2. **Landmark art prototype:** implement just Blackfen Marsh and review screenshots at 100–300% zoom, Intro node label geometry, water/bridge alignment, and Hunter token clarity before scaling the system.
-3. **Duskmere Village:** draw the village centre as coherent connected streets/cottages; add a recognisable southern millstream with valid road bridges.
+3. **Duskmere Village (completed PR16):** named village centre, 18 illustrated sites, actual southern millstream with matching Stone Bridge, causeways and Mill Pond.
 4. **Rookgate District:** render city blocks, two canal corridors, bridges at verified actual road crossings, gates, quays and named workshops. Verify that every node remains on dry ground.
 5. **Ravenmarch County:** render regional terrain bands, mountain relief, woodlands, river valley, border gates and settlement clusters; ensure water crossings and objective markers line up with their names.
 6. **Final QA:** exact node count 14/18/26/36; all labels; collisions at mobile and desktop zoom; all three missions, story briefings, replay, player token and protractor; no bearings / graph / clue / AI regressions.
 
-**Remaining hydrology task:** Blackfen's stream and Moss Bridge are now coupled to the landmark coordinates. **Duskmere Village** still needs its southern millstream, Stone Bridge and Mill Pond designed against actual road crossings before its planned names go live. Rookgate and Ravenmarch have separate canal and river design phases.
+**Remaining geography work:** Blackfen Run and Duskmere Millstream now align with real graph roads and their named landmarks. Next build **Rookgate District's** two canals with verified urban quays and bridge crossings, followed by **Ravenmarch County's** Blackwater river valley. Do not rename an unfinished map before its geography is coherent.
