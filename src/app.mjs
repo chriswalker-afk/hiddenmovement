@@ -1,7 +1,7 @@
-import { MAP, MONSTER_SPAWNS } from './map.mjs';
+import { MAP, MAPS, MONSTER_SPAWNS } from './map.mjs';
 import { bearingBetween, formatBearing, sectorBounds } from './geometry.mjs';
 import {
-  SETTINGS, beginGame, createGame, endHunterTurn, hunterMove,
+  SETTINGS, DIFFICULTIES, beginGame, createGame, endHunterTurn, hunterMove,
   monsterMove, revealTurn, sealTurn, selectMonsterStart, viewForCurrentScreen
 } from './engine.mjs';
 
@@ -10,18 +10,42 @@ const game = createGame();
 let selectedSpawn = MONSTER_SPAWNS[0];
 let plotClue = false;
 let showHowTo = false;
+let difficultyPicker = false;
+const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const nameOf = id => MAP.nodes[id]?.name || 'Unknown';
+const nameOf = id => currentMap().nodes[id]?.name || 'Unknown';
 const roundCaption = round => round === 0 ? 'at the beginning of the hunt' : 'at the end of round ' + round;
 
-function start() {
+function start(mode = 'multi', difficulty = 'intro') {
+  const seed = ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0) || 1;
+  Object.assign(game, createGame({ mode, difficulty, seed }));
   const result = beginGame(game);
   if (result.ok) {
     plotClue = false;
+    difficultyPicker = false;
     selectedSpawn = MONSTER_SPAWNS[0];
   }
   render();
+}
+
+function difficultyHtml() {
+  const cards = Object.values(DIFFICULTIES).map((preset, i) =>
+    '<button class="difficulty-card difficulty-' + esc(preset.id) + '" data-difficulty="' + esc(preset.id) + '">' +
+    '<span class="difficulty-level">LEVEL 0' + (i + 1) + ' <span>· ' + esc(preset.nodes) + ' LOCATIONS</span></span>' +
+    '<strong>' + esc(preset.name) + '</strong>' +
+    '<span class="difficulty-tagline">' + esc(preset.tagline) + '</span>' +
+    '<span class="difficulty-description">' + esc(preset.summary) + '</span>' +
+    '<span class="mode-link">HUNT HERE →</span></button>'
+  ).join('');
+  return '<main class="difficulty-shell"><div class="difficulty-inner">' +
+    '<button id="back-home" class="text-button back-button">← BACK TO MENU</button>' +
+    '<span class="eyebrow">SOLO HUNT · CHOOSE YOUR CHALLENGE</span>' +
+    '<h1>FOUR PATHS INTO <em>THE DARK</em></h1>' +
+    '<p>Each level changes the size of the map, the monster’s instincts and the strength of the clues you uncover.</p>' +
+    '<div class="difficulty-grid">' + cards + '</div>' +
+    '<p class="difficulty-footer">The monster moves automatically after each Hunter turn. Its position is never shown.</p>' +
+    '</div></main>';
 }
 
 function titleBar(mode, view) {
@@ -35,6 +59,7 @@ function titleBar(mode, view) {
 }
 
 function homeHtml() {
+  if (difficultyPicker) return difficultyHtml();
   return '<div class="home-shell">' +
     '<div class="home-glow" aria-hidden="true"></div>' +
     '<div class="home-content">' +
@@ -47,10 +72,10 @@ function homeHtml() {
           '<span class="mode-icon" aria-hidden="true">⚔</span><strong>PASS &amp; PLAY</strong>' +
           '<span>Two players • One device</span><small>Take turns using the map in secret</small>' +
           '<span class="mode-link">BEGIN HUNT <span aria-hidden="true">→</span></span></button>' +
-        '<div class="mode-card disabled-mode" aria-disabled="true">' +
+        '<button id="start-solo-select" class="mode-card">' +
           '<span class="mode-icon" aria-hidden="true">◈</span><strong>SOLO HUNT</strong>' +
-          '<span>One player • Monster AI</span><small>Coming in the next build</small>' +
-          '<span class="mode-link subdued">COMING SOON</span></div>' +
+          '<span>One player • Monster AI</span><small>Four escalating difficulties</small>' +
+          '<span class="mode-link">SELECT DIFFICULTY →</span></button>' +
       '</div>' +
       '<button class="text-button" id="how-toggle" aria-expanded="' + showHowTo + '">HOW TO PLAY <span aria-hidden="true">⌄</span></button>' +
       (showHowTo ? howToHtml() : '') +
@@ -99,8 +124,8 @@ function sectorShape(origin,center,half) {
 function mapSvg(view) {
   const isMonster=view.phase==='monster' || view.phase==='monster-setup';
   const isOver=view.phase==='over';
-  const paths = MAP.edges.map(([a,b]) => {
-    const p=MAP.nodes[a],q=MAP.nodes[b];
+  const paths = currentMap().edges.map(([a,b]) => {
+    const p=currentMap().nodes[a],q=currentMap().nodes[b];
     return '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-base"/>' +
       '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-top"/>';
   }).join('');
@@ -108,19 +133,19 @@ function mapSvg(view) {
     .map((pt,i)=>treeCluster(pt[0],pt[1],i)).join('');
   const clues= view.phase==='hunter' && plotClue ? view.clues.slice(0,1) : [];
   const plotted=clues.map(clue => {
-    const p=MAP.nodes[clue.place];
+    const p=currentMap().nodes[clue.place];
     return '<path class="clue-sector" d="'+sectorShape(p,clue.sectorCenter,clue.halfWidth)+'"/>' +
       '<circle cx="'+p.x+'" cy="'+p.y+'" r="24" class="clue-origin"/>';
   }).join('');
   const hunterTrail=(view.phase==='hunter'||isOver)?view.hunterTrail:[];
   const hunterPath=hunterTrail.length>1 ?
-    '<polyline class="hunter-trail" points="'+hunterTrail.map(id=>MAP.nodes[id].x+','+MAP.nodes[id].y).join(' ')+'"/>' : '';
+    '<polyline class="hunter-trail" points="'+hunterTrail.map(id=>currentMap().nodes[id].x+','+currentMap().nodes[id].y).join(' ')+'"/>' : '';
   const monsterTrail=(view.phase==='monster'||isOver)?view.trail:[];
   const monsterPath=monsterTrail.length>1 ?
-    '<polyline class="monster-trail" points="'+monsterTrail.map(t=>MAP.nodes[t.node].x+','+MAP.nodes[t.node].y).join(' ')+'"/>' : '';
+    '<polyline class="monster-trail" points="'+monsterTrail.map(t=>currentMap().nodes[t.node].x+','+currentMap().nodes[t.node].y).join(' ')+'"/>' : '';
   const eligible=new Set(view.eligibleSpawns||[]);
-  const monsterNeighbours = view.phase==='monster' ? new Set(MAP.adjacency[view.monster]) : new Set();
-  const dots=Object.values(MAP.nodes).map(n=>{
+  const monsterNeighbours = view.phase==='monster' ? new Set(currentMap().adjacency[view.monster]) : new Set();
+  const dots=Object.values(currentMap().nodes).map(n=>{
     const isHunter=view.hunter===n.id;
     const isMonsterHere=(view.phase==='monster'||isOver)&&view.monster===n.id;
     const possibleStart=view.phase==='monster-setup'&&eligible.has(n.id);
@@ -189,7 +214,7 @@ function movementForm(view) {
   const location=monster?view.monster:view.hunter;
   const place=nameOf(location);
   const left=monster?1:view.stepsLeft;
-  const adjacent=MAP.adjacency[location].map(id=>nameOf(id)).join(' · ');
+  const adjacent=currentMap().adjacency[location].map(id=>nameOf(id)).join(' · ');
   return '<section class="panel move-panel">' +
     '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>' +
       '<span class="steps-badge">'+left+' '+(left===1?'MOVE':'MOVES')+' LEFT</span></div>' +
