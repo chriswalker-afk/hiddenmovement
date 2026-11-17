@@ -247,6 +247,9 @@ try{
       assert.equal(await page.locator('.rookgate-city-bridge').count(),9,
         'Only the nine real road/canal crossings receive city bridge decks');
       assert.equal(await page.locator('.rookgate-quay-details').count(),1);
+      assert.equal(await page.locator('.illustrated-scenery[data-world="rookgate"]')
+        .getAttribute('clip-path'),'url(#rookgate-scene-clip)',
+        'Canals must not draw outside the illustrated map bounds in landscape');
       assert.match(await page.locator('.map-heading h2').textContent(),/Rookgate District/);
       assert.equal(await page.locator('.world-svg .terrain-label').count(),0);
       assert.equal(await page.locator('.rookgate-landmark-flood-lock')
