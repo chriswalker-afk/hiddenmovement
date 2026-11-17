@@ -48,7 +48,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/Lanternfall/);
   click('data-mission-solo-escape');
   assert.match(html(),/SOLO HUNT/);
-  assert.match(html(),/THE LAST GATE/);
+  assert.match(html(),/The Last Gate/i);
   click('data-difficulty-apprentice');
   assert.match(html(),/theme-woodland/);
   assert.match(html(),/STORY MISSION/);
@@ -72,7 +72,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.doesNotMatch(html(),/world-svg/);
   click('resume-hunt');
   assert.match(html(),/I should block the bridge/);
-  assert.match(html(),/THE LAST GATE/);
+  assert.match(html(),/The Last Gate/i);
   assert.doesNotMatch(html(),/Your hidden trail/);
 
   click('brand-link');
