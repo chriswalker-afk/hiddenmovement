@@ -136,7 +136,9 @@ function currentAnalysis(view) {
   if (view.phase!=='hunter' || !view.guided || !plotClue) return null;
   const clues=selectedClues(view);
   if(!clues.length) return null;
-  return analyseClues(currentMap(), clues, view.round, {hunterLocation:view.hunter});
+  return analyseClues(currentMap(),clues,view.round,{
+    hunterLocation:view.hunter,publicEvents:view.publicEvents
+  });
 }
 function toggleNodeMark(id) {
   const old=nodeMarks.get(id);
@@ -352,8 +354,9 @@ function mapSvg(view) {
   const candidateSet = new Set(analysis?.candidates || []);
   const plotted=clues.map(clue => {
     const p=currentMap().nodes[clue.place];
-    if(clue.type==='beacon')
+    if(['beacon','teleport-origin'].includes(clue.type))
       return '<circle cx="'+p.x+'" cy="'+p.y+'" r="34" class="beacon-sighting-ring"/>';
+    if(clue.type==='rumour')return '';
     let direction;
     if (clue.halfWidth === 0) {
       const radians=clue.sectorCenter*Math.PI/180;
@@ -382,6 +385,10 @@ function mapSvg(view) {
     const selected=view.phase==='monster-setup'&&selectedSpawn===n.id;
     const target=monsterNeighbours.has(n.id);
     const hasClue=view.phase==='hunter'&&view.clues.some(c=>c.place===n.id);
+    const suspected=view.phase==='hunter'&&view.clues.some(c=>
+      c.type==='rumour'&&c.pointNode===n.id&&c.status==='unverified');
+    const discredited=view.phase==='hunter'&&view.clues.some(c=>
+      c.type==='rumour'&&c.pointNode===n.id&&c.status==='false');
     const mark = view.phase==='hunter' ? nodeMarks.get(n.id) : null;
     const exit = view.scenario==='escape' && view.objectives?.exitNode===n.id;
     const beacon = view.scenario==='beacons' && view.objectives?.beacons?.includes(n.id);
@@ -395,12 +402,16 @@ function mapSvg(view) {
     if(possibleStart)cls.push('spawnable');
     if(selected)cls.push('selected');
     if(hasClue)cls.push('has-clue');
+    if(suspected)cls.push('rumoured-node');
+    if(discredited)cls.push('discredited-node');
     if(analysis?.constrained && candidateSet.has(n.id)) cls.push('candidate-location');
     if(mark) cls.push('marked-'+mark);
     const nodeBody='<title>'+esc(n.name)+(exit?' — Escape Gate':beacon?(dark?' — Extinguished beacon':' — Lit beacon'):'')+'</title>' +
       (exit?'<circle r="28" class="escape-goal-ring"/>':'') +
       (beacon?'<circle r="26" class="beacon-goal-ring"/>':'') +
       (analysis?.constrained && candidateSet.has(n.id)?'<circle r="25" class="candidate-halo"/>':'') +
+      (suspected?'<circle r="28" class="rumour-halo"/><text x="20" y="-19" class="rumour-icon">?</text>':'')+
+      (discredited?'<text x="20" y="-19" class="false-rumour-icon">×</text>':'')+
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
        isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':
@@ -522,21 +533,35 @@ function movementForm(view) {
 function clueSentence(clue) {
   const place=nameOf(clue.place);
   const observation=esc(roundCaption(clue.observedRound));
+  const monster=esc(monsterFor(game.difficulty).name);
+  if(clue.type==='teleport-origin')
+    return '<b>'+monster+'</b> vanished from <strong>'+esc(place)+
+      '</strong> during round '+(clue.observedRound+1)+
+      '. This departure location is confirmed; its destination is hidden, 2–3 connected roads away.';
+  if(clue.type==='rumour')
+    return clue.status==='false'
+      ?'You investigated <strong>'+esc(place)+
+        '</strong> and exposed the report as a <b>false sighting</b>.'
+      :'A villager claims <b>'+monster+'</b> was at <strong>'+esc(place)+
+        '</strong> at the end of round '+clue.observedRound+
+        '. <b>Unconfirmed.</b> Visit this location to verify the claim.';
   if(clue.type==='beacon')
-    return 'A beacon fell at <strong>'+esc(nameOf(clue.pointNode))+'</strong> at the end of round '+
-      clue.observedRound+'. The Monster was at this exact location <b>then</b>, but may have moved since.';
+    return 'A beacon fell at <strong>'+esc(nameOf(clue.pointNode))+
+      '</strong> at the end of round '+clue.observedRound+
+      '. The Monster was here <b>then</b>, but may have moved since.';
   const precise=clue.halfWidth===0;
-  const range=precise?
-    'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.':
-    'was between <strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+esc(clue.bounds[1])+'</strong>.';
+  const range=precise
+    ?'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.'
+    :'was between <strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+
+      esc(clue.bounds[1])+'</strong>.';
   if(clue.type==='sighting'){
     const source=clue.source==='lantern'?'Your Signal Lantern detected':'A watcher reports';
-    return source+': the bearing of the <b>monster</b> from <b>'+esc(place)+
+    return source+': the bearing of <b>'+monster+'</b> from <b>'+esc(place)+
       '</b> '+observation+' '+range;
   }
-  const orientation=clue.kind==='reverse'?
-    'Bearing of <b>'+esc(place)+'</b> from the <b>monster</b>':
-    'Bearing of the <b>monster</b> from <b>'+esc(place)+'</b>';
+  const orientation=clue.kind==='reverse'
+    ?'Bearing of <b>'+esc(place)+'</b> from <b>'+monster+'</b>'
+    :'Bearing of <b>'+monster+'</b> from <b>'+esc(place)+'</b>';
   return orientation+' '+observation+' '+range;
 }
 
@@ -550,20 +575,26 @@ function notebook(view) {
       '<span>'+analysis.eliminated+' of '+analysis.total+' locations ruled out by '+analysis.cluesUsed+
       ' selected clue'+(analysis.cluesUsed===1?'':'s')+'</span>' +
       '<details><summary>Which locations remain?</summary><p>'+esc(locationText || 'No locations satisfy these clues.')+'</p></details>' +
-      '<p class="muted compact">These are possible locations, not guaranteed positions. Older clues allow the monster one road of movement per elapsed round.</p></div>'
+      '<p class="muted compact">These are possible locations, not guaranteed positions. Older clues allow one road per normal Monster turn; a publicly announced teleport permits a 2–3-road jump.</p></div>'
     : plotClue ? '<p class="muted compact">Select at least one clue to check possible locations.</p>' : '';
   const cards=view.clues.map((c,i)=>{
     const chosen=active.some(a=>a.id===c.id);
-    const visit=c.type==='beacon'?'PUBLIC BEACON REPORT':c.type==='sighting'?'PUBLIC SIGNAL':
+    const visit=c.type==='teleport-origin'?'CONFIRMED VANISHING POINT':
+      c.type==='rumour'?(c.status==='false'?'DISPROVED REPORT':'UNCONFIRMED SIGHTING'):
+      c.type==='beacon'?'PUBLIC BEACON REPORT':c.type==='sighting'?'PUBLIC SIGNAL':
       (c.ageLabel ? esc(c.ageLabel) : 'TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound));
     const routeDistance=Number.isInteger(c.distanceMin) ?
       '<p class="distance-hint">Road distance at observation: '+
       (c.distanceMin===c.distanceMax?'exactly '+c.distanceMin:
         c.distanceMin+'–'+c.distanceMax)+' connected roads</p>' : '';
-    const label=c.type==='beacon'?'BEACON EXTINGUISHED':
+    const label=c.type==='teleport-origin'?'MONSTER TELEPORTED':
+      c.type==='rumour'?(c.status==='false'?'DECOY EXPOSED':'LOCAL RUMOUR'):
+      c.type==='beacon'?'BEACON EXTINGUISHED':
       c.source==='lantern'?'SIGNAL LANTERN':
       c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
-    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':c.type==='beacon'?'beacon-card':'')+'">' +
+    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':
+      c.type==='beacon'||c.type==='teleport-origin'?'beacon-card':
+      c.type==='rumour'?'rumour-card':'')+'">' +
       '<div class="clue-meta"><span>'+label+'</span><span>'+visit+'</span></div>' +
       (view.guided && plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
         '" '+(chosen?'checked':'')+'/> INCLUDE IN DEDUCTION</label>':'') +
@@ -571,7 +602,7 @@ function notebook(view) {
       '<small>Discovered round '+c.foundRound+
       (c.kind==='reverse'?' · Reverse the direction by 180°':' · Bearing starts at the stated location')+'</small>' +
       '<details class="clue-explanation"><summary>Explain the maths</summary><p>'+
-        esc(clueMathExplanation(c,view.round))+'</p></details>' +
+        esc(clueMathExplanation(c,view.round,view.publicEvents))+'</p></details>' +
       '</article>';
   }).join('');
   return '<section class="panel notebook-panel">' +
