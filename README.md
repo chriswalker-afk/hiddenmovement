@@ -17,6 +17,8 @@ On the title screen, choose **Solo Hunt**, then one of four difficulty levels. T
 | Tracker | 26 — Sunken Lowlands | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
 | Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
 
+**Map readability:** every location now has its full name printed next to the node, including on the Tracker and Expert maps. The larger maps retain their two-digit index references inside each node marker for quick look-up. The three generated networks have been expanded into a consistent board footprint without changing their road connections or distorting the bearings shown to players.
+
 **Opening and periodic watcher sightings remain available in every solo difficulty, regardless of Standard or Guided mode.** Their bearings are given in the clue notebook as text; they are not drawn on the map. Every timed sighting remains stamped with its observation round. Hunters also earn trace clues when visiting recent Monster locations.
 
 Monster AI uses legal roads, the publicly visible Hunter location and history, and its own private recent trail. Four AI profiles vary evasion, avoidance of recent traces, route look-ahead and randomness. **The AI cannot see the Hunter's future decisions.** Given the same seed and moves, its decisions are reproducible for tests.
