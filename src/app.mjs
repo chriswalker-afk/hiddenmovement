@@ -637,7 +637,7 @@ function movementForm(view) {
       (view.powers?.lanternCharges>0?'<button id="use-lantern" class="lantern-button" '+
         (left===0?'disabled':'')+'>✧ SIGNAL LANTERN · USE 1 MOVE</button>':'')+
       '</div>' : '')+
-    '<button id="open-tutorial-game" class="field-guide-link" type="button">BEARINGS FIELD TRAINING ↗</button>'+
+    '<button id="open-tutorial-game" class="field-guide-link" type="button">HOW TO HUNT &amp; BEARINGS TRAINING ↗</button>'+
     '</section>';
 }
 
@@ -905,11 +905,43 @@ function hudMissionSummary(view) {
   return 'FIND THE MONSTER BEFORE ROUND '+view.maxRounds;
 }
 
+function guidedCoachPanel(view) {
+  const tip=guidedCoach(view,currentMap());
+  if(!tip) return '';
+  return '<section class="panel coach-panel" aria-label="Guided step-by-step help">'+
+    '<span class="eyebrow">YOUR HUNTING COACH · '+tip.remaining+
+      ' ROUND'+(tip.remaining===1?'':'S')+' LEFT</span>'+
+    '<h3>'+esc(tip.title)+'</h3>'+
+    '<p class="coach-instruction">'+esc(tip.instruction)+'</p>'+
+    '<div class="coach-mini-checklist">'+
+      '<strong>EVERY TURN</strong>'+
+      '<p>1 · READ CLUES &nbsp; 2 · PLAN &nbsp; 3 · MEASURE &nbsp; 4 · SEARCH &nbsp; 5 · DEDUCE</p>'+
+    '</div>'+
+    (tip.example && tip.stepsLeft>0?
+      '<div class="coach-example">'+
+        '<span class="eyebrow">OPTIONAL WORKED ROAD EXAMPLE</span>'+
+        '<p>From <strong>'+esc(tip.example.from)+'</strong>, look at the road towards <strong>'+
+          esc(tip.example.to)+'</strong>. Measure clockwise from north first.</p>'+
+        (coachAnswerVisible
+          ?'<p class="coach-reveal-answer">Correct road bearing: <strong>'+
+              esc(tip.example.bearing)+'</strong></p>'
+          :'<button id="coach-reveal" type="button" class="secondary-button">REVEAL BEARING IN TEXT</button>')+
+        '<p class="coach-disclaimer">This example is only text: no line will be drawn on the map.</p>'+
+      '</div>':'')+
+    '<div class="coach-actions">'+
+      '<button id="coach-open-clues" type="button" class="secondary-button">READ MY CLUES</button>'+
+      (tip.stepsLeft>0?'<button id="coach-open-protractor" type="button" class="secondary-button">'+
+        (protractorVisible?'HIDE PROTRACTOR':'SHOW PROTRACTOR')+'</button>':'')+
+      '<button id="coach-training" type="button" class="field-guide-link">FULL HOW-TO GUIDE &amp; PRACTICE ↗</button>'+
+    '</div></section>';
+}
+
 function hudTabsHtml(view) {
   const isMonster=view.phase==='monster';
   const tabs=isMonster
     ? [['trail','TRAIL'],['mission','MISSION']]
-    : [['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
+    : [...(view.guided?[['coach','COACH']]:[]),
+       ['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
        ['stats','FEEDBACK']];
   const chosen=tabs.some(([id])=>id===hudTab)?hudTab:tabs[0][0];
   const tabBar=tabs.map(([id,label])=>'<button type="button" role="tab" id="hud-tab-'+id+
@@ -917,6 +949,7 @@ function hudTabsHtml(view) {
     '" tabindex="'+(chosen===id?'0':'-1')+'">'+label+'</button>').join('');
   const panels={
     trail:()=>monsterTrailPanel(view),
+    coach:()=>guidedCoachPanel(view),
     clues:()=>notebook(view),
     notes:()=>annotationsPanel(),
     mission:()=>view.scenario==='classic'
@@ -1248,6 +1281,19 @@ function render() {
       render();
     });
   });
+  document.getElementById('coach-open-clues')?.addEventListener('click',()=>{
+    hudTab='clues';render();
+  });
+  document.getElementById('coach-open-protractor')?.addEventListener('click',()=>{
+    protractorVisible=!protractorVisible;
+    protractorPosition=null;
+    protractorBearing=0;
+    render();
+  });
+  document.getElementById('coach-reveal')?.addEventListener('click',()=>{
+    coachAnswerVisible=true;render();
+  });
+  document.getElementById('coach-training')?.addEventListener('click',openTutorial);
   bindMapZoom();
   document.getElementById('move-form').addEventListener('submit',event=>{
     event.preventDefault();
@@ -1258,6 +1304,7 @@ function render() {
       :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
     if(before!==after) {
+      coachAnswerVisible=false;
       resetProtractor(view.phase==='hunter' && game.mode==='solo');
       if(view.phase==='hunter' && result.ok && game.hunterOutcome)
         searchReportOpen=true;
@@ -1265,6 +1312,7 @@ function render() {
     render();
   });
   document.getElementById('end-turn')?.addEventListener('click',()=>{
+    coachAnswerVisible=false;
     searchReportOpen=false;
     endHunterTurn(game);
     resetProtractor(game.mode==='solo');
