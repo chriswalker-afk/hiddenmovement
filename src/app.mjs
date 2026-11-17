@@ -805,22 +805,39 @@ function monsterPortrait(difficulty,cssClass='') {
 }
 
 /** Solo level encounter shown before the first movement. No secret state. */
+/** Illustrated Solo briefing: the round limit is always the current level's. */
 function monsterIntroductionHtml(view) {
   const m=monsterFor(view.difficulty);
+  const briefing=hunterBriefing(view);
+  const level=String(Object.keys(MONSTERS).indexOf(view.difficulty)+1).padStart(2,'0');
   return '<div class="encounter-backdrop" data-encounter="intro">'+
-    '<section class="encounter-card monster-encounter" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
-      '<div class="encounter-art">'+monsterPortrait(view.difficulty)+'</div>'+
-      '<div class="encounter-copy">'+
-        '<span class="eyebrow">LEVEL '+String(Object.keys(MONSTERS).indexOf(view.difficulty)+1).padStart(2,'0')+
-          ' · '+esc(m.home.toUpperCase())+'</span>'+
-        '<span class="encounter-kicker">YOUR QUARRY</span>'+
-        '<h1 id="monster-intro-title">'+esc(m.name)+'</h1>'+
-        '<p class="encounter-title">'+esc(m.title)+'</p>'+
-        '<p class="encounter-story">'+esc(m.flavour)+'</p>'+
-        '<div class="monster-power-summary"><strong>'+esc(m.powerTitle)+'</strong>'+
-          '<p>'+esc(m.powerText)+'</p></div>'+
-        '<p class="encounter-tip">Bearings are measured clockwise from north. Every claimed location is worth investigating.</p>'+
-        '<button type="button" id="intro-begin" class="primary-button">BEGIN THE HUNT →</button>'+
+    '<section class="encounter-card monster-encounter hunter-briefing" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
+      '<div class="encounter-art hunter-briefing-art">'+
+        '<img class="briefing-hunter-illustration" src="./assets/characters/monster-hunter.svg" alt="A monster hunter with a lantern, map and compass"/>'+
+        '<div class="briefing-quarry-portrait">'+
+          monsterPortrait(view.difficulty)+
+          '<span>'+esc(m.name)+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="encounter-copy briefing-copy">'+
+        '<span class="eyebrow">LEVEL '+level+' · '+esc(m.home.toUpperCase())+
+          ' · '+briefing.roundLimit+' ROUNDS</span>'+
+        '<span class="encounter-kicker">YOUR MISSION BRIEFING</span>'+
+        '<h1 id="monster-intro-title">'+esc(briefing.heading)+'</h1>'+
+        '<h2 class="briefing-monster-name">FIND '+esc(m.name.toUpperCase())+'</h2>'+
+        '<p class="briefing-text">'+esc(briefing.goal)+'</p>'+
+        '<p class="briefing-text">'+esc(briefing.evidence)+'</p>'+
+        '<p class="briefing-text briefing-warning">'+esc(briefing.warning)+'</p>'+
+        (briefing.missionWarning?'<p class="briefing-mission-warning">'+esc(briefing.missionWarning)+'</p>':'')+
+        '<div class="briefing-deadline"><strong>'+briefing.roundLimit+' ROUNDS</strong>'+
+          '<span>'+esc(briefing.deadline)+'</span></div>'+
+        '<div class="briefing-steps" aria-label="Your first steps">'+
+          '<span>1 · READ CLUES</span><span>2 · MEASURE BEARINGS</span><span>3 · SEARCH LOCATIONS</span>'+
+        '</div>'+
+        '<div class="briefing-actions">'+
+          '<button id="intro-begin" type="button" class="primary-button">BEGIN THE HUNT →</button>'+
+          '<button id="intro-help" type="button" class="secondary-button">HOW TO PLAY</button>'+
+        '</div>'+
       '</div></section></div>';
 }
 
@@ -865,6 +882,7 @@ function bindEncounters() {
     persistNow();
     render();
   });
+  document.getElementById('intro-help')?.addEventListener('click',openTutorial);
   document.getElementById('report-continue')?.addEventListener('click',()=>{
     searchReportOpen=false;
     if(game.phase!=='over')persistNow();
