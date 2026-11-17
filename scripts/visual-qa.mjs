@@ -462,6 +462,10 @@ try{
     assert.equal(await county.locator('.node[data-node-note="E28"]').count(),1);
     assert.equal(await county.locator('.node[data-node-note="E36"]').count(),1);
     assert.equal(await county.locator('.ravenmarch-landmark-blackwater-bridge').count(),1);
+    if(viewport.name==='mobile')
+      assert.ok(await county.locator('.map-heading h2').evaluate(el=>
+        el.scrollWidth<=el.clientWidth+1),
+        'Show the full Ravenmarch County map name on ordinary portrait phones');
     assert.equal(await county.locator('.illustrated-scenery').getAttribute('aria-hidden'),'true');
     assert.equal(await county.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0);
     await measure(county,'ravenmarch-'+viewport.name);
