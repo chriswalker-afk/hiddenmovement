@@ -1,12 +1,12 @@
 {
   "name": "shadow-bearings",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "description": "An original hidden-movement game for learning three-figure bearings.",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/app.mjs && node --check src/engine.mjs && node --check src/map.mjs && node --check src/geometry.mjs && node --check src/ai.mjs && node --check scripts/simulate.mjs && node --check src/deduction.mjs && node --check src/tutorial.mjs && node --check src/scenarios.mjs && node --check src/scenery.mjs && node --check src/persistence.mjs && node --check scripts/package-site.mjs && node --check src/protractor.mjs && node --check src/waterways.mjs && node --check src/monsters.mjs && node --check src/monster-powers.mjs",
+    "check": "node --check src/app.mjs && node --check src/engine.mjs && node --check src/map.mjs && node --check src/geometry.mjs && node --check src/ai.mjs && node --check scripts/simulate.mjs && node --check src/deduction.mjs && node --check src/tutorial.mjs && node --check src/scenarios.mjs && node --check src/scenery.mjs && node --check src/persistence.mjs && node --check scripts/package-site.mjs && node --check src/protractor.mjs && node --check src/waterways.mjs && node --check src/monsters.mjs && node --check src/monster-powers.mjs && node --check src/hunter-guide.mjs",
     "simulate": "node scripts/simulate.mjs",
     "build:site": "node scripts/package-site.mjs"
   },
