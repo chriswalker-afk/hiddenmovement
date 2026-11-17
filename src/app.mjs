@@ -344,6 +344,9 @@ function mapSvg(view) {
     '<polyline class="monster-trail" points="'+monsterTrail.map(t=>currentMap().nodes[t.node].x+','+currentMap().nodes[t.node].y).join(' ')+'"/>' : '';
   const eligible=new Set(view.eligibleSpawns||[]);
   const monsterNeighbours = view.phase==='monster' ? new Set(currentMap().adjacency[view.monster]) : new Set();
+  const mapNodeCount=Object.keys(currentMap().nodes).length;
+  const labelDensity=mapNodeCount>=30?'expert':mapNodeCount>=24?'tracker':
+    mapNodeCount>=18?'apprentice':'intro';
   const dots=Object.values(currentMap().nodes).map(n=>{
     const isHunter=view.hunter===n.id;
     const isMonsterHere=(view.phase==='monster'||isOver)&&view.monster===n.id;
@@ -372,8 +375,13 @@ function mapSvg(view) {
       (analysis?.constrained && candidateSet.has(n.id)?'<circle r="25" class="candidate-halo"/>':'') +
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
-       isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':'')+
-      '<text y="-23" class="node-label" text-anchor="middle">'+esc(Object.keys(currentMap().nodes).length > 18 ? (n.label || n.name) : n.name)+'</text>' +
+       isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':
+       n.label?'<text y="4" text-anchor="middle" class="node-number">'+esc(n.label)+'</text>':'')+
+      // Always print the full place name on the map. Numbers remain *inside*
+      // the marker as a reference to the expandable index, never as a
+      // substitute for the name (previously the 26/36-node maps did this).
+      '<text y="-25" class="node-label node-label-'+labelDensity+
+        '" text-anchor="middle">'+esc(n.name)+'</text>' +
       (exit?'<text x="25" y="8" class="goal-label">GATE</text>':'')+
       (beacon?'<text x="23" y="8" class="goal-label">'+(dark?'OUT':'BEACON')+'</text>':'')+
       (mark?'<text y="34" text-anchor="middle" class="mark-symbol">'+(mark==='possible'?'?':'×')+'</text>':'');
@@ -390,10 +398,14 @@ function mapSvg(view) {
       '<filter id="moor-glow"><feGaussianBlur stdDeviation="11"/></filter>' +
     '</defs>' +
     renderScenery(currentMap().theme) +
-    '<text x="65" y="70" class="terrain-label">'+esc(terrainNames[0])+'</text>' +
-    '<text x="633" y="53" class="terrain-label">'+esc(terrainNames[1])+'</text>' +
-    '<text x="41" y="691" class="terrain-label">'+esc(terrainNames[2])+'</text>' +
-    '<text x="691" y="691" class="terrain-label">'+esc(terrainNames[3])+'</text>' +
+    // Scenic captions belong to the sparsely populated Intro illustration.
+    // On larger maps, reserve this space for genuine named locations.
+    (mapNodeCount<=14 ?
+      '<text x="65" y="70" class="terrain-label">'+esc(terrainNames[0])+'</text>' +
+      '<text x="633" y="53" class="terrain-label">'+esc(terrainNames[1])+'</text>' +
+      '<text x="41" y="691" class="terrain-label">'+esc(terrainNames[2])+'</text>' +
+      '<text x="691" y="691" class="terrain-label">'+esc(terrainNames[3])+'</text>'
+      : '') +
     '<g class="roads">'+paths+'</g>' +
     '<g>'+plotted+'</g>' +
     hunterPath+monsterPath+
@@ -432,7 +444,7 @@ function mapFrame(view) {
       '<div class="map-zoom-controls" aria-label="Map zoom controls">'+
         '<button type="button" id="map-zoom-out" aria-label="Zoom out" '+(mapZoom<=1?'disabled':'')+'>−</button>'+
         '<output aria-label="Map zoom">'+Math.round(mapZoom*100)+'%</output>'+
-        '<button type="button" id="map-zoom-in" aria-label="Zoom in" '+(mapZoom>=2?'disabled':'')+'>+</button>'+
+        '<button type="button" id="map-zoom-in" aria-label="Zoom in" '+(mapZoom>=3?'disabled':'')+'>+</button>'+
       '</div></div></div>' +
     '<div class="map-frame">'+mapSvg(view)+'</div>' +
     '<div class="map-key">' +
@@ -808,7 +820,7 @@ function bindProtractor() {
 function bindMapZoom() {
   bindProtractor();
   document.getElementById('map-zoom-in')?.addEventListener('click',()=>{
-    mapZoom=Math.min(2,Math.round((mapZoom+0.25)*100)/100);
+    mapZoom=Math.min(3,Math.round((mapZoom+0.25)*100)/100);
     render();
   });
   document.getElementById('map-zoom-out')?.addEventListener('click',()=>{

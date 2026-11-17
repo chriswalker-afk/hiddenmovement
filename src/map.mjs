@@ -120,6 +120,24 @@ function makeRegion(id, title, subtitle, theme, rowLengths, locationNames) {
     }
   }
   for (const id of Object.keys(adjacency)) adjacency[id].sort();
+
+  // Lay out roads with their original topology first, then expand the entire
+  // network uniformly along each board axis. Earlier maps used as little as
+  // 46% of the available width. Repositioning nodes AFTER connecting them
+  // preserves the exact graph (and never introduces new/crossing roads).
+  // Do not apply an SVG-only stretch: visual bearings must agree with the
+  // coordinates used by the geometry engine and optional protractor.
+  const xs = dots.map(n => n.x);
+  const ys = dots.map(n => n.y);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const fit = (value, low, high, targetLow, targetHigh) =>
+    Math.round((targetLow + (value - low) * (targetHigh - targetLow) / (high - low)) * 10) / 10;
+  for (const node of dots) {
+    node.x = fit(node.x, xMin, xMax, 95, 905);
+    node.y = fit(node.y, yMin, yMax, 95, 640);
+  }
+
   const middleRow = Math.floor((rowLengths.length - 1) / 2);
   const hunterStart = dots.find(n => n.row === middleRow && n.col === 0).id;
   return Object.freeze({ id, title, subtitle, theme, nodes, edges, adjacency, hunterStart });
