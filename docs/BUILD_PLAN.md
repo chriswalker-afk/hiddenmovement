@@ -253,3 +253,14 @@
 - Test transitions, evidence semantics, local resume, privacy, all four maps and desktop/phone full browser action walkthroughs. No gameplay, clues, ability powers, board geometry or victory rules are altered.
 
 **Next:** Student usability trial of the onboarding: can learners enable/position a protractor, interpret a clue, optionally use deduction and move correctly without oral teacher instructions? Refine arrow visibility and explanation wording based on feedback.
+
+
+## PR21 — Explicit end-of-Hunter-turn to hidden Monster movement (18 November 2026)
+
+- **Clear phase boundary:** After both Hunter routes (or an action that consumes the last route), immediately replace the now-inactive bearing input form with a dedicated Hunter-movement-complete panel. Hide the manual Protractor and its controls until a new turn permits movement.
+- **High-visibility action:** A full-width, readable, high-contrast gold **BEGIN MONSTER’S HIDDEN MOVEMENT** button starts the actual AI secret move only on a deliberate user click. The Hunter can inspect public evidence first; exhausting moves alone does not execute any AI action.
+- **Correct alternatives:** With a route still available, keep a smaller **END HUNTER TURN EARLY** option. In two-player pass-and-play, the end-turn button explicitly begins the **sealed handoff**, not the private Monster's actual move. In the final round, show **FINISH FINAL ROUND · SEE RESULTS**, because this transition ends the game without another Monster move.
+- **Tutorial consistency:** Keep the Guided step anchored to the prominent same `#end-turn` button and update contextual Coach instructions to match the real action label; never expose private Monster information.
+- **Acceptance:** Automated tests assert that 0-step Hunter screens omit the bearing form, disabled input and protractor, while retaining map/clues/end-turn; that Monster AI state remains identical until the button is pressed; and that all modes and devices preserve phase correctness, responsiveness, and sealed handoff privacy.
+
+**Next:** Classroom test of the end-of-turn affordance, including small mobile/landscape displays and students who finish their turn early.
