@@ -1256,3 +1256,165 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 @media(max-width:490px){
   .hud-tabs button{font-size:.48rem;padding:5px 2px}
 }
+
+
+/* PR11 · Hunter Forge — original dark ink-and-wash modular character builder. */
+.forge-launch{
+  width:min(100%,780px);margin:9px auto 14px;padding:6px 10px;
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(110deg,#172f36,#203338);
+  border:1px solid #7b8e79;min-height:60px;
+  text-align:left;box-shadow:inset 0 1px #9ba58825
+}
+.forge-launch-portrait{
+  width:48px;height:48px;display:block;flex:none;overflow:hidden;
+  border:1px solid #ac9670;background:#122731
+}
+.forge-launch-art{display:block;height:100%;width:100%}
+.forge-launch-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.forge-launch-copy strong{font:.76rem 'Cinzel',Georgia,serif;letter-spacing:.06em;color:#f0d5a2}
+.forge-launch-copy small{font-size:.69rem;line-height:1.25;color:#b9c9bc}
+.forge-launch-button,.forge-back{
+  border:1px solid #c2a578;color:#f1deb8;background:#233c43;
+  font-size:.68rem;font-weight:700;letter-spacing:.05em;
+  padding:10px 13px;min-height:37px;white-space:nowrap
+}
+.forge-launch-button:hover,.forge-back:hover{border-color:#f1d8a6;background:#35504e}
+.forge-shell{
+  min-height:100dvh;padding:19px clamp(12px,2.6vw,32px) 22px;
+  background:radial-gradient(ellipse at 28% 21%,#31483f99,transparent 52%),
+    linear-gradient(#0d1b25,#121e27);color:#e7e6d8
+}
+.forge-inner{max-width:1150px;margin:auto}
+.forge-header{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:0 3px 16px
+}
+.forge-header h1{
+  color:#efe6d3;margin:4px 0 7px;font-size:clamp(1.75rem,3vw,2.5rem);
+  font-weight:500;letter-spacing:.065em
+}
+.forge-header h1 em{font-style:normal;color:#dbb779}
+.forge-header p{font-size:.83rem;line-height:1.4;color:#b7c6bc;margin:0}
+.forge-workspace{
+  display:grid;grid-template-columns:minmax(290px,.88fr) minmax(0,1.12fr);
+  min-height:550px;height:min(700px,calc(100dvh - 180px));
+  border:1px solid #b49a6b;box-shadow:0 18px 50px #0008;
+  background:#122932
+}
+.forge-display{
+  min-height:0;min-width:0;overflow:hidden;
+  display:grid;grid-template-rows:minmax(0,1fr) auto auto;
+  background:#12242e;border-right:1px solid #827559
+}
+.forge-art-stage{
+  min-height:0;overflow:hidden;position:relative;
+  background:radial-gradient(ellipse at 50% 39%,#59706440,transparent 55%),#13212a;
+  display:grid;place-items:center
+}
+.forge-art-stage::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 50px #08131d65
+}
+.forge-preview-portrait{
+  height:100%;width:100%;max-width:370px;display:block;
+  object-fit:contain;filter:drop-shadow(0 12px 9px #07151a)
+}
+.forge-display-footer{
+  padding:10px 17px;display:grid;gap:3px;background:#1e343a;
+  border-top:1px solid #627168
+}
+.forge-display-footer strong{color:#e8d1a3;font:600 1rem 'Cinzel',Georgia,serif}
+.forge-display-footer small{font-size:.7rem;color:#b9cec5}
+.forge-preview-actions{display:flex;gap:7px;padding:10px 13px;background:#132b34}
+.forge-preview-actions button,.forge-session-button{
+  flex:1;border:1px solid #798d7a;background:#26433f;color:#e8dbb7;
+  padding:9px 6px;font-size:.68rem;font-weight:700;letter-spacing:.04em
+}
+.forge-preview-actions button:hover,.forge-session-button:hover{background:#355750}
+.forge-settings{
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+  background:#1b3038
+}
+.forge-settings-header{
+  flex:none;display:flex;align-items:baseline;justify-content:space-between;
+  gap:10px;padding:14px 18px;border-bottom:1px solid #61766b
+}
+.forge-settings-header strong{color:#edcf9f;font-size:.75rem;letter-spacing:.09em}
+.forge-settings-header span{color:#bacac0;font-size:.66rem}
+.forge-choices-scroll{flex:1;overflow:auto;min-height:0;padding:7px 15px 12px;scrollbar-color:#8b957a #1b3038}
+.forge-choice-section{margin:12px 0 21px}
+.forge-section-head{display:flex;align-items:baseline;gap:9px;justify-content:space-between;margin-bottom:8px}
+.forge-section-head h2{
+  margin:0;color:#eed7af;letter-spacing:.055em;font:600 .81rem 'Cinzel',Georgia,serif
+}
+.forge-section-head small{color:#aebfb8;font-size:.63rem;line-height:1.3;text-align:right}
+.forge-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.forge-option{
+  min-width:0;display:flex;align-items:center;gap:10px;text-align:left;min-height:52px;
+  border:1px solid #5f786f;background:#223c42;color:#dce7dc;
+  padding:9px 10px;font-size:.73rem;line-height:1.3;
+  transition:border-color .13s,background .13s
+}
+.forge-option:hover{border-color:#dbbd85;background:#2c4948}
+.forge-option[aria-pressed=true]{
+  border:2px solid #e4c58c;background:#3e4d42;
+  color:#ffe4ad;box-shadow:inset 0 0 0 1px #896d48
+}
+.forge-choice-mark{
+  width:25px;height:25px;flex:none;border-radius:50%;display:grid;place-items:center;
+  color:#e9cea1;border:1px solid #879b81;background:#172b35
+}
+.forge-colour-chip,.forge-skin-chip{
+  width:30px;height:30px;flex:none;border-radius:50%;border:2px solid #ddc694;
+  box-shadow:0 1px 5px #0b151a
+}
+.forge-colour-chip{
+  background:conic-gradient(var(--chip-1) 0 48%,var(--chip-2) 48% 73%,var(--chip-3) 73% 100%)
+}
+.forge-bottom{padding:9px 13px 12px;background:#142a31;border-top:1px solid #6c7868}
+.forge-saving-note{color:#b9cbbd;font-size:.7rem;line-height:1.4;margin:0 0 8px}
+.forge-bottom .primary-button{width:100%;min-height:42px}
+.forge-session-button{width:100%;margin-top:7px}
+.forge-future-note{color:#a9bbad;font-size:.72rem;text-align:center;line-height:1.4;margin:12px 0 0}
+.briefing-hunter-illustration{display:block;object-fit:contain;object-position:center center}
+.hunter-briefing-art .briefing-hunter-illustration{object-fit:contain;object-position:center center}
+.guide-character-art{display:block;height:100%;width:100%;object-fit:contain}
+.hud-hunter-avatar{
+  display:block;flex:none;width:40px;height:40px;overflow:hidden;
+  border:1px solid #b3a27e;background:#112932;
+}
+.hud-hunter-art{display:block;width:100%;height:100%}
+.hud-status-main{align-items:center}
+@media(max-width:800px){
+  .forge-workspace{height:auto;min-height:0;grid-template-columns:minmax(0,1fr)}
+  .forge-display{border-right:0;border-bottom:1px solid #827559;grid-template-rows:300px auto auto}
+  .forge-preview-portrait{max-width:320px}
+  .forge-settings{min-height:470px;max-height:620px}
+  .forge-settings-header{flex-wrap:wrap}
+  .forge-choices-scroll{max-height:440px}
+  .forge-shell{overflow:auto}
+  .forge-header{flex-wrap:wrap}
+  .hud-hunter-avatar{width:28px;height:28px}
+}
+@media(max-width:520px){
+  .forge-launch{gap:7px;padding:5px 7px}
+  .forge-launch-copy small{font-size:.62rem}
+  .forge-launch-portrait{width:38px;height:38px}
+  .forge-launch-button{font-size:.57rem;min-height:33px;padding:7px}
+  .forge-shell{padding:11px 9px 21px}
+  .forge-header h1{font-size:1.64rem}
+  .forge-header p{font-size:.74rem}
+  .forge-back{padding:8px;font-size:.58rem}
+  .forge-display{grid-template-rows:260px auto auto}
+  .forge-settings{min-height:540px}
+  .forge-option{font-size:.67rem;gap:6px;min-height:49px;padding:6px}
+  .forge-section-head{flex-direction:column;gap:3px}
+  .forge-settings-header span{font-size:.59rem}
+  .hud-hunter-avatar{width:23px;height:23px}
+  .hud-status-main{gap:5px}
+  .hunter-briefing-art .briefing-hunter-illustration{object-position:center center!important}
+}
+@media(max-height:520px) and (min-width:801px){
+  .forge-workspace{height:calc(100dvh - 135px);min-height:350px}
+}
