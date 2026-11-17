@@ -1,65 +1,86 @@
 # Shadow Bearings
 
-**A bearings-based hidden-movement game for the mathematics classroom.**
+**A hidden-movement adventure that makes three-figure bearings part of the strategy.**
 
-One student plays the **Hunter**, seeking a hidden **Monster** across the Hollow Moor. Both players travel by entering **three-figure bearings clockwise from north**, and the Hunter collects time-stamped directional clues when visiting a location the Monster has recently passed through.
+One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and can combine these with occasional public sightings in solo mode.
 
-## Playable PR1: pass-and-play prototype
+## Playable modes (PR1 + PR2)
 
-The first working version includes:
+### Solo Hunt — Hunter versus Monster AI
 
-- An original, illustrated 14-location map with connected routes and a clear north compass.
-- Validated three-figure bearings (e.g. \`035\`, \`180\`, \`270\`) and helpful input errors.
-- Hunter movement up to **two roads per turn** and Monster movement **one road per turn**.
-- Secret Monster starting location, chosen at least **three route-steps** from the Hunter's Watchtower.
-- Trails that last **five rounds**; fresh traces give bearings with a **±15°** sector, recorded against an explicit observation round.
-- Alternating *bearing of the monster from a location* and *bearing of that location from the monster*, introducing reverse bearings.
-- Clue notebook and optional map overlay for the latest clue.
-- Pass-the-device screens that **show no map or role secrets**. Private views also re-seal when the page is backgrounded.
-- Hunter win on capture; Monster win if not found by the end of round 13.
-- End-of-game reveal of the full Monster route.
-- Automated unit tests and GitHub Actions checks.
+On the title screen, choose **Solo Hunt**, then one of four difficulty levels. The Monster automatically takes a hidden move after each completed Hunter turn. The Hunter sees only public information and does not need to pass the device.
 
-### How to try it
+| Difficulty | Locations | Trail clue accuracy | Trail lasts | Sightings | Monster style | Maximum rounds |
+|---|---:|---|---:|---|---|---:|
+| Intro | 14 — Hollow Moor | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
+| Apprentice | 18 — Thornwood Vale | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
+| Tracker | 26 — Sunken Lowlands | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
+| Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
 
-No build or package install is needed. Serve the repository as static files and open it in a browser:
+All solo difficulties begin with a public sighting at round 0. Its direction is approximate, with uncertainty that increases at higher levels. Subsequent sightings are calculated **after the Monster moves** and stamped with the observed round. Traces still award separate clues only when the Hunter reaches a recent Monster visit.
+
+Monster AI uses legal roads, the publicly visible Hunter location and history, and its own private recent trail. Four AI profiles vary evasion, avoidance of recent traces, route look-ahead and randomness. **The AI cannot see the Hunter's future decisions.** Given the same seed and moves, its decisions are reproducible for tests.
+
+The Tracker and Expert modes provide progressively less precise information about *when* a trail was left. The clue itself is always mathematically truthful for its recorded observation round.
+
+### Pass & Play — Hunter versus a human Monster
+
+The original 14-location Hollow Moor mode remains available. The Monster picks a secret starting point, then the two players alternate.
+
+**Handoff privacy:** all board, clue and position information is replaced by an entirely blank role-transition view containing only the requested handoff text and a reveal button. Switching away from the page re-seals an active two-player role view. In Solo Hunt, the Monster never has a visible role view.
+
+## Movement and winning
+
+- Use exactly **three digits** such as \`035\`, \`180\` or \`270\`, clockwise from north. \`360\` is treated as north, \`000\`.
+- Enter an exit bearing to move along a **connected road**; tolerance is ±6°.
+- The Hunter moves **up to two roads per turn**, stopping early if desired. A human or computer Monster moves **one road after the Hunter finishes**.
+- Reaching the Monster's current location wins immediately. The Monster wins if the Hunter finishes the final round without capture.
+- Recent visit traces trigger a bearing clue, sometimes worded in reverse (the bearing of the trace location *from* the Monster). Observation rounds are explicitly labelled.
+- The clue notebook can draw a ray for an exact bearing or a sector for a range. On larger maps, use the expandable **Location Index** to match numbered locations to names.
+- At the end of the game, the full Monster trail is revealed.
+
+## Running locally
+
+No application dependencies or compilation are required. Serve the files with any static HTTP server:
 
 \`\`\`bash
 python3 -m http.server 8000
 \`\`\`
 
-Then visit **http://localhost:8000/**. (On some Windows setups, \`py -m http.server 8000\` is the available command.)
+Open **http://localhost:8000/**. Windows often uses \`py -m http.server 8000\`.
 
-Because the game uses native ES modules, **do not** open \`index.html\` directly as a \`file://\` URL.
+**Do not** double-click \`index.html\` via \`file://\`: native JavaScript modules require an HTTP server.
 
-### How to play
+## Testing and tuning
 
-1. Choose **Pass & Play**. Hand the device to the Monster on the blank privacy screen.
-2. The Monster chooses an eligible starting point from the purple locations and confirms. The game automatically hides the map and asks for the device to be handed back.
-3. The Hunter enters three-figure bearings to travel along connected roads, for up to **two edges**. They may finish early.
-4. When the Hunter reaches a location on a recent Monster trail, they gain a clue specifying a compass direction (or reverse bearing) **at the end of a particular round**.
-5. The Monster receives the device on a completely blank transition screen, reveals their private map, and enters the bearing of **one road** to move. The Monster sees the Hunter's public location and their own hidden trail.
-6. The Hunter wins by arriving at the Monster's current location. The Monster wins by surviving the final Hunter turn.
-
-**Privacy limitation:** the handoff is intended for cooperative classroom pass-and-play, not for security against an adversary able to inspect browser memory, developer tools, or source code. Two-device competitive multiplayer should use a server-authoritative design.
-
-## Not yet implemented
-
-- **Solo AI / difficulty presets:** planned PR2.
-- **Advanced deduction and tutorial scaffolding:** planned PR3.
-- **Artwork polish, scenario variety, GitHub Pages deployment:** planned PR4.
-
-## Development
+Node.js 20+ is used for development checks:
 
 \`\`\`bash
 npm test
 npm run check
+npm run simulate
 \`\`\`
 
-Node.js 20+ is needed for tests, but not for playing in the browser. The application has no runtime package dependencies.
+\`npm test\` covers bearings, map validity, north wrapping, trail clue provenance, capture, AI legality, no secret state in Hunter views, seeded repeatability, solo full-round progression and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
 
-The source is split into \`src/geometry.mjs\` (bearings), \`src/map.mjs\` (validated map graph), \`src/engine.mjs\` (game rules / state isolation), and \`src/app.mjs\` (role-specific screens and UI).
+\`npm run simulate\` runs **60 fixed-seed games per difficulty** with a baseline Hunter bot. That bot uses only its public view, not the Monster's hidden position. Override the sample size with \`SIM_GAMES=200 npm run simulate\`. The results report capture rates, average rounds, trace discoveries and sightings. They are debugging benchmarks, **not evidence of classroom balance**; student playtesting is still needed.
 
-See [Game Design](docs/GAME_DESIGN.md) and [Build Plan](docs/BUILD_PLAN.md).
+The application remains dependency-free at runtime. Sources:
 
-This is an **original game** inspired by the hidden-movement genre. It does not reuse copyrighted art, named characters, or lore from existing games.
+- \`src/geometry.mjs\` — bearings, angle ranges, graph distance
+- \`src/map.mjs\` — four connected maps with validation
+- \`src/ai.mjs\` — deterministic random generator, spawning and evasion logic
+- \`src/engine.mjs\` — game rules and strictly role-specific view projections
+- \`src/app.mjs\` — screens, movement controls, clues and illustrated SVG maps
+- \`scripts/simulate.mjs\` — reproducible public-information playtest baseline
+
+## Future work
+
+**PR3:** richer deduction tools, tutorials, interactive bearing scaffolds and classroom accessibility.  
+**PR4:** more cohesive original artwork, scenarios and hosted deployment.
+
+**Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
+
+[Game design](docs/GAME_DESIGN.md) · [Build plan](docs/BUILD_PLAN.md)
+
+This is an **original hidden-movement game**; its artwork, setting, characters and terms do not reuse copyrighted elements of existing games.

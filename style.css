@@ -198,3 +198,74 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .end-actions{flex-direction:column}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+
+/* PR2: progressive solo-map selection */
+.difficulty-shell{
+  min-height:100vh;
+  background:radial-gradient(ellipse at 50% 0,rgba(72,114,105,.19),transparent 60%),#0c1720;
+  padding:40px 22px 65px;
+}
+.difficulty-inner{max-width:1110px;margin:0 auto}
+.difficulty-inner>.eyebrow{display:block;text-align:center;margin-top:18px}
+.back-button{padding:10px 0;margin:0}
+.difficulty-inner h1{
+  text-align:center;font-weight:500;letter-spacing:.06em;font-size:clamp(1.7rem,4vw,3.1rem);
+  margin:16px 0 10px;color:#f0ece0
+}
+.difficulty-inner h1 em{font-style:normal;color:var(--gold)}
+.difficulty-inner>p{
+  color:#b4c7c0;text-align:center;margin:0 auto 27px;max-width:670px;
+  line-height:1.7;font-size:.91rem
+}
+.difficulty-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.difficulty-card{
+  text-align:left;border:1px solid #58736b;padding:24px 20px;min-height:320px;
+  background:#213a39;color:var(--ink);display:flex;flex-direction:column;align-items:flex-start;
+  border-radius:3px;transition:transform .18s,border-color .18s,box-shadow .18s
+}
+.difficulty-card:hover{transform:translateY(-3px);border-color:#efd49b;box-shadow:0 16px 30px #050d1599}
+.difficulty-apprentice{background:#1e393a}
+.difficulty-tracker{background:#204047}
+.difficulty-expert{background:#302b42}
+.difficulty-level{font-size:.62rem;font-weight:700;letter-spacing:.13em;color:#f1d192;line-height:1.5}
+.difficulty-level>span{color:#adccc5;display:block;margin-top:3px}
+.difficulty-card strong{font:500 1.4rem 'Cinzel',Georgia,serif;margin:28px 0 6px;color:#f7f1dc}
+.difficulty-tagline{font-family:Georgia,serif;font-size:.94rem;font-style:italic;color:#e1c58a}
+.difficulty-description{color:#bed0c7;font-size:.8rem;line-height:1.7;margin-top:17px}
+.difficulty-card .mode-link{padding-top:27px}
+.difficulty-footer{margin-top:26px!important;font-size:.77rem!important}
+.location-index{margin:4px 0 18px;border:1px solid var(--edge);background:#192e35;padding:0 15px 15px;color:#c8d9cf}
+.location-index summary{cursor:pointer;font-size:.65rem;font-weight:700;letter-spacing:.11em;color:#e2ca93;padding:13px 0;line-height:1.6}
+.location-index-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 10px}
+.location-index-grid>span{font-size:.72rem}
+.location-index-grid b{color:#dbbf8c;font-size:.67rem;margin-right:4px}
+.sighting-card{border-color:#83c5b7!important;background:#16383e}
+.sighting-card .clue-meta{color:#b0e2cb}
+.clue-meta{flex-wrap:wrap;line-height:1.45}
+.world-svg.theme-woodland>rect:first-of-type{fill:#223c34}
+.world-svg.theme-marsh>rect:first-of-type{fill:#1b3b42}
+.world-svg.theme-eclipse>rect:first-of-type{fill:#302a41}
+.theme-woodland .road-top{stroke:#d2b98a}
+.theme-marsh .road-top{stroke:#b1c9b9}
+.theme-eclipse .road-top{stroke:#b3a1c8}
+.theme-eclipse .node-core{fill:#c4a9cf}
+.theme-eclipse .terrain-label{fill:#d4c4e5}
+.theme-eclipse .north-mark circle{stroke:#baa6c9}
+.theme-woodland .terrain-label{fill:#bcd0a7}
+.theme-marsh .terrain-label{fill:#9dcdd0}
+@media(max-width:1050px){
+ .difficulty-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .difficulty-card{min-height:250px}
+ .difficulty-card strong{margin-top:14px}
+}
+@media(max-width:580px){
+ .difficulty-shell{padding:16px 13px 45px}
+ .difficulty-grid{grid-template-columns:1fr}
+ .difficulty-card{min-height:190px;padding:17px}
+ .difficulty-card strong{margin-top:11px}
+ .difficulty-card .mode-link{padding-top:15px}
+ .location-index-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+.clue-ray{stroke:#edc875;stroke-width:4;stroke-opacity:.9;stroke-dasharray:8 8;filter:drop-shadow(0 0 3px #1c2626)}
