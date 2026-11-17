@@ -85,6 +85,10 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('plot-toggle');
   assert.match(html(),/possible locations/);
   assert.match(html(),/INCLUDE IN DEDUCTION/);
+  const toggle=callbacks.get('clue-toggle:sighting-0:change');
+  assert.equal(typeof toggle,'function','Clue selection checkbox must be interactive');
+  toggle({target:{checked:false}});
+  assert.match(html(),/Select at least one clue/);
   const marker=el('node-note:A');
   assert.equal(typeof callbacks.get(marker.id+':click'),'function');
   click(marker.id);
