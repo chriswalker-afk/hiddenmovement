@@ -21,8 +21,8 @@ export const MONSTERS=Object.freeze({
   }),
   tracker:Object.freeze({
     id:'mire-mimic',name:'The Mire Mimic',title:'The False Witness',
-    home:'The Sunken Lowlands',art:'./assets/monsters/mire-mimic.svg',
-    flavour:'Its reflection wears familiar faces. People report sightings that may never have happened.',
+    home:'Rookgate District',art:'./assets/monsters/mire-mimic.svg',
+    flavour:'From Rookgate’s canal steps to the shadowed markets, witnesses swear they saw familiar faces. Some sightings are planted lies.',
     powerTitle:'False Sighting',powerText:'Can plant an unconfirmed location report every 4 monster turns. Visit the place to expose it.',
     teleport:null,decoy:Object.freeze({firstRound:3,cooldown:4}),tint:'#9ed0cd'
   }),
