@@ -1775,3 +1775,96 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   }
   .location-index-grid .location-index-choice{font-size:.68rem}
 }
+
+
+/* PR20 — the interactive Guided Hunt is a floating, non-modal coach. All
+   instructions point to actual controls and can be dismissed at any time.
+   Scene geometry and the Hunter's own mouse/touch inputs stay unchanged. */
+.guided-tour{
+  position:fixed;z-index:7800;
+  top:12px;left:12px;right:auto;bottom:auto;
+  width:min(350px,calc(100vw - 24px));
+  max-height:min(52dvh,350px);overflow-y:auto;
+  border:2px solid #f4d293;border-radius:10px;
+  background:#112a32;box-shadow:0 9px 35px #06161bc9,0 0 0 3px #122a3299;
+  padding:12px 15px;pointer-events:auto;
+}
+.guided-tour-progress{display:flex;justify-content:space-between;gap:10px;
+  color:#edcf99;font-weight:800;font-size:.67rem;letter-spacing:.07em}
+#guided-tour-skip{
+  color:#f1e9d4;border:1px solid #8b9e92;border-radius:4px;
+  background:#223d42;padding:5px 8px;cursor:pointer;font-weight:800;
+  font-size:.61rem;letter-spacing:.035em;flex:0 0 auto
+}
+.guided-tour h3{font:700 1.08rem/1.22 Georgia,serif;color:#ffe1a0;
+  margin:10px 0 8px}
+.guided-tour p{margin:0 0 7px;color:#edf3e8;font:.83rem/1.54 'DM Sans',system-ui,sans-serif}
+.guided-tour small{display:block;color:#b9cfc0;font-size:.68rem;
+  line-height:1.37;margin-top:7px}
+.guided-tour-action{
+  display:block;width:100%;min-height:37px;margin:9px 0 2px;
+  border-radius:5px;border:1px solid #f4db9b;
+  background:#ebce93;color:#173138;font:800 .77rem 'DM Sans',system-ui,sans-serif;
+  cursor:pointer
+}
+.guided-tour button:focus-visible{outline:3px solid #fff0c6;outline-offset:3px}
+.guided-tour-arrow{
+  position:fixed;z-index:7900;pointer-events:none;user-select:none;
+  display:grid;place-items:center;width:40px;height:40px;
+  font:bold 32px/1 'DM Sans',system-ui,sans-serif;
+  color:#fff3b8;text-shadow:0 2px 0 #132f36,0 0 12px #f6bd54;
+  animation:guided-arrow-bounce .95s ease-in-out infinite alternate
+}
+@keyframes guided-arrow-bounce{
+  from{transform:translateY(-5px) scale(.96);filter:brightness(1)}
+  to{transform:translateY(4px) scale(1.13);filter:brightness(1.35)}
+}
+@keyframes guided-target-pulse{
+  0%{box-shadow:0 0 0 2px #ffe1a0,0 0 0 4px #2d4445}
+  50%{box-shadow:0 0 0 4px #fff0b2,0 0 0 11px #f1ce6470}
+  100%{box-shadow:0 0 0 2px #ffe1a0,0 0 0 4px #2d4445}
+}
+.hud-screen button.guided-tour-target,
+.hud-screen input.guided-tour-target,
+.hud-screen .clue-card.guided-tour-target,
+.hud-screen .analysis-summary.guided-tour-target{
+  position:relative;z-index:8;border-radius:5px;
+  animation:guided-target-pulse 1.3s ease-in-out infinite
+}
+.hud-screen .clue-card.guided-tour-target{
+  border:2px solid #ffe4a4;background:#334d4c
+}
+.hud-screen .guided-tour-companion:not(svg *){
+  outline:2px dotted #f7dc9a;outline-offset:3px
+}
+.world-svg .guided-tour-target,
+.world-svg .guided-tour-companion{
+  filter:drop-shadow(0 0 6px #ffe3a1) drop-shadow(0 0 3px #f3af50)
+}
+.world-svg .hunter-board-piece.guided-tour-companion>ellipse{
+  stroke:#ffe3a1;stroke-width:2.8
+}
+.report-encounter .guided-search-note{
+  border-left:4px solid #f2ca7d;
+  padding:10px 12px;background:#2c4342;
+  color:#f6eed8;font:.81rem/1.53 'DM Sans',system-ui,sans-serif
+}
+.report-encounter .guided-search-note strong{color:#ffe4a4}
+@media(max-width:800px){
+  .guided-tour{
+    width:calc(100vw - 24px);max-height:min(37dvh,260px);
+    padding:10px 12px;border-radius:8px
+  }
+  .guided-tour h3{font-size:.98rem;margin:7px 0}
+  .guided-tour p{font-size:.76rem;line-height:1.42}
+  .guided-tour small{font-size:.62rem}
+}
+@media(max-height:480px){
+  .guided-tour{max-height:65dvh;width:min(302px,calc(100vw - 24px))}
+  .guided-tour small{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .guided-tour-arrow,.hud-screen .guided-tour-target{animation:none!important}
+  .hud-screen .guided-tour-target{outline:3px solid #fff0b2;outline-offset:3px}
+  .guided-tour-arrow{filter:none}
+}
