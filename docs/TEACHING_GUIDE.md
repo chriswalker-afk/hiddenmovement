@@ -8,10 +8,10 @@ Best suited to a 15–25 minute lesson activity or a short follow-up after intro
 
 ## Preparation
 
-- Start with **Intro** for new learners; the 14-location map has simple directions, exact trace bearings, and frequent broad watcher sightings.
-- **Apprentice** introduces 30°-wide clue sectors and ±1-road distance bands.
+- Start with **Intro** for new learners; the 14-location map has simpler roads, exact earned trace bearings and periodic watcher sightings in every mode. Guided is only needed for the optional visual clue overlay.
+- **Apprentice** introduces 30°-wide clue sectors and ±1-road distance bands in both Standard and Guided.
 - **Tracker** and **Expert** increase graph complexity, reduce information and increase Monster evasiveness.
-- Students need a device supporting keyboard or touch; no external calculator or additional app is required.
+- Students need a device supporting keyboard or touch; no external calculator or additional app is required. The optional on-map **360° protractor** can be used during every movement turn.
 - Interactive Field Training is available from the main menu and during the Hunter turn.
 - No account, sign-in, grading backend or saved progress is required for the prototype.
 
@@ -21,11 +21,24 @@ Best suited to a 15–25 minute lesson activity or a short follow-up after intro
 
 **2. Scaffolding (4 minutes).** Use the four practice challenges: cardinal bearings, reverse directions, “bearing of Hunter from Monster” wording, and a compass interval wrapping through 000°.
 
-**3. Independent play (9 minutes).** Students play Solo Hunt on Intro or Apprentice. Give the instruction: *before you move, make a prediction*. Keep the automatic analysis overlay off at first. Encourage handwritten or in-game notes.
+**3. Independent play (9 minutes).** Students play Solo Hunt on Intro or Apprentice in **Standard mode**. Give the instruction: *read the bearing clues, then measure on the map before moving*. The notebook still supplies numerical bearings and distance information, but never draws them automatically. Use the optional draggable protractor and encourage handwritten or in-game notes.
 
-**4. Deduction (3 minutes).** Once a few clues exist, open the Field Notebook's optional **Combine Clues on the Map** tool. Check the dates. Choose two clues and discuss why older clues cover more candidate locations when the Monster has already moved since the observation.
+**4. Deduction (3 minutes).** Once a few clues exist, ask students to mark their candidate locations manually. In a separate Guided demonstration, open the Clues tab's **Combine Clues on the Map** tool. Check the dates. Choose two clues and discuss why older clues cover more candidate locations when the Monster has already moved since the observation.
 
-**5. Reflect (1 minute).** Review successful bearings, corrections, mean angular error, and which clue changed the student's decision. A student can retry with a new random Monster route.
+**5. Reflect (1 minute).** Discuss which bearings required re-measurement and which earned clue changed their decision. Mathematical feedback and bearing-entry accuracy remain visible in all modes. A student can retry with a new random Monster route.
+
+
+## Manual protractor and text-first clues
+
+When a movement turn begins, the map and bearing entry sit on a **fixed-height gameplay screen**. The round, active role, current location, movement count and mission objective are all visible. Clues, Notes and Mission are tabs; the secondary content may scroll internally, but the game page itself should not.
+
+Students can select **Protractor** above the map. The transparent 360° protractor starts at their current location. Ask them to place the instrument's centre on the origin, rotate the **gold measuring tip** until it lines up with the chosen road, read the number **clockwise from north** and independently enter the three-figure bearing. The centre and tip are separately draggable by mouse or touch; +/− buttons adjust the displayed measure by a degree for keyboard users. There is no road snapping or auto-filling.
+
+In **Standard mode**, opening and scheduled watcher sightings, track clues, distance bands on easier levels, connected-road descriptions, mathematical feedback, public mission events and Signal Lantern clues remain available. Students read these as text. **The game does not draw the given bearing as a line or sector**: they must interpret it themselves. An invalid bearing entry still does not consume a move.
+
+For a scaffolded group, select **Enable Tutorial Help** before starting a hunt. Guided mode does not add or remove numerical clues; it makes the optional **Combine Clues on the Map** button available. The overlay is initially off and only draws a bearing or sector after a player clicks it. Return to Standard when students are ready to interpret all written clues without a plotting aid.
+
+**Suggested differentiation:** Let students use the protractor for their first three moves, then ask them to estimate bearings before checking with the protractor. At the end, ask for written justification of one reverse bearing.
 
 ## Mathematical conventions
 
@@ -58,7 +71,7 @@ In PR3, the game places each true direction inside a fixed compass interval. For
 
 ### Distance bands
 
-On Intro, a recent track can say **“exactly 3 connected roads away”** as of the clue's observation time. This means shortest-path graph distance is three. In Apprentice, a band of **2–4 roads** includes the true route distance but does not narrow it to one figure. Later movements can invalidate an immediate distance deduction, so always read the round number.
+On Intro, in either mode, a recent track can say **“exactly 3 connected roads away”** as of the clue's observation time. This means shortest-path graph distance is three. In Apprentice, a band of **2–4 roads** includes the true route distance but does not narrow it to one figure. Later movements can invalidate an immediate distance deduction, so always read the round number.
 
 ## Assessment objective ideas
 

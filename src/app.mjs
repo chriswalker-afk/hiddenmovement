@@ -4,6 +4,7 @@ import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
+import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
 import {
   SETTINGS, DIFFICULTIES, beginGame, createGame, endHunterTurn, hunterMove,
@@ -26,6 +27,11 @@ let difficultyPicker = false;
 let scenarioPicker = false;
 let pendingScenario = 'classic';
 let mapZoom = 1;
+let hudTab = 'clues';
+let guidedSelection = false;
+let protractorVisible = false;
+let protractorBearing = 0;
+let protractorPosition = null;
 const storage = () => globalThis.localStorage || null;
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
@@ -35,11 +41,15 @@ const roundCaption = round => round === 0 ? 'at the beginning of the hunt' : 'at
 
 function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
   const seed=((Date.now() ^ Math.floor(Math.random()*0xffffffff))>>>0)||1;
-  Object.assign(game,createGame({mode,difficulty,scenario,seed}));
+  Object.assign(game,createGame({mode,difficulty,scenario,guided:guidedSelection,seed}));
   const result=beginGame(game);
   if(result.ok) {
     plotClue=false;
     selectedClueIds=null;
+    hudTab='clues';
+    protractorVisible=false;
+    protractorBearing=0;
+    protractorPosition=null;
     nodeMarks.clear();
     fieldNotes='';
     tutorialOpen=false;
@@ -69,7 +79,12 @@ function resumeHunt() {
   fieldNotes=restored.ui.fieldNotes;
   nodeMarks.clear();
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
-  plotClue=restored.ui.plotClue;
+  plotClue=restored.ui.plotClue && game.guided;
+  guidedSelection=game.guided;
+  hudTab='clues';
+  protractorVisible=false;
+  protractorPosition=null;
+  protractorBearing=0;
   selectedClueIds=restored.ui.selectedClueIds===null?null:new Set(restored.ui.selectedClueIds);
   difficultyPicker=false;
   scenarioPicker=false;
@@ -83,6 +98,7 @@ function scenarioHtml() {
     '<span class="eyebrow">THREE STORIES · TWO WAYS TO PLAY</span>'+
     '<h1>CHOOSE YOUR <em>MISSION</em></h1>'+
     '<p>Each mission uses the same mathematical movement rules, but changes what the Monster is trying to achieve.</p>'+
+    guidedChoiceHtml() +
     '<div class="scenario-grid">'+Object.values(SCENARIOS).map(mission=>
       '<article class="scenario-card scenario-'+esc(mission.id)+'">'+
       '<div class="scenario-card-symbol" aria-hidden="true">'+esc(mission.icon)+'</div>'+
@@ -107,7 +123,7 @@ function selectedClues(view) {
   return selectedClueIds === null ? view.clues : view.clues.filter(c=>selectedClueIds.has(c.id));
 }
 function currentAnalysis(view) {
-  if (view.phase!=='hunter' || !plotClue) return null;
+  if (view.phase!=='hunter' || !view.guided || !plotClue) return null;
   const clues=selectedClues(view);
   if(!clues.length) return null;
   return analyseClues(currentMap(), clues, view.round, {hunterLocation:view.hunter});
@@ -164,6 +180,18 @@ function bindTutorial() {
   if(!lessonOutcome?.correct) document.getElementById('lesson-answer')?.focus();
 }
 
+
+function guidedChoiceHtml() {
+  return '<div class="guidance-choice" aria-label="Optional guided map visualisation">' +
+    '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
+    '<small>'+(guidedSelection
+      ?'Same textual clues and sightings, plus an optional clue-plotting and deduction-map button.'
+      :'All bearing clues, watcher sightings and gameplay hints remain. No bearings are drawn automatically.')+
+    '</small></div>' +
+    '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
+      (guidedSelection?'SWITCH TO STANDARD':'ENABLE TUTORIAL HELP')+'</button></div>';
+}
+
 function difficultyHtml() {
   const cards = Object.values(DIFFICULTIES).map((preset, i) =>
     '<button class="difficulty-card difficulty-' + esc(preset.id) + '" data-difficulty="' + esc(preset.id) + '">' +
@@ -178,6 +206,7 @@ function difficultyHtml() {
     '<span class="eyebrow">SOLO HUNT · '+esc(SCENARIOS[pendingScenario].name.toUpperCase())+'</span>' +
     '<h1>FOUR PATHS INTO <em>THE DARK</em></h1>' +
     '<p>Each level changes the size of the map, the monster’s instincts and the strength of the clues you uncover.</p>' +
+    guidedChoiceHtml() +
     '<div class="difficulty-grid">' + cards + '</div>' +
     '<p class="difficulty-footer">The monster moves automatically after each Hunter turn. Its position is never shown.</p>' +
     '</div></main>';
@@ -211,6 +240,7 @@ function homeHtml() {
       '<div class="home-crest" aria-hidden="true"><span>N</span><b>✦</b><span>S</span></div>' +
       '<h1>SHADOW<br><i>BEARINGS</i></h1>' +
       '<p class="home-subtitle">One hunter. One hidden monster. A trail of bearings through the Hollow Moor.</p>' +
+      guidedChoiceHtml() +
       '<div class="mode-grid">' +
         '<button id="start-two" class="mode-card">' +
           '<span class="mode-icon" aria-hidden="true">⚔</span><strong>PASS &amp; PLAY</strong>' +
@@ -276,6 +306,11 @@ function mapSvg(view) {
     eclipse: ['RUINED HIGHLANDS','ASHEN SKY','DARK CITADEL','THE ECLIPSE'],
   }[currentMap().theme];
   const isMonster=view.phase==='monster' || view.phase==='monster-setup';
+  const actingNode=view.phase==='monster'?view.monster:view.hunter;
+  const activeNode=currentMap().nodes[actingNode];
+  const toolOrigin=protractorPosition || activeNode;
+  const protractor=(protractorVisible && ['hunter','monster'].includes(view.phase) && toolOrigin)
+    ?renderProtractor(toolOrigin.x,toolOrigin.y,protractorBearing):'';
   const isOver=view.phase==='over';
   const paths = currentMap().edges.map(([a,b]) => {
     const p=currentMap().nodes[a],q=currentMap().nodes[b];
@@ -284,7 +319,7 @@ function mapSvg(view) {
   }).join('');
   const trees = [[115,92],[280,90],[505,70],[675,110],[930,190],[125,510],[320,660],[515,535],[735,635],[885,675]]
     .map((pt,i)=>treeCluster(pt[0],pt[1],i)).join('');
-  const clues = view.phase==='hunter' && plotClue ? selectedClues(view) : [];
+  const clues = view.phase==='hunter' && view.guided && plotClue ? selectedClues(view) : [];
   const analysis = currentAnalysis(view);
   const candidateSet = new Set(analysis?.candidates || []);
   const plotted=clues.map(clue => {
@@ -346,7 +381,9 @@ function mapSvg(view) {
     if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
-  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
+  const mapHeightStyle=['hunter','monster'].includes(view.phase)
+    ?'height:'+Math.round(mapZoom*100)+'%;':'height:auto;';
+  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;'+mapHeightStyle+'max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
     '<defs>' +
       '<linearGradient id="moor-bg" x2="1" y2="1"><stop stop-color="#1a353b"/><stop offset=".52" stop-color="#243e3d"/><stop offset="1" stop-color="#172b38"/></linearGradient>' +
       '<pattern id="moor-grain" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1" fill="#b7c8b7" opacity=".075"/><circle cx="25" cy="26" r="1" fill="#b7c8b7" opacity=".08"/></pattern>' +
@@ -361,6 +398,7 @@ function mapSvg(view) {
     '<g>'+plotted+'</g>' +
     hunterPath+monsterPath+
     '<g class="nodes">'+dots+'</g>' +
+    protractor+
     '<g transform="translate(945 73)" class="north-mark"><circle r="27" fill="#0b1b27" fill-opacity=".72" stroke="#8aafaa" stroke-opacity=".55"/><path d="M0-21L6 2 0-2-6 2Z" fill="#d0b47b"/><path d="M0 21L6 2 0 6-6 2Z" fill="#7c969a"/><text y="-34" text-anchor="middle">N</text></g>' +
     // Keep decorative borders and grain isolated so generic SVG rect styles
     // cannot accidentally paint an opaque layer over roads and game nodes.
@@ -381,6 +419,16 @@ function mapFrame(view) {
   return '<div class="map-section">' +
     '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>Map of ' + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
+      (['hunter','monster'].includes(view.phase)?
+        '<button type="button" id="protractor-toggle" class="protractor-toggle" aria-pressed="'+protractorVisible+'">'+
+        (protractorVisible?'◉ HIDE PROTRACTOR':'◉ PROTRACTOR')+'</button>'+
+        (protractorVisible?
+          '<div class="protractor-keys" aria-label="Fine-tune protractor bearing">'+
+            '<button type="button" id="protractor-minus" aria-label="Rotate protractor counterclockwise one degree">−</button>'+
+            '<output id="protractor-readout" aria-label="Measured bearing">'+formatBearing(protractorBearing)+'</output>'+
+            '<button type="button" id="protractor-plus" aria-label="Rotate protractor clockwise one degree">+</button>'+
+            '<button type="button" id="protractor-center" title="Reposition protractor over current location">CENTER</button>'+
+          '</div>':''):'')+
       '<div class="map-zoom-controls" aria-label="Map zoom controls">'+
         '<button type="button" id="map-zoom-out" aria-label="Zoom out" '+(mapZoom<=1?'disabled':'')+'>−</button>'+
         '<output aria-label="Map zoom">'+Math.round(mapZoom*100)+'%</output>'+
@@ -394,34 +442,39 @@ function mapFrame(view) {
       ((view.phase==='monster-setup')?'<span><i class="key-spot key-available"></i> Eligible start</span>':'')+
       ((view.scenario==='escape')?'<span><i class="key-spot key-goal"></i> Escape Gate</span>':'')+
       ((view.scenario==='beacons')?'<span><i class="key-spot key-beacon"></i> Signal beacon</span>':'')+
-      ((view.phase==='hunter')?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
+      (protractorVisible && ['hunter','monster'].includes(view.phase)
+        ?'<span class="protractor-help">MEASURE: DRAG GOLD TIP · MOVE: DRAG CENTRE</span>':'')+
+      ((view.phase==='hunter' && view.guided)?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
         '<span><i class="key-spot key-watch"></i> Your suspect</span><span><i class="key-spot key-ruled"></i> Your ruled-out mark</span>':'')+
     '</div>'+index+'</div>';
 }
 
 function movementForm(view) {
-  const monster = view.phase === 'monster';
+  const monster=view.phase==='monster';
   const location=monster?view.monster:view.hunter;
-  const place=nameOf(location);
   const left=monster?1:view.stepsLeft;
   const adjacent=currentMap().adjacency[location].map(id=>nameOf(id)).join(' · ');
-  return '<section class="panel move-panel">' +
-    '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>' +
-      '<span class="steps-badge">'+left+' '+(left===1?'MOVE':'MOVES')+' LEFT</span></div>' +
-    '<div class="you-are">Current location</div><h3>'+esc(place)+'</h3>' +
-    '<p class="muted compact">Roads lead to: '+esc(adjacent)+'</p>' +
-    '<form id="move-form" class="bearing-form">' +
-      '<label for="bearing-input">Your next three-figure bearing</label>' +
-      '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="045" pattern="[0-9]{3}°?" '+(left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span><button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>' +
-      '<small id="bearing-help">Clockwise from north · within ±6° of a connected road</small>' +
-      (monster && view.powers?.veilCharges>0?
-        '<label class="veil-option"><input id="veil-move" type="checkbox" /> USE THE VEIL · HIDE THIS NEW TRAIL (ONCE)</label>':'')+
-    '</form>' +
-    (!monster ? '<button id="end-turn" class="secondary-button">'+(view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' <span aria-hidden="true">→</span></button>' +
-      (view.powers?.lanternCharges>0?
-        '<button id="use-lantern" class="lantern-button" '+(left===0?'disabled':'')+
-        '>✧ SIGNAL LANTERN · ONE USE, COSTS ONE MOVE</button>':'')+
-      '<button id="open-tutorial-game" class="field-guide-link">COMPASS &amp; REVERSE BEARING TRAINING ↗</button>' : '') +
+  return '<section class="panel move-panel hud-move-panel">' +
+    '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>'+
+      '<span class="steps-badge">'+left+' '+(left===1?'MOVE':'MOVES')+' LEFT</span></div>'+
+    '<div class="hud-from"><span>FROM</span><h3>'+esc(nameOf(location))+'</h3></div>'+
+    '<p class="muted compact guided-route-help">Roads lead to: '+esc(adjacent)+'</p>'+
+    '<form id="move-form" class="bearing-form">'+
+      '<label for="bearing-input">Enter a three-figure bearing</label>'+
+      '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="000" pattern="[0-9]{3}°?" '+
+      (left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span>'+
+      '<button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>'+
+      '<small id="bearing-help">Clockwise from north · 000°–359°</small>'+
+      (monster&&view.powers?.veilCharges>0?
+        '<label class="veil-option"><input id="veil-move" type="checkbox" /> USE VEIL · CONCEAL THIS TRAIL</label>':'')+
+    '</form>'+
+    (!monster ? '<div class="hud-move-actions">'+
+      '<button id="end-turn" class="secondary-button">'+
+        (view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' →</button>'+
+      (view.powers?.lanternCharges>0?'<button id="use-lantern" class="lantern-button" '+
+        (left===0?'disabled':'')+'>✧ SIGNAL LANTERN · USE 1 MOVE</button>':'')+
+      '</div>' : '')+
+    '<button id="open-tutorial-game" class="field-guide-link" type="button">BEARINGS FIELD TRAINING ↗</button>'+
     '</section>';
 }
 
@@ -471,7 +524,7 @@ function notebook(view) {
       c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
     return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':c.type==='beacon'?'beacon-card':'')+'">' +
       '<div class="clue-meta"><span>'+label+'</span><span>'+visit+'</span></div>' +
-      (plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
+      (view.guided && plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
         '" '+(chosen?'checked':'')+'/> INCLUDE IN DEDUCTION</label>':'') +
       '<p>'+clueSentence(c)+'</p>'+routeDistance+
       '<small>Discovered round '+c.foundRound+
@@ -484,11 +537,12 @@ function notebook(view) {
     '<div class="panel-top"><span class="eyebrow">YOUR EVIDENCE</span><span class="steps-badge">'+
       view.clues.length+' '+(view.clues.length===1?'CLUE':'CLUES')+'</span></div>' +
     '<h3>Field notebook</h3>' +
-    (view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+
+    (view.guided && view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+
       (plotClue?'HIDE DEDUCTION OVERLAY':'COMBINE CLUES ON THE MAP')+
       ' <span aria-hidden="true">↗</span></button>' +
       overview+'<div class="clue-list">'+cards+'</div>' :
-      '<p class="muted empty-evidence">No traces yet. Follow the old roads and search locations where the monster may have been.</p>')+
+      (view.clues.length ? '<div class="clue-list">'+cards+'</div>' :
+      '<p class="muted empty-evidence">No clues yet. Search the Monster’s recent trail.</p>'))+
     '</section>';
 }
 
@@ -561,22 +615,61 @@ function savePanel() {
     '<p class="muted compact">Saved only on this device. In Pass &amp; Play, resuming always shows the handoff screen.</p></section>';
 }
 
+function hudMissionSummary(view) {
+  if(view.scenario==='escape')
+    return 'ESCAPE GATE: '+nameOf(view.objectives.exitNode)+' · OPENS ROUND 5';
+  if(view.scenario==='beacons')
+    return 'BEACONS '+view.beaconVisits.length+'/'+view.objectives.beacons.length+' EXTINGUISHED';
+  return 'FIND THE MONSTER BEFORE ROUND '+view.maxRounds;
+}
+
+function hudTabsHtml(view) {
+  const isMonster=view.phase==='monster';
+  const tabs=isMonster
+    ? [['trail','TRAIL'],['mission','MISSION']]
+    : [['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
+       ['stats','FEEDBACK']];
+  const chosen=tabs.some(([id])=>id===hudTab)?hudTab:tabs[0][0];
+  const tabBar=tabs.map(([id,label])=>'<button type="button" role="tab" id="hud-tab-'+id+
+    '" data-hud-tab="'+id+'" aria-controls="hud-tab-panel" aria-selected="'+(chosen===id)+
+    '" tabindex="'+(chosen===id?'0':'-1')+'">'+label+'</button>').join('');
+  const panels={
+    trail:()=>monsterTrailPanel(view),
+    clues:()=>notebook(view),
+    notes:()=>annotationsPanel(),
+    mission:()=>view.scenario==='classic'
+      ?'<section class="panel mission-panel"><span class="eyebrow">THE LONG HUNT</span>'+
+        '<h3>Find the monster</h3><p class="muted compact">Collect trail clues and intercept the Monster before the final round.</p></section>'
+      :missionPanel(view),
+    stats:()=>progressPanel(view)
+  };
+  return '<section class="hud-details" aria-label="Investigation information">'+
+    '<div class="hud-tabs" role="tablist" aria-label="Game information">'+tabBar+'</div>'+
+    '<div id="hud-tab-panel" class="hud-tab-panel" role="tabpanel" aria-labelledby="hud-tab-'+chosen+'">'+
+      panels[chosen]()+'</div></section>';
+}
+
 function playHtml(view) {
-  const isMonster = view.phase==='monster';
-  return '<div class="app-shell '+(isMonster?'monster-mode':'hunter-mode')+'">' + titleBar(true,view) +
-    '<main class="play-content">' +
-      '<div class="status-row"><div><span class="role-tag">'+(isMonster?'◆ THE MONSTER':(view.mode==='solo'?'✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER'))+'</span>' +
-        '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1>' +
-        '<p>'+(isMonster?'The Hunter is at '+esc(nameOf(view.hunter))+'. Your position is secret.' :
-          'Move up to two roads. Gather clues where the monster has passed.')+'</p>'+
-        (view.scenario!=='classic'?'<span class="mission-hud-tag">'+esc(SCENARIOS[view.scenario].name)+'</span>':'')+'</div>' +
-        '<div class="turn-marker"><small>ROUND</small><strong>'+view.round+' <span>/ '+view.maxRounds+'</span></strong></div></div>' +
-      '<div class="game-grid">'+mapFrame(view)+
-        '<aside class="sidebar">'+missionPanel(view)+movementForm(view) +
-        (isMonster?monsterTrailPanel(view):notebook(view)+annotationsPanel()+progressPanel(view)) +
-        '<p id="game-feedback" class="feedback" role="status" aria-live="polite">'+esc(view.feedback||'Use the map to work out your bearing.')+'</p>' +
-        savePanel() +
-        '</aside></div>' +
+  const isMonster=view.phase==='monster';
+  const mission=esc(hudMissionSummary(view));
+  return '<div class="app-shell hud-screen '+(isMonster?'monster-mode':'hunter-mode')+'">'+
+    titleBar(true,view)+
+    '<main class="play-content hud-content">'+
+      '<div class="status-row hud-status"><div class="hud-status-main">'+
+        '<span class="role-tag">'+(isMonster?'◆ THE MONSTER':view.mode==='solo'?
+          '✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER')+'</span>'+
+        '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1></div>'+
+        '<p class="hud-mission-summary" title="'+mission+'">'+mission+'</p>'+
+        '<div class="turn-marker"><small>ROUND</small><strong>'+view.round+
+          ' <span>/ '+view.maxRounds+'</span></strong></div></div>'+
+      '<div class="game-grid hud-grid">'+mapFrame(view)+
+        '<aside class="sidebar hud-sidebar">'+
+          movementForm(view)+
+          hudTabsHtml(view)+
+          '<div class="hud-footer"><p id="game-feedback" class="feedback" role="status" aria-live="polite">'+
+            esc(view.feedback||'Use the map and measure your next bearing.')+'</p>'+
+            '<button type="button" id="save-exit" class="hud-save" title="Save and return to the menu">SAVE</button>'+
+          '</div></aside></div>'+
     '</main></div>';
 }
 
@@ -619,7 +712,101 @@ function overHtml(view) {
     '</main></div>';
 }
 
+function resetProtractor(keepVisible = false) {
+  protractorBearing=0;
+  protractorPosition=null;
+  if(!keepVisible)protractorVisible=false;
+}
+
+/**
+ * Manual tool only. No adjacent-road bearing or private Monster coordinate is
+ * read by these handlers: users position and rotate the transparent overlay.
+ * Pointer moves update stable SVG nodes without replacing the active element.
+ */
+function bindProtractor() {
+  document.getElementById('protractor-toggle')?.addEventListener('click',()=>{
+    protractorVisible=!protractorVisible;
+    protractorPosition=null;
+    protractorBearing=0;
+    render();
+  });
+  if(!protractorVisible)return;
+  const showValue=()=>{
+    const label=formatBearing(protractorBearing);
+    const output=document.getElementById('protractor-readout');
+    if(output)output.textContent=label;
+    const num=document.getElementById('protractor-number');
+    if(num)num.textContent=label;
+    document.getElementById('protractor-arm-group')?.setAttribute('transform',
+      'rotate('+protractorBearing+')');
+  };
+  const turn=step=>{
+    protractorBearing=normalizeBearing(protractorBearing+step);
+    showValue();
+  };
+  document.getElementById('protractor-minus')?.addEventListener('click',()=>turn(-1));
+  document.getElementById('protractor-plus')?.addEventListener('click',()=>turn(1));
+  document.getElementById('protractor-center')?.addEventListener('click',()=>{
+    protractorPosition=null;
+    render();
+  });
+  const svg=document.querySelector?.('.world-svg');
+  if(!svg || !svg.createSVGPoint || !svg.getScreenCTM)return;
+  const mapPosition=event=>{
+    const matrix=svg.getScreenCTM();
+    if(!matrix)return null;
+    const point=svg.createSVGPoint();
+    point.x=event.clientX;
+    point.y=event.clientY;
+    return point.matrixTransform(matrix.inverse());
+  };
+  const beginDrag=(target,mode)=>{
+    target.addEventListener('pointerdown',event=>{
+      if(event.button!==undefined && event.button!==0)return;
+      event.preventDefault?.();
+      target.setPointerCapture?.(event.pointerId);
+      const pointerId=event.pointerId;
+      const move=e=>{
+        if(e.pointerId!==pointerId)return;
+        const point=mapPosition(e);
+        if(!point)return;
+        if(mode==='move'){
+          protractorPosition={
+            x:Math.max(10,Math.min(990,Math.round(point.x))),
+            y:Math.max(10,Math.min(710,Math.round(point.y)))
+          };
+          document.getElementById('protractor-group')?.setAttribute('transform',
+            'translate('+protractorPosition.x+' '+protractorPosition.y+')');
+        }else {
+          const actor=game.phase==='monster'?game.monster:game.hunter;
+          const origin=protractorPosition || currentMap().nodes[actor];
+          if(!origin)return;
+          const reading=bearingFromPointer(point.x,point.y,origin.x,origin.y);
+          if(reading!==null){
+            protractorBearing=reading;
+            showValue();
+          }
+        }
+      };
+      const stop=e=>{
+        if(e.pointerId!==pointerId)return;
+        target.removeEventListener('pointermove',move);
+        target.removeEventListener('pointerup',stop);
+        target.removeEventListener('pointercancel',stop);
+        target.releasePointerCapture?.(pointerId);
+      };
+      target.addEventListener('pointermove',move);
+      target.addEventListener('pointerup',stop);
+      target.addEventListener('pointercancel',stop);
+      move(event);
+    });
+  };
+  document.querySelectorAll('[data-protractor-rotate]').forEach(element=>beginDrag(element,'rotate'));
+  document.querySelectorAll('[data-protractor-move]').forEach(element=>beginDrag(element,'move'));
+}
+
 function bindMapZoom() {
+  bindProtractor();
   document.getElementById('map-zoom-in')?.addEventListener('click',()=>{
     mapZoom=Math.min(2,Math.round((mapZoom+0.25)*100)/100);
     render();
@@ -650,6 +837,7 @@ function saveAndExit() {
   Object.assign(game,createGame());
   nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
   difficultyPicker=false;scenarioPicker=false;
+  resetProtractor();
   render();
 }
 
@@ -660,6 +848,7 @@ function render() {
   else if(view.phase!=='home')persistNow();
   // Critical privacy boundary: handoff markup is generated without map, role, logs or secret data.
   if(view.phase.startsWith('pass-')) {
+    resetProtractor();
     mount.innerHTML=handoffHtml(view.phase);
     document.getElementById('reveal').addEventListener('click',()=>{
       revealTurn(game);
@@ -674,6 +863,10 @@ function render() {
   }
   if(view.phase==='home') {
     mount.innerHTML=homeHtml();
+    document.getElementById('guided-toggle')?.addEventListener('click',()=>{
+      guidedSelection=!guidedSelection;
+      render();
+    });
     if(scenarioPicker) {
       document.getElementById('scenario-back').addEventListener('click',()=>{
         scenarioPicker=false;render();
@@ -756,16 +949,26 @@ function render() {
   }
   mount.innerHTML=playHtml(view);
   bindCommon();
+  document.querySelectorAll('[data-hud-tab]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      hudTab=button.dataset.hudTab;
+      render();
+    });
+  });
   bindMapZoom();
   document.getElementById('move-form').addEventListener('submit',event=>{
     event.preventDefault();
     const value=document.getElementById('bearing-input').value;
+    const before=view.phase==='hunter'?game.hunter:game.monster;
     if(view.phase==='hunter') hunterMove(game,value);
     else monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
+    const after=view.phase==='hunter'?game.hunter:game.monster;
+    if(before!==after)resetProtractor(view.phase==='hunter' && game.mode==='solo');
     render();
   });
   document.getElementById('end-turn')?.addEventListener('click',()=>{
     endHunterTurn(game);
+    resetProtractor(game.mode==='solo');
     render();
   });
   document.getElementById('use-lantern')?.addEventListener('click',()=>{
@@ -816,6 +1019,7 @@ document.addEventListener('visibilitychange',()=>{
     sealTurn(game);
     if(phase!==game.phase) {
       tutorialOpen=false;
+      resetProtractor();
       render();
     } else if(game.phase!=='home'&&game.phase!=='over')persistNow();
   }

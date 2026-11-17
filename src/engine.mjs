@@ -28,7 +28,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 5, clueHalfWidth: 0, distanceBandHalfWidth: 0,
     sightingInterval: 2, sightingHalfWidth: 25, openingPulse: true,
     clueAgeStyle: 'exact',
-    summary: 'Small map, exact trail clues, a wandering monster and frequent sightings.'
+    summary: 'Small map and exact earned trail clues; guided play adds frequent sightings.'
   }),
   apprentice: Object.freeze({
     id: 'apprentice', name: 'Apprentice', tagline: 'The woods grow darker',
@@ -36,7 +36,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 4, clueHalfWidth: 15, distanceBandHalfWidth: 1,
     sightingInterval: 3, sightingHalfWidth: 35, openingPulse: true,
     clueAgeStyle: 'exact',
-    summary: 'A larger woodland, ±15° trail clues and a wary opponent.'
+    summary: 'A larger woodland, ±15° earned trail clues and a wary opponent.'
   }),
   tracker: Object.freeze({
     id: 'tracker', name: 'Tracker', tagline: 'Follow the faintest trace',
@@ -44,7 +44,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 3, clueHalfWidth: 30, distanceBandHalfWidth: null,
     sightingInterval: 4, sightingHalfWidth: 55, openingPulse: true,
     clueAgeStyle: 'approximate',
-    summary: 'Broad ±30° clues, fading tracks and a more elusive opponent.'
+    summary: 'Broad ±30° earned clues, fading tracks and an elusive opponent.'
   }),
   expert: Object.freeze({
     id: 'expert', name: 'Expert', tagline: 'Face the eclipse',
@@ -52,7 +52,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 2, clueHalfWidth: 45, distanceBandHalfWidth: null,
     sightingInterval: 5, sightingHalfWidth: 75, openingPulse: true,
     clueAgeStyle: 'vague',
-    summary: 'An extensive network, ±45° clues, short-lived tracks and cunning AI.'
+    summary: 'Extensive map, ±45° earned clues, short tracks and cunning AI.'
   })
 });
 
@@ -63,7 +63,11 @@ export function createGame(config = {}) {
     ? config.difficulty : 'intro';
   const preset = mode === 'solo' ? DIFFICULTIES[difficulty] : {};
   const scenario = Object.hasOwn(SCENARIOS, config.scenario) ? config.scenario : 'classic';
-  const settings = { ...SETTINGS, ...preset, ...config };
+  // Game evidence and mathematical hints are identical in Standard and
+  // Guided. The guided flag controls *optional visual plotting assistance*,
+  // never whether a player receives a textual bearing clue.
+  const guided = config.guided === true;
+  const settings = { ...SETTINGS, ...preset, ...config, guided };
   const mapId = mode === 'solo' ? preset.mapId : 'intro';
   const objectives = computeObjectives(MAPS[mapId], scenario);
   const seed = (Math.trunc(Number(config.seed ?? 18251)) >>> 0) || 1;
@@ -71,6 +75,7 @@ export function createGame(config = {}) {
     phase: 'home',
     mode,
     difficulty,
+    guided,
     scenario,
     objectives,
     objectivePowers: SCENARIOS[scenario].powers,
@@ -117,7 +122,7 @@ function requirePhase(game, phase) {
 export function beginGame(game) {
   if (game.phase !== 'home' && game.phase !== 'over')
     return fail(game, 'Finish this game before starting another.');
-  Object.assign(game, createGame({ ...game.config, mode: game.mode, difficulty: game.difficulty, scenario: game.scenario, seed: game.seed }));
+  Object.assign(game, createGame({ ...game.config, mode: game.mode, difficulty: game.difficulty, scenario: game.scenario, guided: game.guided, seed: game.seed }));
   if (game.mode === 'solo') {
     const spawn = chooseMonsterSpawn(game);
     game.monster = spawn;
@@ -168,7 +173,7 @@ export function selectMonsterStart(game, nodeId) {
 export function viewForCurrentScreen(game) {
   const base = {
     phase: game.phase, round: game.round, feedback: game.feedback,
-    mapId: game.mapId, mode: game.mode, difficulty: game.difficulty,
+    mapId: game.mapId, mode: game.mode, difficulty: game.difficulty, guided: game.guided,
     scenario: game.scenario,
     objectives: {exitNode:game.objectives.exitNode,beacons:[...game.objectives.beacons]},
     beaconVisits:[...game.beaconVisits],
@@ -418,10 +423,10 @@ export function hunterMove(game, inputBearing) {
     return say(game, 'The monster was found at ' + destination + '! The Hunter wins.');
   }
   const clue = collectClue(game, game.hunter);
-  const message = 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination
-    + ' (error: ' + route.difference.toFixed(1) + '°; ' + game.stepsLeft + ' route'
-    + (game.stepsLeft === 1 ? '' : 's') + ' left).'
-    + (clue ? ' A fresh trace revealed a clue!' : '');
+  const message = 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination +
+    ' (error: ' + route.difference.toFixed(1) + '°; ' +
+    game.stepsLeft + ' route' + (game.stepsLeft === 1 ? '' : 's') + ' left).' +
+    (clue ? ' A trail clue was found!' : '');
   return say(game, message);
 }
 

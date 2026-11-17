@@ -28,7 +28,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
       const prop=match[1].replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase());
       const attr='data-'+match[1];
       return [...html().matchAll(new RegExp(attr+'="([^"]+)"','g'))].map(m=>{
-        const item=el(attr+'-'+m[1]);item.dataset[prop]=m[1];return item;
+        const item=el(match[1]==='hud-tab'?'hud-tab-'+m[1]:attr+'-'+m[1]);item.dataset[prop]=m[1];return item;
       });
     },
     addEventListener:(type,cb)=>callbacks.set('document:'+type,cb)
@@ -51,6 +51,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/The Last Gate/i);
   click('data-difficulty-apprentice');
   assert.match(html(),/theme-woodland/);
+  click('hud-tab-mission');
   assert.match(html(),/STORY MISSION/);
   assert.match(html(),/SIGNAL LANTERN/);
   assert.match(html(),/GATE/);
@@ -60,9 +61,10 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/125%/);
   assert.match(html(),/width:125%/);
   click('use-lantern');
-  assert.match(html(),/SIGNAL LANTERN/);
+  assert.match(html(),/Signal Lantern/i);
   assert.match(html(),/1 MOVE LEFT/);
   assert.equal(values.has(STORAGE_KEY),true,'Active solo hunt auto-saved');
+  click('hud-tab-notes');
   const notes=el('field-notes');
   notes.value='I should block the bridge';
   callbacks.get('field-notes:input')({target:{value:notes.value}});
@@ -71,7 +73,9 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.doesNotMatch(html(),/I should block the bridge/);
   assert.doesNotMatch(html(),/world-svg/);
   click('resume-hunt');
+  click('hud-tab-notes');
   assert.match(html(),/I should block the bridge/);
+  click('hud-tab-mission');
   assert.match(html(),/The Last Gate/i);
   assert.doesNotMatch(html(),/Your hidden trail/);
 
@@ -88,6 +92,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/Pass this device to the hunter and look away/);
   assert.doesNotMatch(html(),/world-svg/);
   click('reveal');
+  click('hud-tab-mission');
   assert.match(html(),/Lanternfall/);
   click('save-exit');
   assert.match(html(),/RESUME SAFELY/);
@@ -100,7 +105,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   click('end-turn');
   assert.match(html(),/Pass this device to the monster and look away/);
   click('reveal');
-  assert.match(html(),/USE THE VEIL/);
+  assert.match(html(),/USE VEIL/);
   click('save-exit');
   click('resume-hunt');
   assert.match(html(),/Pass this device to the monster and look away/);
