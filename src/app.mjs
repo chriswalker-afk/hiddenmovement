@@ -1818,11 +1818,12 @@ function render() {
       persistNow();
     });
   }
-  if(view.phase==='hunter'){
-    bindGuidedTour(view);
-    if(view.stepsLeft===0 && !searchReportOpen&&tourStage==='done')
-      document.getElementById('end-turn')?.focus();
-  }
+  // Bind the public Hunter steps and, when a second human is playing,
+  // the Monster's own role-safe movement instruction on its private screen.
+  bindGuidedTour(view);
+  if(view.phase==='hunter'&&view.stepsLeft===0 &&
+    !searchReportOpen&&tourStage==='done')
+    document.getElementById('end-turn')?.focus();
 }
 
 /** Re-seal when hidden so app-switch / returning to a tab cannot reveal a private view. */
