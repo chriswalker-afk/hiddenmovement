@@ -5,6 +5,7 @@ import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { MONSTERS, monsterFor } from './monsters.mjs';
+import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
@@ -24,6 +25,9 @@ let fieldNotes = '';
 let tutorialOpen = false;
 let lessonStep = 0;
 let lessonOutcome = null;
+let tutorialStage = 'guide';
+let guideStep = 0;
+let coachAnswerVisible = false;
 let showHowTo = false;
 let difficultyPicker = false;
 let scenarioPicker = false;
@@ -52,7 +56,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     selectedClueIds=null;
     monsterIntroOpen=mode==='solo';
     searchReportOpen=false;
-    hudTab='clues';
+    hudTab=guidedSelection?'coach':'clues';
+    coachAnswerVisible=false;
     protractorVisible=false;
     protractorBearing=0;
     protractorPosition=null;
@@ -61,6 +66,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     tutorialOpen=false;
     lessonStep=0;
     lessonOutcome=null;
+    tutorialStage='guide';
+    guideStep=0;
     difficultyPicker=false;
     scenarioPicker=false;
     pendingScenario='classic';
@@ -91,7 +98,8 @@ function resumeHunt() {
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
   plotClue=restored.ui.plotClue && game.guided;
   guidedSelection=game.guided;
-  hudTab='clues';
+  hudTab=game.guided?'coach':'clues';
+  coachAnswerVisible=false;
   protractorVisible=false;
   protractorPosition=null;
   protractorBearing=0;
@@ -126,6 +134,8 @@ function scenarioHtml() {
 function openTutorial() {
   lessonStep=0;
   lessonOutcome=null;
+  tutorialStage='guide';
+  guideStep=0;
   tutorialOpen=true;
   render();
 }
@@ -147,7 +157,91 @@ function toggleNodeMark(id) {
   else nodeMarks.delete(id);
   render();
 }
+function guideArtwork(step) {
+  if(step.visual==='hunter') return '<img class="guide-character-art" src="./assets/characters/monster-hunter.svg" alt="A cloaked monster hunter with lantern, compass and evidence map"/>';
+  const heading='<svg class="guide-diagram" viewBox="0 0 360 300" role="img" aria-label="Illustrated bearings and deduction teaching example">';
+  const end='</svg>';
+  const compass='<circle cx="175" cy="147" r="109" fill="#213a40" stroke="#d5b987" stroke-width="3"/>'+
+    '<path d="M175 36V259M64 147H286" stroke="#b0c7b2" stroke-opacity=".5" stroke-width="2"/>'+
+    '<text x="175" y="29" text-anchor="middle">N · 000°</text>'+
+    '<text x="306" y="152" text-anchor="middle">E</text>'+
+    '<text x="175" y="285" text-anchor="middle">S</text>'+
+    '<text x="50" y="152" text-anchor="middle">W</text>'+
+    '<line x1="175" y1="147" x2="251" y2="71" stroke="#e7c37d" stroke-width="6" stroke-linecap="round"/>'+
+    '<circle cx="175" cy="147" r="8" fill="#f4d99e"/><circle cx="251" cy="71" r="7" fill="#f4d99e"/>'+
+    '<text x="248" y="55" text-anchor="middle" class="guide-angle">045°</text>';
+  const trail='<path d="M61 205L163 164L257 87L315 176" stroke="#91a9a2" stroke-width="13" fill="none" stroke-linecap="round"/>'+
+    '<path d="M61 205L163 164L257 87L315 176" stroke="#d1b784" stroke-width="4" stroke-dasharray="5 10" fill="none"/>'+
+    '<g fill="#284b51" stroke="#d7c79c" stroke-width="4"><circle cx="61" cy="205" r="19"/><circle cx="163" cy="164" r="19"/><circle cx="257" cy="87" r="19"/><circle cx="315" cy="176" r="19"/></g>'+
+    '<circle cx="163" cy="164" r="29" fill="none" stroke="#e9d29e" stroke-width="3" stroke-dasharray="5 4"/>'+
+    '<text x="163" y="129" text-anchor="middle">TRAIL FOUND</text>'+
+    '<text x="163" y="170" text-anchor="middle" class="guide-map-mark">✧</text>'+
+    '<text x="61" y="242" text-anchor="middle">HUNTER</text>'+
+    '<text x="257" y="52" text-anchor="middle">CLUE</text>';
+  const timeline='<g fill="#263e44" stroke="#abc4b6" stroke-width="3">'+
+    '<rect x="20" y="112" width="95" height="65" rx="6"/>'+
+    '<rect x="131" y="112" width="95" height="65" rx="6"/>'+
+    '<rect x="242" y="112" width="95" height="65" rx="6"/></g>'+
+    '<path d="M116 146H130M227 146H241" stroke="#e7cc98" stroke-width="4"/>'+
+    '<g fill="#e7d3a6" text-anchor="middle"><text x="67" y="100">ROUND 2</text>'+
+    '<text x="178" y="100">ROUND 3</text><text x="290" y="100">ROUND 4</text>'+
+    '<text x="67" y="151" class="guide-symbol">✧</text>'+
+    '<text x="178" y="151" class="guide-symbol">?</text>'+
+    '<text x="290" y="151" class="guide-symbol">?</text>'+
+    '<text x="179" y="218">The Monster can move between clues</text></g>';
+  const powers='<g fill="none" stroke="#b5d0c3" stroke-width="4">'+
+    '<circle cx="91" cy="125" r="48"/><circle cx="268" cy="125" r="48"/>'+
+    '<path d="M139 125H217M203 111L217 125L203 139" stroke="#f4cf92" stroke-width="5"/></g>'+
+    '<text x="91" y="135" text-anchor="middle" class="guide-symbol">✧</text>'+
+    '<text x="268" y="135" text-anchor="middle" class="guide-symbol">?</text>'+
+    '<g text-anchor="middle"><text x="91" y="206">TELEPORT</text>'+
+    '<text x="268" y="206">UNCONFIRMED</text><text x="180" y="253">An announced move is not a live sighting</text></g>';
+  const checklist='<g text-anchor="start">'+[0,1,2,3,4,5].map(i=>{
+    const x=i%2===0?24:190,y=57+Math.floor(i/2)*89;
+    return '<circle cx="'+(x+15)+'" cy="'+(y+7)+'" r="16" fill="#e0c28d"/>'+
+      '<text x="'+(x+15)+'" y="'+(y+13)+'" text-anchor="middle" class="guide-count">'+(i+1)+'</text>'+
+      '<text x="'+(x+37)+'" y="'+(y+12)+'">'+
+        ['READ','PLAN','MEASURE','SEARCH','DEDUCE','END TURN'][i]+'</text>';
+  }).join('')+'</g>';
+  let picture=step.visual==='compass'?compass:
+    step.visual==='trail'?trail:
+    step.visual==='timeline'?timeline:
+    step.visual==='powers'?powers:checklist;
+  return heading+picture+end;
+}
+
+function guideHtml() {
+  const step=GUIDE_STEPS[guideStep];
+  return '<main class="tutorial-screen tutorial-screen-guide">'+
+    '<section class="tutorial-card guide-card" role="dialog" aria-modal="true" aria-labelledby="guide-title">'+
+      '<div class="tutorial-header">'+
+        '<span class="eyebrow">HOW TO HUNT · STEP '+(guideStep+1)+' OF '+GUIDE_STEPS.length+'</span>'+
+        '<button id="tutorial-close" type="button" class="tutorial-close" aria-label="Close tutorial">✕ CLOSE</button>'+
+      '</div>'+
+      '<div class="tutorial-steps" aria-label="Tutorial progress">'+
+        GUIDE_STEPS.map((_,i)=>'<span class="'+(i<=guideStep?'completed-step':'')+'"></span>').join('')+
+      '</div>'+
+      '<div class="guide-layout">'+
+        '<div class="guide-art">'+guideArtwork(step)+'</div>'+
+        '<div class="guide-copy">'+
+          '<span class="encounter-kicker">'+esc(step.heading)+'</span>'+
+          '<h1 id="guide-title">'+esc(step.title)+'</h1>'+
+          '<p class="guide-main-text">'+esc(step.detail)+'</p>'+
+          '<div class="guide-example"><strong>EXAMPLE / REMEMBER</strong><p>'+esc(step.example)+'</p></div>'+
+          '<div class="guide-actions">'+
+            (guideStep>0?'<button id="guide-back" type="button" class="secondary-button">← PREVIOUS</button>':'')+
+            (guideStep===GUIDE_STEPS.length-1
+              ?'<button id="guide-practice" type="button" class="primary-button">PRACTISE BEARINGS →</button>'
+              :'<button id="guide-next" type="button" class="primary-button">NEXT: '+esc(GUIDE_STEPS[guideStep+1].heading)+' →</button>')+
+          '</div>'+
+          (guideStep!==GUIDE_STEPS.length-1?'<button id="guide-skip" class="guide-skip" type="button">SKIP TO BEARINGS PRACTICE</button>':'')+
+        '</div>'+
+      '</div>'+
+    '</section></main>';
+}
+
 function tutorialHtml() {
+  if(tutorialStage==='guide')return guideHtml();
   const lesson=LESSONS[lessonStep];
   const radians=lesson.bearing*Math.PI/180;
   const x=130+75*Math.sin(radians),y=130-75*Math.cos(radians);
@@ -177,7 +271,24 @@ function tutorialHtml() {
     '</div></div></section></main>';
 }
 function bindTutorial() {
-  document.getElementById('tutorial-close').addEventListener('click',()=>{tutorialOpen=false;render();});
+  document.getElementById('tutorial-close').addEventListener('click',()=>{
+    tutorialOpen=false;render();
+  });
+  if(tutorialStage==='guide'){
+    document.getElementById('guide-next')?.addEventListener('click',()=>{
+      guideStep=Math.min(GUIDE_STEPS.length-1,guideStep+1);render();
+    });
+    document.getElementById('guide-back')?.addEventListener('click',()=>{
+      guideStep=Math.max(0,guideStep-1);render();
+    });
+    const practise=()=>{
+      tutorialStage='practice';lessonStep=0;lessonOutcome=null;render();
+    };
+    document.getElementById('guide-skip')?.addEventListener('click',practise);
+    document.getElementById('guide-practice')?.addEventListener('click',practise);
+    document.getElementById('guide-next')?.focus?.();
+    return;
+  }
   document.getElementById('lesson-form').addEventListener('submit',e=>{
     e.preventDefault();
     lessonOutcome=checkLesson(lessonStep,document.getElementById('lesson-answer').value);
@@ -194,11 +305,11 @@ function bindTutorial() {
 
 
 function guidedChoiceHtml() {
-  return '<div class="guidance-choice" aria-label="Optional guided map visualisation">' +
+  return '<div class="guidance-choice" aria-label="Optional step-by-step gameplay coaching">' +
     '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
     '<small>'+(guidedSelection
-      ?'Same textual clues and sightings, plus an optional clue-plotting and deduction-map button.'
-      :'All bearing clues, watcher sightings and gameplay hints remain. No bearings are drawn automatically.')+
+      ?'Step-by-step Coach tab, worked bearing examples on request and optional clue plotting. All original clues stay.'
+      :'All original clues and sightings remain. Measure the bearings yourself; no clue rays are drawn automatically.')+
     '</small></div>' +
     '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
       (guidedSelection?'SWITCH TO STANDARD':'ENABLE TUTORIAL HELP')+'</button></div>';
@@ -526,7 +637,7 @@ function movementForm(view) {
       (view.powers?.lanternCharges>0?'<button id="use-lantern" class="lantern-button" '+
         (left===0?'disabled':'')+'>✧ SIGNAL LANTERN · USE 1 MOVE</button>':'')+
       '</div>' : '')+
-    '<button id="open-tutorial-game" class="field-guide-link" type="button">BEARINGS FIELD TRAINING ↗</button>'+
+    '<button id="open-tutorial-game" class="field-guide-link" type="button">HOW TO HUNT &amp; BEARINGS TRAINING ↗</button>'+
     '</section>';
 }
 
@@ -694,22 +805,39 @@ function monsterPortrait(difficulty,cssClass='') {
 }
 
 /** Solo level encounter shown before the first movement. No secret state. */
+/** Illustrated Solo briefing: the round limit is always the current level's. */
 function monsterIntroductionHtml(view) {
   const m=monsterFor(view.difficulty);
+  const briefing=hunterBriefing(view);
+  const level=String(Object.keys(MONSTERS).indexOf(view.difficulty)+1).padStart(2,'0');
   return '<div class="encounter-backdrop" data-encounter="intro">'+
-    '<section class="encounter-card monster-encounter" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
-      '<div class="encounter-art">'+monsterPortrait(view.difficulty)+'</div>'+
-      '<div class="encounter-copy">'+
-        '<span class="eyebrow">LEVEL '+String(Object.keys(MONSTERS).indexOf(view.difficulty)+1).padStart(2,'0')+
-          ' · '+esc(m.home.toUpperCase())+'</span>'+
-        '<span class="encounter-kicker">YOUR QUARRY</span>'+
-        '<h1 id="monster-intro-title">'+esc(m.name)+'</h1>'+
-        '<p class="encounter-title">'+esc(m.title)+'</p>'+
-        '<p class="encounter-story">'+esc(m.flavour)+'</p>'+
-        '<div class="monster-power-summary"><strong>'+esc(m.powerTitle)+'</strong>'+
-          '<p>'+esc(m.powerText)+'</p></div>'+
-        '<p class="encounter-tip">Bearings are measured clockwise from north. Every claimed location is worth investigating.</p>'+
-        '<button type="button" id="intro-begin" class="primary-button">BEGIN THE HUNT →</button>'+
+    '<section class="encounter-card monster-encounter hunter-briefing" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
+      '<div class="encounter-art hunter-briefing-art">'+
+        '<img class="briefing-hunter-illustration" src="./assets/characters/monster-hunter.svg" alt="A monster hunter with a lantern, map and compass"/>'+
+        '<div class="briefing-quarry-portrait">'+
+          monsterPortrait(view.difficulty)+
+          '<span>'+esc(m.name)+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="encounter-copy briefing-copy">'+
+        '<span class="eyebrow">LEVEL '+level+' · '+esc(m.home.toUpperCase())+
+          ' · '+briefing.roundLimit+' ROUNDS</span>'+
+        '<span class="encounter-kicker">YOUR MISSION BRIEFING</span>'+
+        '<h1 id="monster-intro-title">'+esc(briefing.heading)+'</h1>'+
+        '<h2 class="briefing-monster-name">FIND '+esc(m.name.toUpperCase())+'</h2>'+
+        '<p class="briefing-text">'+esc(briefing.goal)+'</p>'+
+        '<p class="briefing-text">'+esc(briefing.evidence)+'</p>'+
+        '<p class="briefing-text briefing-warning">'+esc(briefing.warning)+'</p>'+
+        (briefing.missionWarning?'<p class="briefing-mission-warning">'+esc(briefing.missionWarning)+'</p>':'')+
+        '<div class="briefing-deadline"><strong>'+briefing.roundLimit+' ROUNDS</strong>'+
+          '<span>'+esc(briefing.deadline)+'</span></div>'+
+        '<div class="briefing-steps" aria-label="Your first steps">'+
+          '<span>1 · READ CLUES</span><span>2 · MEASURE BEARINGS</span><span>3 · SEARCH LOCATIONS</span>'+
+        '</div>'+
+        '<div class="briefing-actions">'+
+          '<button id="intro-begin" type="button" class="primary-button">BEGIN THE HUNT →</button>'+
+          '<button id="intro-help" type="button" class="secondary-button">HOW TO PLAY</button>'+
+        '</div>'+
       '</div></section></div>';
 }
 
@@ -754,6 +882,7 @@ function bindEncounters() {
     persistNow();
     render();
   });
+  document.getElementById('intro-help')?.addEventListener('click',openTutorial);
   document.getElementById('report-continue')?.addEventListener('click',()=>{
     searchReportOpen=false;
     if(game.phase!=='over')persistNow();
@@ -776,11 +905,43 @@ function hudMissionSummary(view) {
   return 'FIND THE MONSTER BEFORE ROUND '+view.maxRounds;
 }
 
+function guidedCoachPanel(view) {
+  const tip=guidedCoach(view,currentMap());
+  if(!tip) return '';
+  return '<section class="panel coach-panel" aria-label="Guided step-by-step help">'+
+    '<span class="eyebrow">YOUR HUNTING COACH · '+tip.remaining+
+      ' ROUND'+(tip.remaining===1?'':'S')+' LEFT</span>'+
+    '<h3>'+esc(tip.title)+'</h3>'+
+    '<p class="coach-instruction">'+esc(tip.instruction)+'</p>'+
+    '<div class="coach-mini-checklist">'+
+      '<strong>EVERY TURN</strong>'+
+      '<p>1 · READ CLUES &nbsp; 2 · PLAN &nbsp; 3 · MEASURE &nbsp; 4 · SEARCH &nbsp; 5 · DEDUCE</p>'+
+    '</div>'+
+    (tip.example && tip.stepsLeft>0?
+      '<div class="coach-example">'+
+        '<span class="eyebrow">OPTIONAL WORKED ROAD EXAMPLE</span>'+
+        '<p>From <strong>'+esc(tip.example.from)+'</strong>, look at the road towards <strong>'+
+          esc(tip.example.to)+'</strong>. Measure clockwise from north first.</p>'+
+        (coachAnswerVisible
+          ?'<p class="coach-reveal-answer">Correct road bearing: <strong>'+
+              esc(tip.example.bearing)+'</strong></p>'
+          :'<button id="coach-reveal" type="button" class="secondary-button">REVEAL BEARING IN TEXT</button>')+
+        '<p class="coach-disclaimer">This example is only text: no line will be drawn on the map.</p>'+
+      '</div>':'')+
+    '<div class="coach-actions">'+
+      '<button id="coach-open-clues" type="button" class="secondary-button">READ MY CLUES</button>'+
+      (tip.stepsLeft>0?'<button id="coach-open-protractor" type="button" class="secondary-button">'+
+        (protractorVisible?'HIDE PROTRACTOR':'SHOW PROTRACTOR')+'</button>':'')+
+      '<button id="coach-training" type="button" class="field-guide-link">FULL HOW-TO GUIDE &amp; PRACTICE ↗</button>'+
+    '</div></section>';
+}
+
 function hudTabsHtml(view) {
   const isMonster=view.phase==='monster';
   const tabs=isMonster
     ? [['trail','TRAIL'],['mission','MISSION']]
-    : [['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
+    : [...(view.guided?[['coach','COACH']]:[]),
+       ['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
        ['stats','FEEDBACK']];
   const chosen=tabs.some(([id])=>id===hudTab)?hudTab:tabs[0][0];
   const tabBar=tabs.map(([id,label])=>'<button type="button" role="tab" id="hud-tab-'+id+
@@ -788,6 +949,7 @@ function hudTabsHtml(view) {
     '" tabindex="'+(chosen===id?'0':'-1')+'">'+label+'</button>').join('');
   const panels={
     trail:()=>monsterTrailPanel(view),
+    coach:()=>guidedCoachPanel(view),
     clues:()=>notebook(view),
     notes:()=>annotationsPanel(),
     mission:()=>view.scenario==='classic'
@@ -1119,6 +1281,19 @@ function render() {
       render();
     });
   });
+  document.getElementById('coach-open-clues')?.addEventListener('click',()=>{
+    hudTab='clues';render();
+  });
+  document.getElementById('coach-open-protractor')?.addEventListener('click',()=>{
+    protractorVisible=!protractorVisible;
+    protractorPosition=null;
+    protractorBearing=0;
+    render();
+  });
+  document.getElementById('coach-reveal')?.addEventListener('click',()=>{
+    coachAnswerVisible=true;render();
+  });
+  document.getElementById('coach-training')?.addEventListener('click',openTutorial);
   bindMapZoom();
   document.getElementById('move-form').addEventListener('submit',event=>{
     event.preventDefault();
@@ -1129,6 +1304,7 @@ function render() {
       :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
     if(before!==after) {
+      coachAnswerVisible=false;
       resetProtractor(view.phase==='hunter' && game.mode==='solo');
       if(view.phase==='hunter' && result.ok && game.hunterOutcome)
         searchReportOpen=true;
@@ -1136,6 +1312,7 @@ function render() {
     render();
   });
   document.getElementById('end-turn')?.addEventListener('click',()=>{
+    coachAnswerVisible=false;
     searchReportOpen=false;
     endHunterTurn(game);
     resetProtractor(game.mode==='solo');

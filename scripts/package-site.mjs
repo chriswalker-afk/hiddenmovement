@@ -16,5 +16,7 @@ for(const file of source)await copyFile(join(root,'src',file),join(output,'src',
 // The four original portrait assets are an explicit trusted static directory.
 await cp(join(root,'assets','monsters'),join(output,'assets','monsters'),
   {recursive:true});
+await cp(join(root,'assets','characters'),join(output,'assets','characters'),
+  {recursive:true});
 await writeFile(join(output,'.nojekyll'),'');
 console.log('Packaged Shadow Bearings: '+top.length+' top-level files and '+source.length+' JavaScript modules and four original monster portraits.');

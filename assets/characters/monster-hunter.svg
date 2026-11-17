@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="600" viewBox="0 0 520 600" role="img" aria-labelledby="title description">
+<title id="title">The Monster Hunter</title>
+<desc id="description">A cloaked monster hunter carries an old brass compass, an evidence map and a glowing lantern across misty moorland beneath the stars.</desc>
+<defs>
+  <radialGradient id="night"><stop stop-color="#36505a"/><stop offset=".53" stop-color="#1d3441"/><stop offset="1" stop-color="#0b1929"/></radialGradient>
+  <linearGradient id="cloak" x1="0" y1="0" x2=".85" y2="1"><stop stop-color="#4a6867"/><stop offset=".38" stop-color="#263e49"/><stop offset=".78" stop-color="#122b38"/><stop offset="1" stop-color="#101e2d"/></linearGradient>
+  <linearGradient id="leather" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b4966a"/><stop offset=".38" stop-color="#796345"/><stop offset="1" stop-color="#393a37"/></linearGradient>
+  <radialGradient id="lantern"><stop stop-color="#fff8c9" stop-opacity=".98"/><stop offset=".32" stop-color="#f6d58e" stop-opacity=".65"/><stop offset="1" stop-color="#e0bb6a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f2e2b5"/><stop offset="1" stop-color="#b9a98a"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="13"/></filter>
+</defs>
+<rect width="520" height="600" rx="24" fill="url(#night)"/>
+<path d="M0 403Q104 340 201 391T520 380V600H0Z" fill="#213c42" opacity=".7"/>
+<path d="M0 452Q105 409 232 433T520 421V600H0Z" fill="#163039" opacity=".82"/>
+<g opacity=".29" fill="none" stroke="#bad1bc" stroke-width="2"><path d="M0 471Q117 447 263 469T520 461M0 527Q151 501 288 520T520 513M0 557Q139 527 281 548T520 542"/></g>
+<g fill="#dfcda6" opacity=".6"><circle cx="83" cy="77" r="3"/><circle cx="143" cy="102" r="2"/><circle cx="387" cy="79" r="2"/><circle cx="446" cy="153" r="3"/><circle cx="351" cy="141" r="2"/><circle cx="54" cy="198" r="2"/><circle cx="473" cy="67" r="2"/><circle cx="303" cy="45" r="2"/></g>
+<g opacity=".45" fill="none" stroke="#a2bfb2" stroke-width="5"><path d="M28 472q17-86-5-127M47 472q-12-72 14-109M482 488q-20-94 10-149M460 487q18-65-11-101"/></g>
+<g opacity=".32" stroke="#8dada3" stroke-width="8" fill="none"><path d="M78 335Q54 288 94 227M434 351Q470 283 438 234"/></g>
+<path d="M213 257Q177 303 141 380Q118 448 73 546L187 567L259 584L350 564L431 544Q375 443 345 345Q318 265 280 243Z" fill="url(#cloak)" stroke="#9bad96" stroke-width="4"/>
+<path d="M171 357Q205 330 255 338Q307 337 336 365M136 473Q194 458 239 471M286 475Q355 449 378 479" fill="none" stroke="#8aa59c" stroke-opacity=".54" stroke-width="3"/>
+<path d="M251 149Q201 164 185 218L162 283Q208 318 259 315Q309 316 356 282L326 215Q311 159 251 149Z" fill="#263b42" stroke="#9daea1" stroke-width="5"/>
+<path d="M247 181Q215 191 205 231Q202 268 222 282Q247 295 278 282Q305 264 303 234Q295 194 264 183Z" fill="#a78e6c" stroke="#d2b998" stroke-width="3"/>
+<path d="M209 218Q220 198 239 196M274 196Q297 207 303 226" stroke="#2b3534" stroke-width="12" fill="none" stroke-linecap="round"/>
+<path d="M221 242L238 239M275 239L291 240" stroke="#222f36" stroke-width="5" stroke-linecap="round"/>
+<path d="M240 262Q257 274 278 261" stroke="#69523e" stroke-width="3" fill="none"/>
+<path d="M181 214Q187 158 224 132Q273 112 305 141Q332 170 334 219L314 233Q295 182 264 172Q226 173 204 211Z" fill="#1c3541" stroke="#aab7a1" stroke-width="4"/>
+<path d="M192 187Q203 157 227 150M302 158Q321 179 325 201" fill="none" stroke="#96afa5" stroke-opacity=".54" stroke-width="4"/>
+<path d="M172 314L195 305L222 345L216 418L175 433L154 382Z" fill="url(#leather)" stroke="#c0a47a" stroke-width="3"/>
+<path d="M314 311L335 307L367 383L352 417L313 405L295 344Z" fill="url(#leather)" stroke="#c0a47a" stroke-width="3"/>
+<path d="M216 337Q262 350 304 333L314 361Q262 380 219 367Z" fill="#715a46" stroke="#cdb48c" stroke-width="3"/>
+<circle cx="262" cy="355" r="10" fill="#cfb582" stroke="#4b5147" stroke-width="3"/>
+<path d="M160 360Q131 379 118 417L103 451M360 359Q395 384 403 418L421 440" fill="none" stroke="#ba9b76" stroke-width="18" stroke-linecap="round"/>
+<path d="M116 426L101 463" stroke="#cfb792" stroke-width="12" stroke-linecap="round"/>
+<g transform="translate(59 409) rotate(-13)">
+ <ellipse cx="62" cy="65" rx="92" ry="100" fill="url(#lantern)" opacity=".76"/>
+ <path d="M43 23Q62 4 81 23L80 110Q60 126 43 110Z" fill="#c49f67" stroke="#f2d39b" stroke-width="5"/>
+ <path d="M46 33H78V102H46Z" fill="#f0dca2" opacity=".86"/>
+ <path d="M46 52H78M46 83H78M61 33V102" stroke="#765d48" stroke-width="5"/>
+ <path d="M51 20Q61 0 74 20M60 0V-13" fill="none" stroke="#e3ca97" stroke-width="5"/>
+ <ellipse cx="62" cy="68" rx="20" ry="33" fill="#fff7c5" opacity=".8"/>
+</g>
+<g transform="translate(330 416) rotate(12)">
+  <path d="M0 12L75 2L93 80L18 99Z" fill="url(#paper)" stroke="#846b4c" stroke-width="5"/>
+  <path d="M14 24Q27 30 32 43T68 53M12 58Q42 47 63 75M42 17L53 88" fill="none" stroke="#65766a" stroke-width="3" stroke-dasharray="5 5"/>
+  <circle cx="33" cy="41" r="6" fill="#ad7654"/><circle cx="69" cy="67" r="6" fill="#ad7654"/>
+  <path d="M30 39L69 66" stroke="#ad7654" stroke-width="2"/>
+</g>
+<g transform="translate(273 440)">
+  <circle r="53" fill="#8e7959" stroke="#dfc797" stroke-width="5"/>
+  <circle r="42" fill="#243e44" stroke="#e4d2a7" stroke-width="2"/>
+  <path d="M0 -34L12 8L0 31L-12 8Z" fill="#e7cda1"/>
+  <path d="M0 34L-12-8L0-31L12-8Z" fill="#809e9b"/>
+  <circle r="7" fill="#f3e4bb" stroke="#1b3541" stroke-width="3"/>
+  <g fill="#e9d8ae" font-size="12" font-family="serif" font-weight="bold" text-anchor="middle">
+   <text x="0" y="-39">N</text><text x="40" y="4">E</text>
+   <text x="0" y="47">S</text><text x="-40" y="4">W</text>
+  </g>
+</g>
+<path d="M0 553Q109 518 227 551T520 543V600H0Z" fill="#122833" opacity=".82"/>
+<g opacity=".5" fill="none" stroke="#cad6b9" stroke-width="2">
+ <path d="M37 573l-8-24M59 579l18-31M420 562l-9-30M460 567l12-33"/>
+</g>
+</svg>

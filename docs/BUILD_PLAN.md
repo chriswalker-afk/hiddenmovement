@@ -104,7 +104,7 @@
 
 ## PR9 — unique monsters, truth-preserving powers and search feedback
 
-**Scope implemented on PR #9** (built after PR #8 was merged; not yet on live main):
+**Implemented and merged in PR #9** (after PR #8):
 
 - Four new named Solo monsters: **Lantern Wisp** (no special ability), **Briar Shade** (public-origin 2–3-road teleport, 4-round cooldown), **Mire Mimic** (unconfirmed decoy location, 4-round cooldown), and **Eclipse Herald** (both abilities on 5- and 4-round cooldowns, never both the same Monster turn).
 - Four cohesive, original, locally bundled SVG portrait assets with level-introduction cards, difficulty-screen previews and game-over art.
@@ -116,3 +116,16 @@
 - Follow-up: actual classroom feedback and playtests to adjust ability frequency and tune report writing, especially on Expert.
 
 **Shipping gate:** merge only after tests, seeded AI benchmarks, deployable site build, all four introduction images and desktop/mobile visual QA succeed. PR9 does not replace the live game until merged.
+
+
+## PR10 — illustrated Monster Hunter briefings and Guided help
+
+**Implementation (17 November 2026):**
+- Solo levels begin with an original Hunter illustration paired with the existing **unique monster portrait**. The text introduces the Hunter's role, the evidence-search loop, the Monster's specific power, secret movement, and the win condition; it derives **13/15/18/21 rounds** from the actual difficulty state.
+- The briefing also warns about early Monster victory on The Last Gate and Lanternfall story missions.
+- Seven illustrated **How to Hunt** pages teach movement bearings, trace clues, clue wording/reverse bearings, old observation timestamps, teleports, false sightings and a turn checklist. The original four interactive compass challenges follow; students can skip ahead or close the tutorial.
+- Opt-in **Guided / Tutorial** mode adds a contextual Coach panel. Its example bearing is revealed only on request **as text**, uses a connected road and public Hunter state, and does not draw lines or sectors automatically. Standard clue/sighting frequency remains unchanged.
+- The allowlisted preview/Page deployment copies `assets/characters/monster-hunter.svg`, and regression tests cover the briefings, round limits, guide structure, powers and non-secret Coach advice.
+- Browser viewport QA captures all four briefings, tutorial and Guided Coach with mobile/desktop layout checks. **Final gate:** tests, syntax checks, site packaging and browser visual QA must pass before merging.
+
+**Still to tune with students:** relative usefulness of Guide versus Coach and how often each monster power ought to activate.

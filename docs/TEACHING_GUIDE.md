@@ -8,18 +8,18 @@ Best suited to a 15–25 minute lesson activity or a short follow-up after intro
 
 ## Preparation
 
-- Start with **Intro** for new learners; the 14-location map has simpler roads, exact earned trace bearings and periodic watcher sightings in every mode. Guided is only needed for the optional visual clue overlay.
+- Start with **Intro** for new learners; the 14-location map has simpler roads, exact earned trace bearings and periodic watcher sightings in every mode. Guided adds optional contextual Coach advice, text-only worked road bearings and a manually enabled visual clue overlay; Standard keeps all original numerical clues.
 - **Apprentice** introduces 30°-wide clue sectors and ±1-road distance bands in both Standard and Guided.
 - **Tracker** and **Expert** increase graph complexity, reduce information and increase Monster evasiveness.
 - Students need a device supporting keyboard or touch; no external calculator or additional app is required. The optional on-map **360° protractor** can be used during every movement turn.
-- Interactive Field Training is available from the main menu and during the Hunter turn.
+- The **seven-step illustrated How to Hunt guide** is available from the menu, pre-level briefing and during a Hunter turn; it flows into the existing **four bearings practice challenges**.
 - No account, sign-in, grading backend or saved progress is required for the prototype.
 
 ## Suggested 20-minute teaching sequence
 
 **1. Model (3 minutes).** Draw a north arrow and a road to the southeast. Remind students to measure clockwise from north. Enter a three-figure bearing. Ask which *point* the bearing statement starts from.
 
-**2. Scaffolding (4 minutes).** Use the four practice challenges: cardinal bearings, reverse directions, “bearing of Hunter from Monster” wording, and a compass interval wrapping through 000°.
+**2. Scaffolding (4 minutes).** Show the How to Hunt steps about moving, obtaining trail clues and clue observation dates. Students needing extra support can continue the seven steps; use one or two interactive bearings challenges to practise three-figure directions and reverse bearings.
 
 **3. Independent play (9 minutes).** Students play Solo Hunt on Intro or Apprentice in **Standard mode**. Give the instruction: *read the bearing clues, then measure on the map before moving*. The notebook still supplies numerical bearings and distance information, but never draws them automatically. Use the optional draggable protractor and encourage handwritten or in-game notes.
 
@@ -36,9 +36,17 @@ Students can select **Protractor** above the map. The transparent 360° protract
 
 In **Standard mode**, opening and scheduled watcher sightings, track clues, distance bands on easier levels, connected-road descriptions, mathematical feedback, public mission events and Signal Lantern clues remain available. Students read these as text. **The game does not draw the given bearing as a line or sector**: they must interpret it themselves. An invalid bearing entry still does not consume a move.
 
-For a scaffolded group, select **Enable Tutorial Help** before starting a hunt. Guided mode does not add or remove numerical clues; it makes the optional **Combine Clues on the Map** button available. The overlay is initially off and only draws a bearing or sector after a player clicks it. Return to Standard when students are ready to interpret all written clues without a plotting aid.
+For a scaffolded group, select **Enable Tutorial Help** before starting a hunt. Guided mode does not add or remove numerical clues; it adds a **Coach** tab with specific next-step prompts and an optional *text-only* worked bearing of a public connected road. The Coach can open Clues or the draggable protractor. **Combine Clues on the Map** remains optional and off until deliberately selected from Clues; a numerical hint alone never draws a bearing. Return to Standard when students are ready to interpret the written clues independently.
 
 **Suggested differentiation:** Let students use the protractor for their first three moves, then ask them to estimate bearings before checking with the protractor. At the end, ask for written justification of one reverse bearing.
+
+## How to use the PR10 illustrated introductions and seven-step tutorial
+
+Each Solo level now presents a **Monster Hunter briefing** with original Hunter and monster illustrations, its region, the evidence goal, a power warning and the actual round cap (**13 / 15 / 18 / 21**, not a universal 15). In story missions, the intro also warns that an escape gate or two extinguished beacons can end the hunt early. Ask students to name which report is trustworthy, how they will measure their first bearing and when the Monster next moves.
+
+For students new to hidden movement, use **HOW TO PLAY** on the briefing. The seven illustrated pages cover the player's role; measuring road bearings; finding recent trails; wording and reverse bearings; observation dates versus current positions; teleports and deceptive rumours; and a short action checklist. Four existing answer-checked bearings exercises follow. Students may skip to practice without losing their hunt.
+
+During Guided play, the **Coach tab** provides phase-appropriate prompts using only Hunter-visible facts. A request to reveal a correct road bearing displays **text**, not an automatic bearing ray. To fade support, first have students read the Coach and measure themselves, then use only the standard Clues tab and manual protractor, and finally play Standard without the Coach or optional plotting overlay.
 
 ## Working with the four monsters (PR9)
 
@@ -114,4 +122,4 @@ The optional candidate overlay uses **only Hunter-visible clue data and map topo
 
 ## Prototype limits and future work
 
-Game balance is based on repeatable automated simulations, not yet calibrated against a class of students. No persistent saves, cloud multiplayer, polished art, or hosted deployment are included in PR3. Those are later milestones. Consider collecting students' gameplay feedback on confusion around bearing wording, density of clues, and whether the monster is catchable without overlay assistance.
+Game balance is based on repeatable automated simulations, not yet calibrated against a class of students. The current game includes original illustrated artwork, GitHub Pages deployment and local-device save/resume, but **not** shared cloud saves, competitive two-device multiplayer or server-authoritative anti-cheat. Consider collecting feedback on clue wording, density of evidence, tutorial clarity and whether the monster is catchable without the optional overlay.

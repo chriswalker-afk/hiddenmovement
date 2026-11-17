@@ -63,8 +63,11 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   await import('../src/app.mjs');
   assert.match(html(),/INTERACTIVE BEARINGS TRAINING/);
   click('open-tutorial');
-  assert.match(html(),/BEARINGS FIELD TRAINING/);
+  assert.match(html(),/HOW TO HUNT/);
+  assert.match(html(),/You are the Monster Hunter/);
   assert.doesNotMatch(html(),/world-svg/);
+  click('guide-skip');
+  assert.match(html(),/BEARINGS FIELD TRAINING/);
   el('lesson-answer').value='090';
   submit('lesson-form');
   assert.match(html(),/Correct: 090°/);
@@ -79,6 +82,7 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('guided-toggle'); // Opt into manual clue plotting during teaching; textual clues are always present.
   click('start-solo-select');
   click('difficulty-intro');
+  click('hud-tab-clues');
   assert.match(html(),/WATCHER SIGHTING/);
   click('hud-tab-stats');
   assert.match(html(),/MATHS FEEDBACK/);
@@ -126,7 +130,8 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('reveal');
   assert.match(html(),/Follow the trail/);
   click('open-tutorial-game');
-  assert.match(html(),/BEARINGS FIELD TRAINING/);
+  assert.match(html(),/HOW TO HUNT/);
+  assert.match(html(),/You are the Monster Hunter/);
   document.hidden=true;
   callbacks.get('document:visibilitychange')();
   assert.match(html(),/Pass this device to the hunter and look away/);
