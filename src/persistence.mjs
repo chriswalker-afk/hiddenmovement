@@ -1,4 +1,5 @@
 import { createGame, sealTurn } from './engine.mjs';
+import { validTourStage } from './guided-walkthrough.mjs';
 
 export const STORAGE_KEY='shadow-bearings-save-v1';
 const VERSION=1;
@@ -33,7 +34,8 @@ export function serializeGame(game,ui={}) {
     selectedClueIds:Array.isArray(ui.selectedClueIds)?ui.selectedClueIds.filter(x=>typeof x==='string').slice(0,100):null,
     plotClue:!!ui.plotClue,
     introSeen:ui.introSeen!==false,
-    reportSeen:ui.reportSeen!==false
+    reportSeen:ui.reportSeen!==false,
+    tourStage:game.guided&&validTourStage(ui.tourStage)?ui.tourStage:'done'
   };
   return JSON.stringify(data);
 }
@@ -111,6 +113,7 @@ export function restoreGame(raw) {
     fieldNotes:typeof ui.fieldNotes==='string'?ui.fieldNotes.slice(0,400):'',
     marks,plotClue:!!ui.plotClue,
     introSeen:ui.introSeen!==false,reportSeen:ui.reportSeen!==false,
+    tourStage:guided&&validTourStage(ui.tourStage)?ui.tourStage:(guided&&game.round===1?'enable-protractor':'done'),
     selectedClueIds:Array.isArray(ui.selectedClueIds)?
       ui.selectedClueIds.filter(x=>typeof x==='string').slice(0,100):null
   }};

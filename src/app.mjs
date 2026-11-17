@@ -6,6 +6,10 @@ import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenari
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { MONSTERS, monsterFor } from './monsters.mjs';
 import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
+import {
+  DEFAULT_TOUR_STAGE,advanceTour,reconcileTour,tourStep,nearHunter,
+  initialRulerPosition,validTourStage
+} from './guided-walkthrough.mjs';
 import { buildHuntReplay, replayMapView, replayFrameCaption } from './hunt-replay.mjs';
 import { FORGE_CHOICES, FORGE_PALETTES, FORGE_COMPLEXIONS,
   DEFAULT_HUNTER, normalizeHunter, randomHunter, loadHunter, saveHunter,
@@ -45,6 +49,7 @@ let mapZoom = 1;
 let pendingHunterMotion = null;
 let hudTab = 'clues';
 let guidedSelection = false;
+let tourStage = 'done';
 let protractorVisible = false;
 let protractorBearing = 0;
 let protractorPosition = null;
@@ -84,6 +89,7 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     searchReportOpen=false;
     hudTab=guidedSelection?'coach':'clues';
     coachAnswerVisible=false;
+    tourStage=game.guided?DEFAULT_TOUR_STAGE:'done';
     protractorVisible=false;
     protractorBearing=0;
     protractorPosition=null;
@@ -107,7 +113,8 @@ function persistNow() {
   const state={
     fieldNotes,marks:[...nodeMarks.entries()],plotClue,
     selectedClueIds:selectedClueIds===null?null:[...selectedClueIds],
-    introSeen:!monsterIntroOpen,reportSeen:!searchReportOpen
+    introSeen:!monsterIntroOpen,reportSeen:!searchReportOpen,
+    tourStage
   };
   return persistSaved(storage(),game,state);
 }
@@ -125,10 +132,22 @@ function resumeHunt() {
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
   plotClue=restored.ui.plotClue && game.guided;
   guidedSelection=game.guided;
-  hudTab=game.guided?'coach':'clues';
+  tourStage=game.guided
+    ?(validTourStage(restored.ui.tourStage)?restored.ui.tourStage:
+      (game.round===1?DEFAULT_TOUR_STAGE:'done'))
+    :'done';
+  hudTab=game.guided&&['read-bearing','enable-deduction',
+    'explain-deduction','independent'].includes(tourStage)?'clues':
+    game.guided?'coach':'clues';
   coachAnswerVisible=false;
-  protractorVisible=false;
-  protractorPosition=null;
+  // Reopen the manual ruler for the relevant saved lesson. Without this,
+  // a resumed "read the bearing" lesson could point to a missing tool.
+  protractorVisible=game.guided&&[
+    'place-protractor','open-clue','read-bearing','enable-deduction',
+    'explain-deduction','first-move','search-report','second-move'
+  ].includes(tourStage);
+  protractorPosition=tourStage==='place-protractor'
+    ?initialRulerPosition(currentMap().nodes[game.hunter]):null;
   protractorBearing=0;
   selectedClueIds=restored.ui.selectedClueIds===null?null:new Set(restored.ui.selectedClueIds);
   difficultyPicker=false;
@@ -449,7 +468,7 @@ function guidedChoiceHtml() {
   return '<div class="guidance-choice" aria-label="Optional step-by-step gameplay coaching">' +
     '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
     '<small>'+(guidedSelection
-      ?'Step-by-step Coach tab, worked bearing examples on request and optional clue plotting. All original clues stay.'
+      ?'On-screen arrows walk through the protractor, clue, deduction overlay, two Hunter moves and the secret Monster turn. Skip any time.'
       :'All original clues and sightings remain. Measure the bearings yourself; no clue rays are drawn automatically.')+
     '</small></div>' +
     '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
@@ -1028,8 +1047,10 @@ function monsterIntroductionHtml(view) {
         '<div class="briefing-steps" aria-label="Your first steps">'+
           '<span>1 · READ CLUES</span><span>2 · MEASURE BEARINGS</span><span>3 · SEARCH LOCATIONS</span>'+
         '</div>'+
+        (view.guided?'<p class="briefing-text briefing-guided">GUIDED MODE: Follow the on-screen arrows for your first turn. You can skip the walkthrough at any time.</p>':'')+
         '<div class="briefing-actions">'+
-          '<button id="intro-begin" type="button" class="primary-button">BEGIN THE HUNT →</button>'+
+          '<button id="intro-begin" type="button" class="primary-button">'+
+            (view.guided?'BEGIN GUIDED HUNT':'BEGIN THE HUNT')+' →</button>'+
           '<button id="intro-help" type="button" class="secondary-button">HOW TO PLAY</button>'+
         '</div>'+
       '</div></section></div>';
@@ -1053,6 +1074,10 @@ function searchReportHtml(view) {
         '<span class="encounter-kicker">'+category+'</span>'+
         '<h2 id="search-report-title">'+esc(report.heading)+'</h2>'+
         '<p class="report-story">'+esc(report.text)+'</p>'+
+        (view.guided&&tourStage==='search-report'&&view.phase==='hunter'
+          ?'<p class="guided-search-note"><strong>GUIDED STEP · SEARCH RESULTS</strong> '+
+            'You have searched this location. A trace is a dated clue, not the Monster’s live position. '+
+            'If you found nothing, that does not rule out the road. Read this report, then continue to your second move.</p>':'')+
         (report.clueId?'<p class="report-clue-note">The full dated clue is in your notebook.</p>':'')+
         '<div class="report-actions">'+
           '<button id="report-continue" type="button" class="primary-button">'+
@@ -1079,11 +1104,13 @@ function bindEncounters() {
   document.getElementById('intro-help')?.addEventListener('click',openTutorial);
   document.getElementById('report-continue')?.addEventListener('click',()=>{
     searchReportOpen=false;
+    tourEvent('report-dismissed');
     if(game.phase!=='over')persistNow();
     render();
   });
   document.getElementById('report-notebook')?.addEventListener('click',()=>{
     searchReportOpen=false;
+    tourEvent('report-dismissed');
     hudTab='clues';
     persistNow();
     render();
@@ -1128,6 +1155,91 @@ function guidedCoachPanel(view) {
         (protractorVisible?'HIDE PROTRACTOR':'SHOW PROTRACTOR')+'</button>':'')+
       '<button id="coach-training" type="button" class="field-guide-link">FULL HOW-TO GUIDE &amp; PRACTICE ↗</button>'+
     '</div></section>';
+}
+
+
+// Each step follows an actual control action rather than a timer or an
+// invented path. Stage data is harmless public UI, not secret game state.
+function tourEvent(event) {
+  if(!game.guided||tourStage==='done')return false;
+  const next=advanceTour(tourStage,event);
+  if(next===tourStage)return false;
+  tourStage=next;
+  if(['read-bearing','enable-deduction','explain-deduction','independent'].includes(next))
+    hudTab='clues';
+  if(['first-move','second-move'].includes(next))hudTab='coach';
+  return true;
+}
+function tourHtml(view) {
+  if(monsterIntroOpen||searchReportOpen||tutorialOpen)return '';
+  const step=tourStep(view,currentMap(),tourStage);
+  if(!step)return '';
+  return '<section id="guided-tour" class="guided-tour" role="status" '+
+    'aria-live="polite" data-guided-step="'+esc(step.stage)+'">'+
+      '<div class="guided-tour-progress">GUIDED HUNT · STEP '+esc(step.counter)+
+        '<button type="button" id="guided-tour-skip" title="Skip the interactive walkthrough">SKIP TUTORIAL</button></div>'+
+      '<h3>'+esc(step.heading)+'</h3>'+
+      '<p>'+esc(step.text)+'</p>'+
+      (step.stage==='place-protractor'
+        ?'<button type="button" id="guided-tour-center" class="guided-tour-action">'+
+          'CENTER ON HUNTER · TOUCH / KEYBOARD OPTION →</button>':'')+
+      (step.action?'<button type="button" id="guided-tour-next" class="guided-tour-action">'+
+        esc(step.action)+' →</button>':'')+
+      '<small>Follow the flashing arrow and highlighted control. Skip only the walkthrough, never the game.</small>'+
+    '</section>'+
+    '<span id="guided-tour-arrow" class="guided-tour-arrow" aria-hidden="true">➜</span>';
+}
+function bindGuidedTour(view){
+  const panel=document.getElementById('guided-tour');
+  if(!panel||!['hunter','monster'].includes(view.phase))return;
+  const step=tourStep(view,currentMap(),tourStage);
+  if(!step)return;
+  document.getElementById('guided-tour-skip')?.addEventListener('click',()=>{
+    tourEvent('skip');render();
+  });
+  document.getElementById('guided-tour-next')?.addEventListener('click',()=>{
+    tourEvent(step.event);render();
+  });
+  document.getElementById('guided-tour-center')?.addEventListener('click',()=>{
+    // The toolbar's CENTER button is compact-screen hidden; its original
+    // handler still performs the real protractor positioning and stage change.
+    document.getElementById('protractor-center')?.click();
+  });
+  const target=document.querySelector?.(step.target||'#__no_target__');
+  const companion=step.secondary?document.querySelector?.(step.secondary):null;
+  target?.classList?.add('guided-tour-target');
+  companion?.classList?.add('guided-tour-companion');
+  if(!target?.getBoundingClientRect||!panel.style)return;
+  const arrow=document.getElementById('guided-tour-arrow');
+  const point=()=>{
+    if(!arrow?.style)return;
+    const box=target.getBoundingClientRect();
+    const viewportW=globalThis.innerWidth||0,viewportH=globalThis.innerHeight||0;
+    if(!viewportW||!viewportH||box.width===0)return;
+    const rect=panel.getBoundingClientRect();
+    const w=Math.min(viewportW-24,rect.width||310);
+    const h=rect.height||165;
+    let x,y;
+    if(viewportW<800){
+      x=12;
+      y=box.top>viewportH*.52?12:viewportH-h-12;
+    }else{
+      x=box.left>viewportW*.54?box.left-w-22:box.right+22;
+      x=Math.max(12,Math.min(viewportW-w-12,x));
+      y=Math.max(12,Math.min(viewportH-h-12,box.top-10));
+    }
+    panel.style.left=x+'px';panel.style.top=Math.max(12,y)+'px';
+    panel.style.right='auto';panel.style.bottom='auto';
+    const left=Math.max(9,Math.min(viewportW-46,box.left+box.width/2-19));
+    const above=box.top>=48;
+    arrow.style.left=left+'px';
+    arrow.style.top=Math.max(4,Math.min(viewportH-43,
+      above?box.top-44:box.bottom+2))+'px';
+    arrow.textContent=above?'⬇':'⬆';
+  };
+  point();
+  document.querySelector?.('.map-frame')?.addEventListener('scroll',point,{passive:true});
+  document.querySelector?.('.hud-tab-panel')?.addEventListener('scroll',point,{passive:true});
 }
 
 function hudTabsHtml(view) {
@@ -1180,7 +1292,7 @@ function playHtml(view) {
             esc(view.feedback||'Use the map and measure your next bearing.')+'</p>'+
             '<button type="button" id="save-exit" class="hud-save" title="Save and return to the menu">SAVE</button>'+
           '</div></aside></div>'+
-    '</main></div>';
+    '</main>'+tourHtml(view)+'</div>';
 }
 
 function setupHtml(view) {
@@ -1330,6 +1442,16 @@ function resetProtractor(keepVisible = false) {
   protractorPosition=null;
   if(!keepVisible)protractorVisible=false;
 }
+function toggleProtractor(){
+  protractorVisible=!protractorVisible;
+  protractorPosition=null;
+  protractorBearing=0;
+  if(protractorVisible&&game.phase==='hunter'&&tourStage==='enable-protractor'){
+    protractorPosition=initialRulerPosition(currentMap().nodes[game.hunter]);
+    tourEvent('tool-on');
+  }
+  render();
+}
 
 /**
  * Manual tool only. No adjacent-road bearing or private Monster coordinate is
@@ -1337,12 +1459,7 @@ function resetProtractor(keepVisible = false) {
  * Pointer moves update stable SVG nodes without replacing the active element.
  */
 function bindProtractor() {
-  document.getElementById('protractor-toggle')?.addEventListener('click',()=>{
-    protractorVisible=!protractorVisible;
-    protractorPosition=null;
-    protractorBearing=0;
-    render();
-  });
+  document.getElementById('protractor-toggle')?.addEventListener('click',toggleProtractor);
   if(!protractorVisible)return;
   const showValue=()=>{
     const label=formatBearing(protractorBearing);
@@ -1361,6 +1478,7 @@ function bindProtractor() {
   document.getElementById('protractor-plus')?.addEventListener('click',()=>turn(1));
   document.getElementById('protractor-center')?.addEventListener('click',()=>{
     protractorPosition=null;
+    if(game.phase==='hunter')tourEvent('tool-centred');
     render();
   });
   const svg=document.querySelector?.('.world-svg');
@@ -1407,6 +1525,12 @@ function bindProtractor() {
         target.removeEventListener('pointerup',stop);
         target.removeEventListener('pointercancel',stop);
         target.releasePointerCapture?.(pointerId);
+        if(mode==='move'&&game.phase==='hunter'&&
+           tourStage==='place-protractor'&&
+           nearHunter(protractorPosition,currentMap().nodes[game.hunter])){
+          tourEvent('tool-centred');
+          render();
+        }
       };
       target.addEventListener('pointermove',move);
       target.addEventListener('pointerup',stop);
@@ -1468,6 +1592,7 @@ function bindCommon() {
       resetReplay();
       monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
+      tourStage='done';
       render();
     }
   });
@@ -1483,6 +1608,7 @@ function saveAndExit() {
   resetReplay();
   monsterIntroOpen=false;searchReportOpen=false;
   nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
+  tourStage='done';
   difficultyPicker=false;scenarioPicker=false;
   resetProtractor();
   render();
@@ -1490,6 +1616,8 @@ function saveAndExit() {
 
 function render() {
   const view=viewForCurrentScreen(game);
+  if(view.guided&&['hunter','over'].includes(view.phase))
+    tourStage=reconcileTour(tourStage,view);
   // Keep saved games on the home screen; clear completed games.
   if(view.phase==='over')clearSaved(storage());
   else if(view.phase!=='home')persistNow();
@@ -1610,6 +1738,7 @@ function render() {
         resetReplay();
         monsterIntroOpen=false;searchReportOpen=false;
         nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
+      tourStage='done';
         difficultyPicker = false;mapZoom=1;
         render();
       });
@@ -1625,18 +1754,14 @@ function render() {
   document.querySelectorAll('[data-hud-tab]').forEach(button=>{
     button.addEventListener('click',()=>{
       hudTab=button.dataset.hudTab;
+      if(hudTab==='clues')tourEvent('clues-open');
       render();
     });
   });
   document.getElementById('coach-open-clues')?.addEventListener('click',()=>{
-    hudTab='clues';render();
+    hudTab='clues';tourEvent('clues-open');render();
   });
-  document.getElementById('coach-open-protractor')?.addEventListener('click',()=>{
-    protractorVisible=!protractorVisible;
-    protractorPosition=null;
-    protractorBearing=0;
-    render();
-  });
+  document.getElementById('coach-open-protractor')?.addEventListener('click',toggleProtractor);
   document.getElementById('coach-reveal')?.addEventListener('click',()=>{
     coachAnswerVisible=true;render();
   });
@@ -1651,7 +1776,10 @@ function render() {
       :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
     if(before!==after) {
-      if(view.phase==='hunter')pendingHunterMotion={from:before,to:after};
+      if(view.phase==='hunter'){
+        pendingHunterMotion={from:before,to:after};
+        if(result.ok)tourEvent('hunter-moved');
+      }
       coachAnswerVisible=false;
       resetProtractor(view.phase==='hunter' && game.mode==='solo');
       if(view.phase==='hunter' && result.ok && game.hunterOutcome)
@@ -1662,7 +1790,8 @@ function render() {
   document.getElementById('end-turn')?.addEventListener('click',()=>{
     coachAnswerVisible=false;
     searchReportOpen=false;
-    endHunterTurn(game);
+    const outcome=endHunterTurn(game);
+    if(outcome.ok)tourEvent('turn-ended');
     resetProtractor(game.mode==='solo');
     render();
   });
@@ -1673,6 +1802,7 @@ function render() {
   document.getElementById('save-exit')?.addEventListener('click',saveAndExit);
   document.getElementById('plot-toggle')?.addEventListener('click',()=>{
     plotClue=!plotClue;
+    if(plotClue)tourEvent('deduction-on');
     render();
   });
   if(view.phase==='hunter') {
@@ -1704,7 +1834,11 @@ function render() {
       persistNow();
     });
   }
-  if(view.phase==='hunter' && view.stepsLeft===0 && !searchReportOpen)
+  // Bind the public Hunter steps and, when a second human is playing,
+  // the Monster's own role-safe movement instruction on its private screen.
+  bindGuidedTour(view);
+  if(view.phase==='hunter'&&view.stepsLeft===0 &&
+    !searchReportOpen&&tourStage==='done')
     document.getElementById('end-turn')?.focus();
 }
 

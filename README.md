@@ -105,6 +105,10 @@ Choose **HOW TO PLAY** from the level briefing, **HOW TO HUNT & BEARINGS TRAININ
 
 After these steps, the original **four interactive bearings exercises** remain available, with immediate answer feedback. Players can also skip directly to the exercises and close the tutorial without losing the current hunt.
 
+**PR20 — Interactive Guided Hunt:** After the level briefing, Guided/Tutorial mode launches a **first-turn, on-map walkthrough** with pulsing control highlights and on-screen arrows. The student actively turns on the protractor, drags its centre to the Hunter (or uses the accessible CENTER button), opens the flashing dated watcher clue, measures clockwise from the clue's named **FROM** point, and switches on the optional **Deduction Overlay**. They then make their first legal three-figure move, read the resulting search report, make another move, and end their turn. The walkthrough explains the Monster's next **secret** movement and any newly available public sightings, finishing with **"You are now on your own!"** and a button to continue the hunt independently. On a Guided Pass & Play Monster screen, a role-safe prompt also explains how the Monster makes one secret bearing move without exposing the screen to the Hunter.
+
+The walkthrough **advances through actual player actions**, not delays. **SKIP TUTORIAL** dismisses it without ending the game. Its stage is included in the existing local save, and opaque pass-and-play handoff screens never reveal role information. The protractor remains manually positioned and the clue overlay is **not enabled automatically**. After the onboarding, the existing Coach tab and bearings practice guide remain available.
+
 **Guided mode now includes a COACH tab**. It gives contextual, student-friendly instructions at the start of the hunt and after searches, invalid bearing attempts, announced special powers or the final rounds. It can show the bearing of **one connected road as a worked *text-only* example on request**, and offers shortcuts to Clues, the manual protractor and the full guide. The Coach and worked example operate on public Hunter information, not secret Monster state.
 
 **Standard play is unchanged:** it receives the same earned clues, sightings and bearing-entry feedback, but not the Coach or optional combined-clue plotting. Neither mode automatically draws bearing rays or sectors on the map: the optional Guided clue overlay is activated deliberately from Clues.
@@ -269,6 +273,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
 - `src/tutorial.mjs` — four interactive bearings practice activities
 - `src/hunter-guide.mjs` — seven illustrated How to Hunt lessons, level briefings and public-information Guided Coach
+- `src/guided-walkthrough.mjs` — public-only, action-driven Guided Hunt sequence and role-safe monster-phase explanations
 - `src/hunter-forge.mjs` — validated modular SVG Hunter artwork, mini board figure, palettes, randomisation and device-local persistence
 - `src/hunt-replay.mjs` — privacy-safe post-game event reconstruction, progressive paths and replay map projections
 - `src/engine.mjs` — game rules and strictly role-specific view projections
@@ -278,7 +283,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR19:** Conduct a student-led **real-device/projector visual review** of all four illustrated maps, using the [consistency checklist](docs/FOUR_WORLD_VISUAL_QA.md). PR19 completes the automated comparison and location-finder polish, not the classroom trial. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR20:** Validate the interactive Guided Hunt walkthrough on real student devices, and conduct a student-led **real-device/projector visual review** of all four illustrated maps, using the [consistency checklist](docs/FOUR_WORLD_VISUAL_QA.md). PR19 completes the automated comparison and location-finder polish, not the classroom trial. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 
