@@ -1,5 +1,5 @@
 /**
- * Illustrated river centrelines for the two densest maps.
+ * Illustrated canal and river centrelines for the themed maps.
  *
  * All coordinates are in the game's 1000 x 720 world (SVG) units. These
  * channels deliberately pass between land-based location rows, never through
@@ -42,9 +42,12 @@ export const WATERWAYS = Object.freeze({
       ]
     })
   ]),
+  // Rookgate's northern deep navigable canal and southern industrial canal.
+  // The unchanged centrelines and widths have exactly four and five legal
+  // road crossings respectively; both keep all node centres safely on land.
   marsh: Object.freeze([
     Object.freeze({
-      id: 'northern-river', width: 72,
+      id: 'rookgate-north-canal', width: 72,
       segments: [
         [[-60,174],[80,170],[155,179],[263,175]],
         [[263,175],[375,174],[500,174],[603,175]],
@@ -52,7 +55,7 @@ export const WATERWAYS = Object.freeze({
       ]
     }),
     Object.freeze({
-      id: 'southern-creek', width: 46,
+      id: 'rookgate-south-canal', width: 46,
       segments: [
         [[-50,571],[115,560],[244,580],[365,571]],
         [[365,571],[520,568],[635,565],[734,570]],
