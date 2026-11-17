@@ -87,6 +87,16 @@ try{
     await page.screenshot({path:'visual/'+size.name+'-monster-intro.png',fullPage:false});
     await page.locator('#intro-begin').click();
     await page.locator('.hud-screen').waitFor({state:'visible'});
+    // PR13: the same user-created Hunter is a real figurine on every map.
+    const piece=page.locator('.world-svg .hunter-board-piece');
+    assert.equal(await piece.count(),1,size.name+' missing Hunter board figurine');
+    assert.equal(await piece.getAttribute('data-hunter-board-node'),MAPS.expert.hunterStart);
+    assert.equal(await piece.getAttribute('data-hunter-palette'),'moss');
+    assert.equal(await piece.locator('[data-hunter-slot]').count(),3);
+    assert.equal(await piece.locator('animateTransform').count(),0);
+    assert.equal(await piece.getAttribute('pointer-events'),'none');
+    assert.equal(await page.locator('.node.hunter-location .person-symbol').count(),0,
+      'Generic Hunter star must be replaced with customised character');
     assert.equal(await page.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0,
       'Default screen must not auto-plot clue bearings');
     await measure(page,size.name+'-expert');
@@ -125,6 +135,14 @@ try{
       }),size.name+' search report portrait failed to load');
       await page.screenshot({path:'visual/'+size.name+'-search-report.png',fullPage:false});
       await page.locator('#report-continue').click();
+      assert.equal(await page.locator('.hunter-board-piece').getAttribute('data-hunter-board-node'),target,
+        size.name+' miniature must follow the exact reached node');
+      assert.equal(await page.locator('.hunter-board-piece').getAttribute('data-animated'),'true',
+        size.name+' miniature should animate the actual road traversal');
+      assert.equal(await page.locator('.hunter-board-piece animateTransform').count(),1);
+      await page.screenshot({path:'visual/'+size.name+'-hunter-board-move.png',fullPage:false});
+      assert.equal(await page.locator('.node.hunter-location').getAttribute('data-node-note'),target,
+        'Current node must remain available for map annotations');
     }
     assert.deepEqual(errors,[],size.name+' browser console exceptions');
     await page.close();
@@ -152,6 +170,8 @@ try{
     await page.screenshot({path:'visual/monster-intro-'+difficulty+'.png',fullPage:false});
     await page.locator('#intro-begin').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
+    assert.equal(await page.locator('.hunter-board-piece').count(),1,
+      difficulty+' requires one identifiable Hunter figurine on its full map');
     const decks=await page.locator('.river-bridges .river-bridge').count();
     if(['tracker','expert'].includes(difficulty))
       assert.ok(decks>=4 && decks<=18,
@@ -239,6 +259,16 @@ try{
     await forge.screenshot({path:'visual/hunter-forge-'+viewport.name+'-briefing.png',fullPage:false});
     await forge.locator('#intro-begin').click();
     assert.equal(await forge.locator('.hud-hunter-art').getAttribute('data-hunter-palette'),'midnight');
+    const token=forge.locator('.hunter-board-piece');
+    assert.equal(await token.count(),1,'Exactly one Hunter board figurine');
+    assert.equal(await token.getAttribute('data-hunter-part-head'),'brim');
+    assert.equal(await token.getAttribute('data-hunter-part-torso'),'armour');
+    assert.equal(await token.getAttribute('data-hunter-part-legs'),'greaves');
+    assert.equal(await token.getAttribute('data-hunter-palette'),'midnight');
+    assert.equal(await token.getAttribute('data-hunter-complexion'),'deep');
+    assert.equal(await token.locator('[data-hunter-slot]').count(),3);
+    await forge.screenshot({
+      path:'visual/hunter-board-piece-'+viewport.name+'-custom.png',fullPage:false});
     assert.equal(await forge.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0);
     await measure(forge,'forge-'+viewport.name+'-hud');
     await forge.screenshot({path:'visual/hunter-forge-'+viewport.name+'-hud.png',fullPage:false});
@@ -300,6 +330,8 @@ try{
     }
     await replay.locator('.replay-screen').waitFor({state:'visible'});
     assert.equal(await replay.locator('[data-replay-actor="hunter"]').count(),1);
+    assert.equal(await replay.locator('.hunter-board-piece[data-replay-actor="hunter"]').count(),1,
+      'Replay should keep the player's own outfit as their board piece');
     assert.equal(await replay.locator('[data-replay-actor="monster"]').count(),1);
     assert.match(await replay.locator('.replay-heading h1').textContent(),/HUNT, REPLAYED/);
     assert.equal(await replay.locator('#replay-progress').count(),1);
