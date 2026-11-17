@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="520" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
+<title id="title">The Eclipse Herald</title><desc id="desc">A regal shadow creature with an eclipse halo, fractured obsidian armour, pale violet eyes and a star cloak.</desc>
+<defs><radialGradient id="bg"><stop stop-color="#51405e"/><stop offset=".57" stop-color="#29233d"/><stop offset="1" stop-color="#101c30"/></radialGradient>
+<radialGradient id="halo"><stop stop-color="#ead8b4" stop-opacity=".83"/><stop offset=".48" stop-color="#b69dbb" stop-opacity=".36"/><stop offset="1" stop-color="#b69dbb" stop-opacity="0"/></radialGradient>
+<linearGradient id="armor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8f7e9f"/><stop offset=".38" stop-color="#40374f"/><stop offset="1" stop-color="#171d31"/></linearGradient>
+<linearGradient id="cloak" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#56405e"/><stop offset=".55" stop-color="#2b2540"/><stop offset="1" stop-color="#111b30"/></linearGradient>
+<filter id="blur"><feGaussianBlur stdDeviation="8"/></filter></defs>
+<rect width="480" height="520" rx="28" fill="url(#bg)"/>
+<circle cx="242" cy="150" r="146" fill="url(#halo)"/>
+<circle cx="242" cy="148" r="92" fill="none" stroke="#dfc5ac" stroke-width="13" stroke-opacity=".45"/>
+<circle cx="256" cy="139" r="87" fill="#1c2034"/>
+<circle cx="242" cy="148" r="114" fill="none" stroke="#e2ba9d" stroke-opacity=".24" stroke-width="2" stroke-dasharray="6 18"/>
+<path d="M53 457L146 283 172 219 204 154Q242 130 278 157L318 221 342 280 433 465Q350 482 281 465L242 494 200 463Q114 483 53 457Z" fill="url(#cloak)" stroke="#b8a2b7" stroke-opacity=".57" stroke-width="4"/>
+<g stroke="#917d9c" stroke-opacity=".8" fill="none" stroke-width="8" stroke-linecap="round"><path d="M209 179L179 99 150 59M271 179L308 102 347 61M181 107L172 64M300 117L303 73"/></g>
+<g fill="#42344d" stroke="#b9a3ae" stroke-width="3">
+<path d="M238 163Q194 159 181 196L193 274 230 306 246 300 286 304 308 267 303 197Q290 160 238 163Z"/>
+<path d="M190 267L155 311 172 353 223 333 242 308 256 331 313 355 328 310 289 267 245 302Z" fill="url(#armor)"/>
+<path d="M155 309L111 366 136 425 176 394 177 351Z" fill="url(#armor)"/>
+<path d="M328 310L365 367 343 424 308 396 313 352Z" fill="url(#armor)"/>
+</g>
+<path d="M193 224L217 218 231 236 211 245Z" fill="#d8b3ee" stroke="#ffdfce" stroke-width="2"/>
+<path d="M250 236L267 217 297 223 281 245Z" fill="#d8b3ee" stroke="#ffdfce" stroke-width="2"/>
+<g fill="#e9c9f8" filter="url(#blur)"><ellipse cx="214" cy="230" rx="11" ry="7"/><ellipse cx="273" cy="230" rx="11" ry="7"/></g>
+<path d="M233 246L241 264 249 244M221 282L263 282" fill="none" stroke="#1c2537" stroke-width="6"/>
+<path d="M189 308L241 350 291 308" fill="none" stroke="#f2d5bc" stroke-opacity=".35" stroke-width="3"/>
+<path d="M243 318L227 360 243 384 259 360Z" fill="#d8be9f" stroke="#f2e0b8" stroke-width="2"/>
+<path d="M195 367Q163 417 139 454M288 361Q337 427 358 450" fill="none" stroke="#786a92" stroke-width="7" opacity=".7"/>
+<g fill="#f6d8b3"><circle cx="60" cy="97" r="3"/><circle cx="405" cy="117" r="3"/><circle cx="112" cy="200" r="2"/><circle cx="391" cy="312" r="3"/><circle cx="75" cy="332" r="2"/><circle cx="345" cy="53" r="3"/><circle cx="175" cy="414" r="2"/><circle cx="300" cy="429" r="2"/></g>
+<g fill="none" stroke="#c9aabd" stroke-opacity=".37"><path d="M51 448L118 416M362 416L435 449M0 505Q141 469 241 497T480 490"/></g>
+<path d="M0 485Q115 451 219 477T480 470V520H0Z" fill="#111b2d" opacity=".82"/>
+</svg>

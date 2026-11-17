@@ -35,6 +35,8 @@ jobs:
           node --check src/scenarios.mjs
           node --check src/scenery.mjs
           node --check src/waterways.mjs
+          node --check src/monsters.mjs
+          node --check src/monster-powers.mjs
           node --check src/persistence.mjs
           node --check src/protractor.mjs
           node --check scripts/package-site.mjs

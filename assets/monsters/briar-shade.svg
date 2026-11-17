@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="520" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
+<title id="title">The Briar Shade</title><desc id="desc">An antlered thorn spirit with a hood of roots and pale green eyes beneath dark forest branches.</desc>
+<defs><radialGradient id="bg"><stop stop-color="#47664e"/><stop offset=".65" stop-color="#203b3d"/><stop offset="1" stop-color="#0d1e2a"/></radialGradient>
+<linearGradient id="cloak" x1=".3" y1="0" x2=".7" y2="1"><stop stop-color="#46584c"/><stop offset=".45" stop-color="#253d35"/><stop offset="1" stop-color="#0d252b"/></linearGradient>
+<linearGradient id="wood" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c1ab7d"/><stop offset=".44" stop-color="#625844"/><stop offset="1" stop-color="#243d36"/></linearGradient>
+<radialGradient id="eyes"><stop stop-color="#edf9b1"/><stop offset="1" stop-color="#7dc9a0" stop-opacity=".3"/></radialGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="12"/></filter></defs>
+<rect width="480" height="520" rx="28" fill="url(#bg)"/>
+<g opacity=".17" stroke="#bed1ad" fill="none" stroke-width="6"><path d="M0 136Q70 111 102 37M480 175Q425 122 413 29M0 426Q126 373 217 429T480 413"/></g>
+<g stroke="#869d73" stroke-width="9" fill="none" stroke-linecap="round">
+<path d="M213 200Q167 136 129 116L77 46M143 129Q114 108 110 51M123 105Q73 110 51 78M175 148Q193 108 169 55"/>
+<path d="M272 200Q327 139 357 121L397 46M335 140Q366 109 372 55M357 117Q405 115 428 79M306 157Q285 106 313 55"/>
+</g>
+<g stroke="#bfd09b" stroke-width="2.5" stroke-opacity=".58" fill="none"><path d="M130 117L73 46M143 129L110 51M349 129L396 45M333 141L372 54M174 149L169 57M306 158L313 55"/></g>
+<g fill="#7d9f72" opacity=".75"><path d="M105 85q-35-30-47-17q19 28 47 17ZM348 84q26-32 45-23q-9 28-45 23ZM183 117q-21-36-36-23q3 24 36 23ZM302 119q22-40 40-30q-3 28-40 30Z"/></g>
+<path d="M235 153Q174 159 154 219Q131 279 87 356Q71 414 41 482Q165 508 241 498Q330 513 447 485Q407 405 374 315Q352 170 277 157Z" fill="url(#cloak)" stroke="#9cad86" stroke-width="4"/>
+<g opacity=".54" fill="none" stroke="#94ba88" stroke-width="3"><path d="M136 460Q172 389 175 330M334 453Q315 388 308 337M87 480Q124 460 139 402M380 473Q353 416 344 397"/></g>
+<path d="M239 173Q190 175 174 239L188 312Q220 347 259 342Q292 313 305 244Q288 185 239 173Z" fill="url(#wood)" stroke="#c9bb86" stroke-width="4"/>
+<path d="M188 222Q199 201 220 198M263 198Q289 200 296 221" fill="none" stroke="#d5c696" stroke-opacity=".65" stroke-width="4"/>
+<path d="M188 249Q207 235 227 244Q208 265 189 258Z" fill="#8ed4a6" stroke="#eaf4bd" stroke-width="2"/>
+<path d="M254 244Q276 235 295 249Q275 263 255 256Z" fill="#8ed4a6" stroke="#eaf4bd" stroke-width="2"/>
+<g filter="url(#glow)" fill="url(#eyes)" opacity=".75"><ellipse cx="210" cy="249" rx="17" ry="12"/><ellipse cx="273" cy="249" rx="17" ry="12"/></g>
+<path d="M227 279L241 259 255 279M210 299Q240 315 273 299" fill="none" stroke="#293c35" stroke-width="7" stroke-linecap="round"/>
+<path d="M217 315Q240 338 260 315L248 364Q237 376 228 360Z" fill="#354c42"/>
+<g stroke="#6d865d" stroke-width="7" fill="none" stroke-linecap="round"><path d="M149 329Q101 362 105 411L83 437M333 325Q390 362 377 406L411 432M104 411L76 394M377 406L411 389"/></g>
+<g fill="#e5d49a" opacity=".74"><circle cx="111" cy="242" r="3"/><circle cx="369" cy="203" r="3"/><circle cx="132" cy="100" r="3"/><circle cx="407" cy="324" r="2"/><circle cx="58" cy="360" r="2"/></g>
+<path d="M0 487Q122 447 240 478T480 474V520H0Z" fill="#132b2d" opacity=".75"/>
+<g opacity=".55" fill="none" stroke="#c2d2a5" stroke-width="2"><path d="M65 480l-9-24M80 488l11-29M410 477l7-26M432 490l-12-24"/></g>
+</svg>

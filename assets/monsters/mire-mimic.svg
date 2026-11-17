@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="520" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
+<title id="title">The Mire Mimic</title><desc id="desc">A shifting swamp figure reflected in pools, wearing a split silver mask and emitting deceptive ghost lights.</desc>
+<defs><radialGradient id="bg"><stop stop-color="#3c7474"/><stop offset=".56" stop-color="#20515a"/><stop offset="1" stop-color="#0a2833"/></radialGradient>
+<linearGradient id="body" x1="0" y1="0" x2=".4" y2="1"><stop stop-color="#7ea69d"/><stop offset=".38" stop-color="#2d5960"/><stop offset="1" stop-color="#13323b"/></linearGradient>
+<linearGradient id="mask" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dfebe0"/><stop offset=".37" stop-color="#87b8b3"/><stop offset="1" stop-color="#446971"/></linearGradient>
+<radialGradient id="mist"><stop stop-color="#a6eee0" stop-opacity=".78"/><stop offset="1" stop-color="#a6eee0" stop-opacity="0"/></radialGradient>
+<filter id="blur"><feGaussianBlur stdDeviation="14"/></filter></defs>
+<rect width="480" height="520" rx="28" fill="url(#bg)"/>
+<path d="M0 375Q92 328 201 370T480 353V520H0Z" fill="#16434e"/>
+<g fill="none" stroke="#84bdb0" stroke-width="2" opacity=".35"><path d="M0 424Q129 383 227 420T480 414M0 464Q135 424 265 465T480 452M50 493Q193 466 318 488T469 477"/></g>
+<ellipse cx="236" cy="232" rx="156" ry="156" fill="url(#mist)" opacity=".3"/>
+<g opacity=".5" filter="url(#blur)"><ellipse cx="241" cy="283" rx="107" ry="164" fill="#5cc0b2"/></g>
+<g fill="#b4e6ce" opacity=".72"><circle cx="74" cy="175" r="8"/><circle cx="413" cy="218" r="10"/><circle cx="102" cy="305" r="6"/><circle cx="393" cy="337" r="8"/></g>
+<path d="M243 127Q165 124 141 208Q131 269 91 328Q78 368 107 419Q120 460 75 495Q176 478 241 497Q315 485 405 500Q362 459 372 416Q399 351 359 311Q344 224 314 160Q294 124 243 127Z" fill="url(#body)" stroke="#a3d4c4" stroke-opacity=".6" stroke-width="4"/>
+<g fill="none" stroke="#77c3b6" stroke-width="4" opacity=".54"><path d="M116 376Q168 400 129 440M357 357Q311 406 366 445M171 443Q199 409 211 359M301 448Q274 393 286 355"/></g>
+<path d="M243 152Q185 161 184 237L198 298Q227 337 246 326Q278 339 301 294L304 237Q301 171 243 152Z" fill="url(#mask)" stroke="#d8eee0" stroke-width="4"/>
+<path d="M243 154V325" stroke="#1c5a66" stroke-width="6"/>
+<path d="M194 227Q215 210 231 229L225 249 201 251Z" fill="#0b3d51"/>
+<path d="M253 229Q276 204 299 224L290 253 259 248Z" fill="#0b3d51"/>
+<path d="M199 233L221 232M260 234L289 231" stroke="#aaf9df" stroke-width="4"/>
+<path d="M209 278Q223 284 235 278M255 278Q276 283 288 272" fill="none" stroke="#325c67" stroke-width="5"/>
+<g fill="none" stroke="#caeee2" stroke-width="2.5" opacity=".7"><path d="M190 240Q169 268 195 299M303 239Q329 266 300 298M236 186L234 213M253 186L253 216"/></g>
+<path d="M181 314Q143 298 125 337Q118 367 165 399M303 317Q355 295 374 336Q377 367 326 405" fill="none" stroke="#7fbbae" stroke-width="18" stroke-linecap="round"/>
+<g opacity=".47" fill="none" stroke="#c4f8e7" stroke-width="3"><path d="M138 391Q175 376 201 407T271 418T354 390M75 470Q138 450 196 480T328 465T407 482"/></g>
+<g stroke="#a6cfb7" stroke-width="3" fill="none" opacity=".6"><path d="M34 515q8-68-2-95M58 515q-6-57 13-90M427 515q-8-66 5-93M455 515q14-52-2-84"/></g>
+<g fill="#f6e7bb"><circle cx="74" cy="175" r="3"/><circle cx="413" cy="218" r="4"/><circle cx="102" cy="305" r="2"/><circle cx="393" cy="337" r="3"/></g>
+</svg>

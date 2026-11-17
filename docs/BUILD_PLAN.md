@@ -100,3 +100,19 @@
 - Added deployment and rollback guidance; a public site URL is **not confirmed live until Pages is enabled and the main-branch deployment succeeds**.
 
 **Remaining after PR4:** real classroom difficulty tuning; optional server-authoritative two-device multiplayer; additional locations, narrative variety and accessibility certification.
+
+
+## PR9 — unique monsters, truth-preserving powers and search feedback
+
+**Scope implemented on PR #9** (built after PR #8 was merged; not yet on live main):
+
+- Four new named Solo monsters: **Lantern Wisp** (no special ability), **Briar Shade** (public-origin 2–3-road teleport, 4-round cooldown), **Mire Mimic** (unconfirmed decoy location, 4-round cooldown), and **Eclipse Herald** (both abilities on 5- and 4-round cooldowns, never both the same Monster turn).
+- Four cohesive, original, locally bundled SVG portrait assets with level-introduction cards, difficulty-screen previews and game-over art.
+- High-visibility, dismissible Hunter search-result pop-ins after every valid movement, with distinct outcomes for empty searches, earned bearing clues, decoy exposure and capture.
+- Public exact teleport origins and bounded destination range, but no landing location disclosure. The public clue solver propagates through actual announced teleports without excluding the true Monster.
+- Rumour clues remain **unverified** and do not constrain the automatic deduction solver. They are shown as reported locations rather than automatically plotted bearing lines. Visiting a reported site visibly disproves the decoy.
+- Seeded AI ability selection, state validation and device-local persistence of cooldowns/decoys and modal acknowledgement. Pass-and-play handoff privacy unchanged.
+- Test suite expanded to cover power cooldowns, true bearings, decoy investigation, local persistence, class-specific behaviour, and visual QA verifying each portrait and search result on desktop/mobile.
+- Follow-up: actual classroom feedback and playtests to adjust ability frequency and tune report writing, especially on Expert.
+
+**Shipping gate:** merge only after tests, seeded AI benchmarks, deployable site build, all four introduction images and desktop/mobile visual QA succeed. PR9 does not replace the live game until merged.

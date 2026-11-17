@@ -4,11 +4,11 @@
 
 One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine these with occasional public sightings in solo mode. Bearing values appear as text, not automatically drawn rays or sectors on the map.
 
-## Playable modes (PR1 + PR2 + PR3 + PR4)
+## Playable modes (PR1–PR9)
 
 ### Solo Hunt — Hunter versus Monster AI
 
-On the title screen, choose **Solo Hunt**, then one of four difficulty levels. The Monster automatically takes a hidden move after each completed Hunter turn. The Hunter sees only public information and does not need to pass the device.
+On the title screen, choose **Solo Hunt**, then one of four difficulty levels. The Monster automatically takes a hidden move or uses a level-specific power after each completed Hunter turn. The Hunter sees only public information and does not need to pass the device.
 
 | Difficulty | Locations | Trail clue accuracy | Trail lasts | Solo sightings | Monster style | Maximum rounds |
 |---|---:|---|---:|---|---|---:|
@@ -21,7 +21,7 @@ On the title screen, choose **Solo Hunt**, then one of four difficulty levels. T
 
 **Opening and periodic watcher sightings remain available in every solo difficulty, regardless of Standard or Guided mode.** Their bearings are given in the clue notebook as text; they are not drawn on the map. Every timed sighting remains stamped with its observation round. Hunters also earn trace clues when visiting recent Monster locations.
 
-Monster AI uses legal roads, the publicly visible Hunter location and history, and its own private recent trail. Four AI profiles vary evasion, avoidance of recent traces, route look-ahead and randomness. **The AI cannot see the Hunter's future decisions.** Given the same seed and moves, its decisions are reproducible for tests.
+Monster AI uses legal roads (except for announced bounded teleports), the public Hunter location and history, and its own private recent trail. Four AI profiles vary evasion, avoidance of recent traces, route look-ahead and randomness. **The AI cannot see the Hunter's future decisions.** Given the same seed and moves, its decisions are reproducible for tests.
 
 The Tracker and Expert modes provide progressively less precise information about *when* a trail was left. The clue itself is always mathematically truthful for its recorded observation round.
 
@@ -33,7 +33,28 @@ The original 14-location Hollow Moor mode remains available. The Monster picks a
 
 **Handoff privacy:** all board, clue and position information is replaced by an entirely blank role-transition view containing only the requested handoff text and a reveal button. Switching away from the page re-seals an active two-player role view. In Solo Hunt, the Monster never has a visible role view.
 
-## Dry riverbank locations (PR8 candidate)
+## Monsters, powers and investigation reports (PR9)
+
+Every Solo Hunt difficulty introduces a different illustrated monster before the first move. Four original portraits are bundled in the site at `assets/monsters/` and reused on the level cards, introductions, search pop-ins and final result.
+
+| Level | Monster | Signature ability | Counterplay |
+|---|---|---|---|
+| Intro — Hollow Moor | **The Lantern Wisp** | None | A straightforward hunt with ordinary bearings and tracks |
+| Apprentice — Thornwood Vale | **The Briar Shade** | Briar Step teleport, 4-turn cooldown | Leaps 2–3 connected roads, but publicly exposes its previous location |
+| Tracker — Sunken Lowlands | **The Mire Mimic** | False Sighting, 4-turn cooldown | Plants an **unconfirmed** reported location that is debunked when the Hunter visits |
+| Expert — Eclipse Marches | **The Eclipse Herald** | Eclipse Shift teleport (5-turn cooldown) and Phantom Echo decoy (4-turn cooldown) | Combines the two fair rules, never both on one Monster turn |
+
+The powers currently belong to Solo Hunt levels; Pass & Play uses the Intro board and its powerless Lantern Wisp. Existing scenario-specific Veil and Signal Lantern rules are unchanged.
+
+**Why teleport clues remain mathematically useful:** a jump discloses where the Monster was immediately before it vanished and how many connected roads it could jump, not its secret destination. The deduction solver uses the public move event to propagate older clues across the 2–3-road teleport instead of incorrectly treating that turn as a one-road move.
+
+**Why decoys are fair:** the reported position is labelled an **unconfirmed local sighting** and is shown with a question mark, not as a confirmed exact bearing. The Hunter must visit the node to expose the false report. The candidate solver never treats a rumour as certain evidence.
+
+**After every valid Hunter move**, a large illustrated report appears: an empty search names the place and creature; a real trace includes the actual historical bearing clue from locals; a decoy triggers a false-sighting reveal; and a capture gets a victory report. Invalid bearing attempts do not consume a move or generate a pop-in.
+
+Saved games retain power cooldowns, unresolved decoys and which reports have been acknowledged. These elements never appear on an opaque shared-device handoff screen, and the Monster's hidden destination remains private.
+
+## Dry riverbank locations (merged PR8)
 
 **Tracker / The Sunken Lowlands** and **Expert / The Eclipse Marches** now place their rivers through channels **between** rows of dry land nodes, rather than underneath named locations. The rows adjacent to each watercourse have been moved slightly onto the banks without removing any places or changing a single road connection. All 26 Tracker and 36 Expert locations remain playable with their original IDs, clues and scenario objectives. Routes crossing a watercourse remain connected roads.
 
@@ -57,7 +78,7 @@ Saved games remember whether optional visual assistance was enabled. Older solo 
 
 **Interactive field training.** Select **Interactive Bearings Training** on the home screen or **Bearings Field Training** during the movement turn. Four exercises cover clockwise-from-north bearings, opposite bearings, careful "bearing of A from B" wording, and ranges wrapping across 000°. Every exercise checks a three-figure answer and explains the method.
 
-**Combine clues in Guided mode.** In the Hunter's Clues tab, choose **Combine clues on the map**. Tick or untick observations to see their rays/sectors, highlight possible Monster locations, and list remaining candidate places. The analysis uses only *public observations*: for each time-stamped clue it finds possible locations at the recorded round, advances those possibilities through the correct number of single-road Monster moves, then intersects the sets. It does NOT overlap old clues as if the Monster remained stationary. The overlay may be turned off to restore unaided problem solving.
+**Combine clues in Guided mode.** In the Hunter's Clues tab, choose **Combine clues on the map**. Tick or untick observations to see their rays/sectors, highlight possible Monster locations, and list remaining candidate places. The analysis uses only *public observations*: for each time-stamped clue it finds possible locations at the recorded round, advances those possibilities through ordinary one-road moves or publicly announced two-to-three-road teleports, then intersects the sets. It does NOT overlap old clues as if the Monster remained stationary. The overlay may be turned off to restore unaided problem solving.
 
 **Mark and annotate the map.** Click a location or use keyboard/Enter to cycle it through *suspected*, *ruled out*, and unmarked. A location selector offers the same action on phones or when keyboard navigation is preferred. The Hunter can keep written working in a private note area during the current game. Personal marks do not automatically change the mathematically computed candidate set. Marks and notes never appear on Monster or handoff screens and clear when a new game starts.
 

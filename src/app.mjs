@@ -4,6 +4,7 @@ import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
+import { MONSTERS, monsterFor } from './monsters.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
@@ -33,6 +34,8 @@ let guidedSelection = false;
 let protractorVisible = false;
 let protractorBearing = 0;
 let protractorPosition = null;
+let monsterIntroOpen = false;
+let searchReportOpen = false;
 const storage = () => globalThis.localStorage || null;
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
@@ -47,6 +50,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
   if(result.ok) {
     plotClue=false;
     selectedClueIds=null;
+    monsterIntroOpen=mode==='solo';
+    searchReportOpen=false;
     hudTab='clues';
     protractorVisible=false;
     protractorBearing=0;
@@ -68,7 +73,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
 function persistNow() {
   const state={
     fieldNotes,marks:[...nodeMarks.entries()],plotClue,
-    selectedClueIds:selectedClueIds===null?null:[...selectedClueIds]
+    selectedClueIds:selectedClueIds===null?null:[...selectedClueIds],
+    introSeen:!monsterIntroOpen,reportSeen:!searchReportOpen
   };
   return persistSaved(storage(),game,state);
 }
@@ -77,6 +83,9 @@ function resumeHunt() {
   const restored=readSaved(storage());
   if(!restored)return;
   Object.assign(game,restored.game);
+  monsterIntroOpen=game.mode==='solo' && !restored.ui.introSeen;
+  searchReportOpen=!!game.hunterOutcome && !restored.ui.reportSeen &&
+    ['hunter','over'].includes(game.phase);
   fieldNotes=restored.ui.fieldNotes;
   nodeMarks.clear();
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
@@ -127,7 +136,9 @@ function currentAnalysis(view) {
   if (view.phase!=='hunter' || !view.guided || !plotClue) return null;
   const clues=selectedClues(view);
   if(!clues.length) return null;
-  return analyseClues(currentMap(), clues, view.round, {hunterLocation:view.hunter});
+  return analyseClues(currentMap(),clues,view.round,{
+    hunterLocation:view.hunter,publicEvents:view.publicEvents
+  });
 }
 function toggleNodeMark(id) {
   const old=nodeMarks.get(id);
@@ -199,6 +210,10 @@ function difficultyHtml() {
     '<span class="difficulty-level">LEVEL 0' + (i + 1) + ' <span>· ' + esc(preset.nodes) + ' LOCATIONS</span></span>' +
     '<strong>' + esc(preset.name) + '</strong>' +
     '<span class="difficulty-tagline">' + esc(preset.tagline) + '</span>' +
+    '<img class="difficulty-monster-art" src="'+monsterFor(preset.id).art+
+      '" alt="Portrait of '+esc(monsterFor(preset.id).name)+'" loading="lazy"/>' +
+    '<span class="difficulty-monster-name">'+esc(monsterFor(preset.id).name)+'</span>' +
+    '<span class="difficulty-monster-power">'+esc(monsterFor(preset.id).powerTitle)+'</span>' +
     '<span class="difficulty-description">' + esc(preset.summary) + '</span>' +
     '<span class="mode-link">HUNT HERE →</span></button>'
   ).join('');
@@ -339,8 +354,9 @@ function mapSvg(view) {
   const candidateSet = new Set(analysis?.candidates || []);
   const plotted=clues.map(clue => {
     const p=currentMap().nodes[clue.place];
-    if(clue.type==='beacon')
+    if(['beacon','teleport-origin'].includes(clue.type))
       return '<circle cx="'+p.x+'" cy="'+p.y+'" r="34" class="beacon-sighting-ring"/>';
+    if(clue.type==='rumour')return '';
     let direction;
     if (clue.halfWidth === 0) {
       const radians=clue.sectorCenter*Math.PI/180;
@@ -369,6 +385,10 @@ function mapSvg(view) {
     const selected=view.phase==='monster-setup'&&selectedSpawn===n.id;
     const target=monsterNeighbours.has(n.id);
     const hasClue=view.phase==='hunter'&&view.clues.some(c=>c.place===n.id);
+    const suspected=view.phase==='hunter'&&view.clues.some(c=>
+      c.type==='rumour'&&c.pointNode===n.id&&c.status==='unverified');
+    const discredited=view.phase==='hunter'&&view.clues.some(c=>
+      c.type==='rumour'&&c.pointNode===n.id&&c.status==='false');
     const mark = view.phase==='hunter' ? nodeMarks.get(n.id) : null;
     const exit = view.scenario==='escape' && view.objectives?.exitNode===n.id;
     const beacon = view.scenario==='beacons' && view.objectives?.beacons?.includes(n.id);
@@ -382,12 +402,16 @@ function mapSvg(view) {
     if(possibleStart)cls.push('spawnable');
     if(selected)cls.push('selected');
     if(hasClue)cls.push('has-clue');
+    if(suspected)cls.push('rumoured-node');
+    if(discredited)cls.push('discredited-node');
     if(analysis?.constrained && candidateSet.has(n.id)) cls.push('candidate-location');
     if(mark) cls.push('marked-'+mark);
     const nodeBody='<title>'+esc(n.name)+(exit?' — Escape Gate':beacon?(dark?' — Extinguished beacon':' — Lit beacon'):'')+'</title>' +
       (exit?'<circle r="28" class="escape-goal-ring"/>':'') +
       (beacon?'<circle r="26" class="beacon-goal-ring"/>':'') +
       (analysis?.constrained && candidateSet.has(n.id)?'<circle r="25" class="candidate-halo"/>':'') +
+      (suspected?'<circle r="28" class="rumour-halo"/><text x="20" y="-19" class="rumour-icon">?</text>':'')+
+      (discredited?'<text x="20" y="-19" class="false-rumour-icon">×</text>':'')+
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
        isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':
@@ -509,21 +533,35 @@ function movementForm(view) {
 function clueSentence(clue) {
   const place=nameOf(clue.place);
   const observation=esc(roundCaption(clue.observedRound));
+  const monster=esc(monsterFor(game.difficulty).name);
+  if(clue.type==='teleport-origin')
+    return '<b>'+monster+'</b> vanished from <strong>'+esc(place)+
+      '</strong> during round '+(clue.observedRound+1)+
+      '. This departure location is confirmed; its destination is hidden, 2–3 connected roads away.';
+  if(clue.type==='rumour')
+    return clue.status==='false'
+      ?'You investigated <strong>'+esc(place)+
+        '</strong> and exposed the report as a <b>false sighting</b>.'
+      :'A villager claims <b>'+monster+'</b> was at <strong>'+esc(place)+
+        '</strong> at the end of round '+clue.observedRound+
+        '. <b>Unconfirmed.</b> Visit this location to verify the claim.';
   if(clue.type==='beacon')
-    return 'A beacon fell at <strong>'+esc(nameOf(clue.pointNode))+'</strong> at the end of round '+
-      clue.observedRound+'. The Monster was at this exact location <b>then</b>, but may have moved since.';
+    return 'A beacon fell at <strong>'+esc(nameOf(clue.pointNode))+
+      '</strong> at the end of round '+clue.observedRound+
+      '. The Monster was here <b>then</b>, but may have moved since.';
   const precise=clue.halfWidth===0;
-  const range=precise?
-    'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.':
-    'was between <strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+esc(clue.bounds[1])+'</strong>.';
+  const range=precise
+    ?'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.'
+    :'was between <strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+
+      esc(clue.bounds[1])+'</strong>.';
   if(clue.type==='sighting'){
     const source=clue.source==='lantern'?'Your Signal Lantern detected':'A watcher reports';
-    return source+': the bearing of the <b>monster</b> from <b>'+esc(place)+
+    return source+': the bearing of <b>'+monster+'</b> from <b>'+esc(place)+
       '</b> '+observation+' '+range;
   }
-  const orientation=clue.kind==='reverse'?
-    'Bearing of <b>'+esc(place)+'</b> from the <b>monster</b>':
-    'Bearing of the <b>monster</b> from <b>'+esc(place)+'</b>';
+  const orientation=clue.kind==='reverse'
+    ?'Bearing of <b>'+esc(place)+'</b> from <b>'+monster+'</b>'
+    :'Bearing of <b>'+monster+'</b> from <b>'+esc(place)+'</b>';
   return orientation+' '+observation+' '+range;
 }
 
@@ -537,20 +575,26 @@ function notebook(view) {
       '<span>'+analysis.eliminated+' of '+analysis.total+' locations ruled out by '+analysis.cluesUsed+
       ' selected clue'+(analysis.cluesUsed===1?'':'s')+'</span>' +
       '<details><summary>Which locations remain?</summary><p>'+esc(locationText || 'No locations satisfy these clues.')+'</p></details>' +
-      '<p class="muted compact">These are possible locations, not guaranteed positions. Older clues allow the monster one road of movement per elapsed round.</p></div>'
-    : plotClue ? '<p class="muted compact">Select at least one clue to check possible locations.</p>' : '';
+      '<p class="muted compact">These are possible locations, not guaranteed positions. Older clues allow one road per normal Monster turn; a publicly announced teleport permits a 2–3-road jump.</p></div>'
+    : plotClue ? '<p class="muted compact">Select a confirmed bearing or location clue. Unverified local rumours never constrain the mathematical candidate set.</p>' : '';
   const cards=view.clues.map((c,i)=>{
     const chosen=active.some(a=>a.id===c.id);
-    const visit=c.type==='beacon'?'PUBLIC BEACON REPORT':c.type==='sighting'?'PUBLIC SIGNAL':
+    const visit=c.type==='teleport-origin'?'CONFIRMED VANISHING POINT':
+      c.type==='rumour'?(c.status==='false'?'DISPROVED REPORT':'UNCONFIRMED SIGHTING'):
+      c.type==='beacon'?'PUBLIC BEACON REPORT':c.type==='sighting'?'PUBLIC SIGNAL':
       (c.ageLabel ? esc(c.ageLabel) : 'TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound));
     const routeDistance=Number.isInteger(c.distanceMin) ?
       '<p class="distance-hint">Road distance at observation: '+
       (c.distanceMin===c.distanceMax?'exactly '+c.distanceMin:
         c.distanceMin+'–'+c.distanceMax)+' connected roads</p>' : '';
-    const label=c.type==='beacon'?'BEACON EXTINGUISHED':
+    const label=c.type==='teleport-origin'?'MONSTER TELEPORTED':
+      c.type==='rumour'?(c.status==='false'?'DECOY EXPOSED':'LOCAL RUMOUR'):
+      c.type==='beacon'?'BEACON EXTINGUISHED':
       c.source==='lantern'?'SIGNAL LANTERN':
       c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
-    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':c.type==='beacon'?'beacon-card':'')+'">' +
+    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':
+      c.type==='beacon'||c.type==='teleport-origin'?'beacon-card':
+      c.type==='rumour'?'rumour-card':'')+'">' +
       '<div class="clue-meta"><span>'+label+'</span><span>'+visit+'</span></div>' +
       (view.guided && plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
         '" '+(chosen?'checked':'')+'/> INCLUDE IN DEDUCTION</label>':'') +
@@ -558,7 +602,7 @@ function notebook(view) {
       '<small>Discovered round '+c.foundRound+
       (c.kind==='reverse'?' · Reverse the direction by 180°':' · Bearing starts at the stated location')+'</small>' +
       '<details class="clue-explanation"><summary>Explain the maths</summary><p>'+
-        esc(clueMathExplanation(c,view.round))+'</p></details>' +
+        esc(clueMathExplanation(c,view.round,view.publicEvents))+'</p></details>' +
       '</article>';
   }).join('');
   return '<section class="panel notebook-panel">' +
@@ -643,6 +687,87 @@ function savePanel() {
     '<p class="muted compact">Saved only on this device. In Pass &amp; Play, resuming always shows the handoff screen.</p></section>';
 }
 
+function monsterPortrait(difficulty,cssClass='') {
+  const m=monsterFor(difficulty);
+  return '<img class="monster-portrait '+cssClass+'" src="'+m.art+
+    '" alt="Illustration of '+esc(m.name)+'" loading="eager"/>';
+}
+
+/** Solo level encounter shown before the first movement. No secret state. */
+function monsterIntroductionHtml(view) {
+  const m=monsterFor(view.difficulty);
+  return '<div class="encounter-backdrop" data-encounter="intro">'+
+    '<section class="encounter-card monster-encounter" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
+      '<div class="encounter-art">'+monsterPortrait(view.difficulty)+'</div>'+
+      '<div class="encounter-copy">'+
+        '<span class="eyebrow">LEVEL '+String(Object.keys(MONSTERS).indexOf(view.difficulty)+1).padStart(2,'0')+
+          ' · '+esc(m.home.toUpperCase())+'</span>'+
+        '<span class="encounter-kicker">YOUR QUARRY</span>'+
+        '<h1 id="monster-intro-title">'+esc(m.name)+'</h1>'+
+        '<p class="encounter-title">'+esc(m.title)+'</p>'+
+        '<p class="encounter-story">'+esc(m.flavour)+'</p>'+
+        '<div class="monster-power-summary"><strong>'+esc(m.powerTitle)+'</strong>'+
+          '<p>'+esc(m.powerText)+'</p></div>'+
+        '<p class="encounter-tip">Bearings are measured clockwise from north. Every claimed location is worth investigating.</p>'+
+        '<button type="button" id="intro-begin" class="primary-button">BEGIN THE HUNT →</button>'+
+      '</div></section></div>';
+}
+
+/** Prominent role-safe search result after each VALID Hunter movement. */
+function searchReportHtml(view) {
+  const report=view.hunterOutcome;
+  if(!report)return '';
+  const m=monsterFor(view.difficulty);
+  const category={
+    empty:'NOTHING FOUND',trace:'A NEW TRAIL',decoy:'FALSE SIGHTING EXPOSED',
+    capture:'MONSTER CAPTURED'
+  }[report.kind]||'SEARCH REPORT';
+  return '<div class="encounter-backdrop" data-encounter="report">'+
+    '<section class="encounter-card report-encounter report-'+esc(report.kind)+
+      '" role="dialog" aria-modal="true" aria-labelledby="search-report-title">'+
+      '<div class="report-art">'+monsterPortrait(view.difficulty)+'</div>'+
+      '<div class="report-copy">'+
+        '<span class="eyebrow">ROUND '+view.round+' · '+esc(nameOf(report.place))+'</span>'+
+        '<span class="encounter-kicker">'+category+'</span>'+
+        '<h2 id="search-report-title">'+esc(report.heading)+'</h2>'+
+        '<p class="report-story">'+esc(report.text)+'</p>'+
+        (report.clueId?'<p class="report-clue-note">The full dated clue is in your notebook.</p>':'')+
+        '<div class="report-actions">'+
+          '<button id="report-continue" type="button" class="primary-button">'+
+            (view.phase==='over'?'SEE HUNT RESULTS →':'CONTINUE HUNT →')+'</button>'+
+          (report.clueId&&view.phase==='hunter'
+            ?'<button id="report-notebook" type="button" class="secondary-button">VIEW FIELD NOTEBOOK</button>':'')+
+        '</div></div></section></div>';
+}
+
+function encounterOverlay(view) {
+  if(monsterIntroOpen && view.mode==='solo' && view.phase==='hunter')
+    return monsterIntroductionHtml(view);
+  if(searchReportOpen && view.hunterOutcome &&
+    ['hunter','over'].includes(view.phase))return searchReportHtml(view);
+  return '';
+}
+
+function bindEncounters() {
+  document.getElementById('intro-begin')?.addEventListener('click',()=>{
+    monsterIntroOpen=false;
+    persistNow();
+    render();
+  });
+  document.getElementById('report-continue')?.addEventListener('click',()=>{
+    searchReportOpen=false;
+    if(game.phase!=='over')persistNow();
+    render();
+  });
+  document.getElementById('report-notebook')?.addEventListener('click',()=>{
+    searchReportOpen=false;
+    hudTab='clues';
+    persistNow();
+    render();
+  });
+  document.getElementById(monsterIntroOpen?'intro-begin':'report-continue')?.focus?.();
+}
+
 function hudMissionSummary(view) {
   if(view.scenario==='escape')
     return 'ESCAPE GATE: '+nameOf(view.objectives.exitNode)+' · OPENS ROUND 5';
@@ -679,7 +804,7 @@ function hudTabsHtml(view) {
 
 function playHtml(view) {
   const isMonster=view.phase==='monster';
-  const mission=esc(hudMissionSummary(view));
+  const mission=esc(monsterFor(view.difficulty).name+' · '+hudMissionSummary(view));
   return '<div class="app-shell hud-screen '+(isMonster?'monster-mode':'hunter-mode')+'">'+
     titleBar(true,view)+
     '<main class="play-content hud-content">'+
@@ -711,7 +836,9 @@ function setupHtml(view) {
       '<p>The hunter starts at the Watchtower. Only locations at least three roads away are available.</p></div></div>' +
       '<div class="game-grid">'+mapFrame(view) +
       '<aside class="sidebar"><section class="panel move-panel"><span class="eyebrow">SECRET LOCATION</span>' +
-      '<h3>Begin in the shadows</h3><p class="muted">Choose a purple location on the map, or use the list below. Keep this location hidden.</p>' +
+      '<h3>Begin in the shadows</h3>'+monsterPortrait(view.difficulty,'setup-monster-art')+
+      '<p class="muted">You are '+esc(monsterFor(view.difficulty).name)+
+      '. Choose a purple location on the map, or use the list below. Keep this location hidden.</p>' +
       '<label class="setup-label" for="spawn-select">Your secret starting location</label>' +
       '<select id="spawn-select">'+spawnOptions+'</select>' +
       '<button id="confirm-spawn" class="primary-button">CONFIRM SECRET START →</button>' +
@@ -722,10 +849,13 @@ function setupHtml(view) {
 function overHtml(view) {
   const hunterWin=view.winner==='hunter';
   const route=view.trail.map(t=>nameOf(t.node)).join(' → ');
+  const creature=monsterFor(view.difficulty);
   return '<div class="app-shell end-mode">'+titleBar(false,view) +
     '<main class="play-content"><div class="end-header">' +
       '<span class="eyebrow">THE HUNT HAS ENDED</span><div class="result-symbol">'+(hunterWin?'✦':'◆')+'</div>' +
       '<h1>'+(hunterWin?'THE HUNTER PREVAILS':'THE MONSTER ESCAPES')+'</h1>' +
+      monsterPortrait(view.difficulty,'end-monster-art')+
+      '<h2 class="end-monster-name">'+esc(creature.name)+'</h2>' +
       '<p>'+(hunterWin?'The monster has been found before the final lantern went dark.':
         view.finishReason==='escape'?'The Monster slipped through the open Escape Gate.':
         view.finishReason==='beacons'?'Both signal beacons were extinguished.':
@@ -850,6 +980,7 @@ function bindCommon() {
     event.preventDefault();
     if (confirm('Leave this game and return to the menu? Progress will be lost.')) {
       Object.assign(game, createGame());
+      monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       render();
     }
@@ -863,6 +994,7 @@ function saveAndExit() {
     return;
   }
   Object.assign(game,createGame());
+  monsterIntroOpen=false;searchReportOpen=false;
   nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
   difficultyPicker=false;scenarioPicker=false;
   resetProtractor();
@@ -876,6 +1008,7 @@ function render() {
   else if(view.phase!=='home')persistNow();
   // Critical privacy boundary: handoff markup is generated without map, role, logs or secret data.
   if(view.phase.startsWith('pass-')) {
+    monsterIntroOpen=false;searchReportOpen=false;
     resetProtractor();
     mount.innerHTML=handoffHtml(view.phase);
     document.getElementById('reveal').addEventListener('click',()=>{
@@ -963,19 +1096,22 @@ function render() {
     return;
   }
   if(view.phase==='over') {
-    mount.innerHTML=overHtml(view);
+    mount.innerHTML=overHtml(view)+encounterOverlay(view);
+    bindEncounters();
     bindCommon();
     bindMapZoom();
     document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty,game.scenario));
     document.getElementById('main-menu').addEventListener('click',()=>{
       Object.assign(game,createGame());
+      monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       difficultyPicker = false;
       render();
     });
     return;
   }
-  mount.innerHTML=playHtml(view);
+  mount.innerHTML=playHtml(view)+encounterOverlay(view);
+  bindEncounters();
   bindCommon();
   document.querySelectorAll('[data-hud-tab]').forEach(button=>{
     button.addEventListener('click',()=>{
@@ -988,13 +1124,19 @@ function render() {
     event.preventDefault();
     const value=document.getElementById('bearing-input').value;
     const before=view.phase==='hunter'?game.hunter:game.monster;
-    if(view.phase==='hunter') hunterMove(game,value);
-    else monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
+    const result=view.phase==='hunter'
+      ?hunterMove(game,value)
+      :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
-    if(before!==after)resetProtractor(view.phase==='hunter' && game.mode==='solo');
+    if(before!==after) {
+      resetProtractor(view.phase==='hunter' && game.mode==='solo');
+      if(view.phase==='hunter' && result.ok && game.hunterOutcome)
+        searchReportOpen=true;
+    }
     render();
   });
   document.getElementById('end-turn')?.addEventListener('click',()=>{
+    searchReportOpen=false;
     endHunterTurn(game);
     resetProtractor(game.mode==='solo');
     render();
@@ -1037,7 +1179,8 @@ function render() {
       persistNow();
     });
   }
-  if(view.phase==='hunter' && view.stepsLeft===0) document.getElementById('end-turn')?.focus();
+  if(view.phase==='hunter' && view.stepsLeft===0 && !searchReportOpen)
+    document.getElementById('end-turn')?.focus();
 }
 
 /** Re-seal when hidden so app-switch / returning to a tab cannot reveal a private view. */
@@ -1046,7 +1189,7 @@ document.addEventListener('visibilitychange',()=>{
     const phase=game.phase;
     sealTurn(game);
     if(phase!==game.phase) {
-      tutorialOpen=false;
+      tutorialOpen=false;monsterIntroOpen=false;searchReportOpen=false;
       resetProtractor();
       render();
     } else if(game.phase!=='home'&&game.phase!=='over')persistNow();

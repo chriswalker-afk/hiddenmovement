@@ -94,7 +94,7 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   const toggle=callbacks.get('clue-toggle:sighting-0:change');
   assert.equal(typeof toggle,'function','Clue selection checkbox must be interactive');
   toggle({target:{checked:false}});
-  assert.match(html(),/Select at least one clue/);
+  assert.match(html(),/Select a confirmed bearing or location clue/);
   const marker=el('node-note:A');
   assert.equal(typeof callbacks.get(marker.id+':click'),'function');
   click(marker.id);
