@@ -362,31 +362,55 @@ export function useLantern(game) {
   return say(game,'Your Signal Lantern found a fresh approximate bearing. One movement action was used.');
 }
 
-/** Shared, validated outcome for both human and AI Monster travel. */
-function applyMonsterStep(game,destination,veil=false) {
-  if(!game.map.adjacency[game.monster]?.includes(destination))
+/**
+ * A teleport is bounded to 2–3 shortest-road hops and exposes its *origin*.
+ * The Hunter can use that certified old location, but never receives the
+ * secret arrival point. Teleport destination clues are therefore truthful.
+ */
+function applyMonsterStep(game,destination,veil=false,teleport=false) {
+  const origin=game.monster;
+  const rule=monsterFor(game.difficulty).teleport;
+  if(teleport) {
+    if(game.mode!=='solo'||!rule||
+        game.round<game.monsterCooldowns.teleportReadyRound ||
+        !teleportTargets(game).includes(destination))
+      throw new RangeError('Illegal or unavailable monster teleport');
+    if(veil)throw new RangeError('Teleport and Veil cannot be combined');
+  } else if(!game.map.adjacency[origin]?.includes(destination))
     throw new RangeError('Illegal Monster road');
   if(veil && (!game.objectivePowers||game.veilCharges<=0))
     throw new RangeError('The Monster has no Veil charge');
   const movedRound=game.round;
   game.monster=destination;
   game.monsterTrail.push({
-    id:'visit-'+game.nextTrailId++, node:destination,round:movedRound,
-    ...(veil?{concealed:true}:{})
+    id:'visit-'+game.nextTrailId++,node:destination,round:movedRound,
+    ...(veil?{concealed:true}:{}),...(teleport?{teleported:true}:{})
   });
-  game.history.push({role:'monster',round:movedRound,node:destination});
+  game.history.push({role:'monster',round:movedRound,node:destination,
+    ...(teleport?{movement:'teleport'}:{})});
   if(veil) {
     game.veilCharges--;
     game.publicEvents.push({type:'veil',round:movedRound});
   }
+  if(teleport) {
+    game.monsterCooldowns.teleportReadyRound=movedRound+rule.cooldown;
+    game.publicEvents.push({
+      type:'teleport',round:movedRound,from:origin,
+      minHops:rule.minHops,maxHops:rule.maxHops
+    });
+    game.clues.unshift({
+      id:'teleport-origin-'+movedRound,
+      type:'teleport-origin',source:'teleport',
+      place:origin,pointNode:origin,kind:'location',
+      observedRound:movedRound-1,foundRound:movedRound+1
+    });
+  }
   if(game.monster===game.hunter) {
-    game.phase='over';
-    game.winner='hunter';
-    game.finishReason='capture';
+    game.phase='over';game.winner='hunter';game.finishReason='capture';
     return {ended:true,message:'The Monster walked into the Hunter and was captured!'};
   }
-  if(game.scenario==='beacons' && game.objectives.beacons.includes(destination)
-      && !game.beaconVisits.includes(destination)) {
+  if(game.scenario==='beacons'&&game.objectives.beacons.includes(destination)
+      &&!game.beaconVisits.includes(destination)) {
     game.beaconVisits.push(destination);
     game.publicEvents.push({type:'beacon',round:movedRound,node:destination});
     game.clues.unshift({
@@ -395,23 +419,68 @@ function applyMonsterStep(game,destination,veil=false) {
       observedRound:movedRound,foundRound:movedRound+1,kind:'location'
     });
     if(game.beaconVisits.length>=game.objectives.beacons.length) {
-      game.phase='over';
-      game.winner='monster';
-      game.finishReason='beacons';
+      game.phase='over';game.winner='monster';game.finishReason='beacons';
       return {ended:true,message:'Both signal beacons have gone dark. The Monster wins!'};
     }
   }
-  if(game.scenario==='escape' && destination===game.objectives.exitNode
-      && movedRound>=SCENARIOS.escape.unlockRound) {
-    game.phase='over';
-    game.winner='monster';
-    game.finishReason='escape';
+  if(game.scenario==='escape'&&destination===game.objectives.exitNode
+      &&movedRound>=SCENARIOS.escape.unlockRound) {
+    game.phase='over';game.winner='monster';game.finishReason='escape';
     return {ended:true,message:'The Monster reached the open escape gate and vanished!'};
   }
   game.round++;
   game.stepsLeft=game.config.hunterSteps;
-  return {ended:false,veiled:veil,
+  return {ended:false,veiled:veil,teleported:teleport,
     beaconReached:game.publicEvents.some(e=>e.type==='beacon'&&e.round===movedRound)};
+}
+
+/**
+ * A deliberately unverified local sighting. It is not mathematical evidence:
+ * the map candidate solver skips these reports until a student investigates.
+ * Private activeDecoys stores the true falsehood; the Hunter sees only rumour.
+ */
+function plantDecoy(game,movedRound) {
+  const rule=monsterFor(game.difficulty).decoy;
+  if(!rule||game.mode!=='solo'||movedRound<game.monsterCooldowns.decoyReadyRound)return null;
+  const target=chooseDecoyDestination(game);
+  if(!target)return null;
+  const id='rumour-'+movedRound+'-'+game.activeDecoys.length;
+  game.activeDecoys.push({id,node:target,createdRound:movedRound,revealed:false});
+  game.clues.unshift({
+    id,type:'rumour',source:'villager',kind:'location',
+    place:target,pointNode:target,observedRound:movedRound,
+    foundRound:movedRound+1,status:'unverified'
+  });
+  game.publicEvents.push({type:'rumour',round:movedRound,node:target});
+  game.monsterCooldowns.decoyReadyRound=movedRound+rule.cooldown;
+  return target;
+}
+
+function searchOutcome(game,location,clue,unmasked=[]) {
+  const place=game.map.nodes[location].name;
+  const creature=monsterFor(game.difficulty).name;
+  if(unmasked.length) {
+    return {kind:'decoy',place:location,heading:'A false sighting!',
+      text:'You confront the witnesses in '+place+'. The report was a decoy planted by '+
+        creature+'. The location is now marked as false.'+
+        (clue?' You also uncovered a genuine trail clue.':''),
+      ...(clue?{clueId:clue.id}:{})};
+  }
+  if(clue) {
+    const was=clue.observedRound===0?'at the start of the hunt':
+      'at the end of round '+clue.observedRound;
+    const direction=clue.kind==='reverse'
+      ?'the bearing of '+place+' from '+creature
+      :'the bearing of '+creature+' from '+place;
+    const number=clue.halfWidth===0
+      ?'was '+clue.bounds[0]
+      :'was between '+clue.bounds[0]+' and '+clue.bounds[1];
+    return {kind:'trace',place:location,clueId:clue.id,heading:'A clue in the shadows',
+      text:'You ask the locals in '+place+'. They tell you that '+direction+
+        ' '+number+' '+was+'. The Monster may have moved since then.'};
+  }
+  return {kind:'empty',place:location,heading:'No trace found',
+    text:'You search '+place+', but there is no evidence of '+creature+' here. Keep hunting.'};
 }
 
 export function hunterMove(game, inputBearing) {
