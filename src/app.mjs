@@ -361,11 +361,25 @@ function render() {
   }
   if(view.phase==='home') {
     mount.innerHTML=homeHtml();
-    document.getElementById('start-two').addEventListener('click',start);
-    document.getElementById('how-toggle').addEventListener('click',()=>{
-      showHowTo=!showHowTo;
-      render();
-    });
+    if (difficultyPicker) {
+      document.getElementById('back-home').addEventListener('click',()=>{
+        difficultyPicker = false;
+        render();
+      });
+      document.querySelectorAll('[data-difficulty]').forEach(button=>{
+        button.addEventListener('click',()=> start('solo', button.dataset.difficulty));
+      });
+    } else {
+      document.getElementById('start-two').addEventListener('click',()=>start('multi'));
+      document.getElementById('start-solo-select').addEventListener('click',()=>{
+        difficultyPicker = true;
+        render();
+      });
+      document.getElementById('how-toggle').addEventListener('click',()=>{
+        showHowTo=!showHowTo;
+        render();
+      });
+    }
     return;
   }
   if(view.phase==='monster-setup') {
@@ -392,9 +406,10 @@ function render() {
   if(view.phase==='over') {
     mount.innerHTML=overHtml(view);
     bindCommon();
-    document.getElementById('play-again').addEventListener('click',start);
+    document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty));
     document.getElementById('main-menu').addEventListener('click',()=>{
       Object.assign(game,createGame());
+      difficultyPicker = false;
       render();
     });
     return;
