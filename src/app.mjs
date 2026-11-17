@@ -444,7 +444,7 @@ function mapFrame(view) {
       '<div class="map-zoom-controls" aria-label="Map zoom controls">'+
         '<button type="button" id="map-zoom-out" aria-label="Zoom out" '+(mapZoom<=1?'disabled':'')+'>−</button>'+
         '<output aria-label="Map zoom">'+Math.round(mapZoom*100)+'%</output>'+
-        '<button type="button" id="map-zoom-in" aria-label="Zoom in" '+(mapZoom>=2?'disabled':'')+'>+</button>'+
+        '<button type="button" id="map-zoom-in" aria-label="Zoom in" '+(mapZoom>=3?'disabled':'')+'>+</button>'+
       '</div></div></div>' +
     '<div class="map-frame">'+mapSvg(view)+'</div>' +
     '<div class="map-key">' +
@@ -820,7 +820,7 @@ function bindProtractor() {
 function bindMapZoom() {
   bindProtractor();
   document.getElementById('map-zoom-in')?.addEventListener('click',()=>{
-    mapZoom=Math.min(2,Math.round((mapZoom+0.25)*100)/100);
+    mapZoom=Math.min(3,Math.round((mapZoom+0.25)*100)/100);
     render();
   });
   document.getElementById('map-zoom-out')?.addEventListener('click',()=>{
