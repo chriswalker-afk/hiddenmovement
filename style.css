@@ -778,7 +778,7 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .hud-status .turn-marker{padding:4px 7px;min-width:70px}
   .hud-status .turn-marker strong{font-size:.87rem}
   .hud-screen .map-toolbar{gap:3px}
-  .hud-screen .map-heading h2{max-width:33vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem}
+  .hud-screen .map-heading h2{max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem}
   .protractor-toggle{font-size:.51rem;padding:4px 5px;min-height:25px}
   .protractor-keys button{padding:3px 4px}
   .protractor-keys output{min-width:31px;font-size:.58rem}
