@@ -158,7 +158,7 @@ export function tourStep(view,map,stage){
     },
     'monster-moved':{
       heading:'The Monster moved in secret',
-      text:'The Monster has completed its movement phase. You cannot see its position. Check the CLUES tab for a new watcher report, teleport departure or unconfirmed rumour, if one appeared. Compare each clue’s observation round with the current round.',
+      text:'The Monster has completed its SECRET movement phase. You cannot see its position. Check the CLUES tab for a new watcher report, teleport departure or unconfirmed rumour, if one appeared. Compare each clue’s observation round with the current round.',
       target:'#hud-tab-clues',counter:'10 / 11'
     },
     'independent':{
