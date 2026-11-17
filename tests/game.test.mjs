@@ -199,3 +199,37 @@ test('clues are not awarded repeatedly from the same trail visit', () => {
   hunterMove(g,'123'); // A -> C again
   assert.equal(g.clues.length,1);
 });
+
+
+test('reverse-bearing clues point back toward the trace location', () => {
+  const g=beginAt('K');
+  g.monster='J';
+  g.monsterTrail=[{id:'visit-9',node:'C',round:0}];
+  g.clues=[{id:'earlier-clue'}]; // Alternate clue wording on this discovery
+  const result=hunterMove(g,'123'); // A -> C
+  assert.equal(result.ok,true);
+  const clue=g.clues[0];
+  assert.equal(clue.kind,'reverse');
+  assert.ok(angularDifference(clue.center,reverseBearing(clue.sectorCenter))<0.001);
+  assert.ok(withinSector(reverseBearing(bearingBetween(MAP.nodes.C,MAP.nodes.J)),clue.center,clue.halfWidth));
+});
+
+test('a full thirteen-round monster-survival game reaches its ending', () => {
+  const g=beginAt('K');
+  for(let round=1;round<13;round++) {
+    assert.equal(g.round,round);
+    assert.equal(g.phase,'hunter');
+    endHunterTurn(g); // Hunter remains at Watchtower
+    assert.equal(g.phase,'pass-monster');
+    revealTurn(g);
+    const bearing=round%2===1?'254':'074'; // K -> N, N -> K
+    assert.equal(monsterMove(g,bearing).ok,true);
+    assert.equal(g.phase,'pass-hunter');
+    assert.deepEqual(viewForCurrentScreen(g),{phase:'pass-hunter'});
+    revealTurn(g);
+  }
+  endHunterTurn(g);
+  assert.equal(g.winner,'monster');
+  assert.equal(g.phase,'over');
+  assert.equal(g.monsterTrail.length,13);
+});
