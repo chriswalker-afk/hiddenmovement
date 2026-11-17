@@ -886,6 +886,127 @@ try{
     privacy:'sealed',monsterGuide:'role-only'});
   await writeFile('visual/guided-walkthrough.json',JSON.stringify(guidedChecks,null,2));
 
+
+  // PR21: Standard (no Guided overlay) must also end Hunter movement with a
+  // prominent manual phase confirmation. Exercise three device shapes, and
+  // inspect the CTA's REAL bounding box, not merely DOM presence.
+  const handoffChecks=[];
+  for(const viewport of [
+    {name:'desktop',width:1280,height:800,difficulty:'intro'},
+    {name:'portrait',width:390,height:844,difficulty:'expert'},
+    {name:'landscape',width:844,height:390,difficulty:'apprentice'}
+  ]){
+    const page=await browser.newPage({viewport:{
+      width:viewport.width,height:viewport.height
+    }});
+    const errors=[];
+    page.on('pageerror',error=>errors.push(String(error)));
+    await page.goto(url,{waitUntil:'domcontentloaded'});
+    await page.locator('#start-solo-select').click();
+    await page.locator('[data-difficulty="'+viewport.difficulty+'"]').click();
+    await page.locator('#intro-begin').click();
+    assert.equal(await page.locator('#move-form').count(),1);
+    assert.equal(await page.locator('#end-turn.secondary-button').count(),1,
+      'The Hunter must still be able to end a turn early');
+    assert.match(await page.locator('#end-turn').textContent(),/END HUNTER TURN EARLY/);
+    const map=MAPS[viewport.difficulty];
+    const first=map.adjacency[map.hunterStart][0];
+    const toFirst=formatBearing(bearingBetween(map.nodes[map.hunterStart],map.nodes[first])).slice(0,3);
+    const back=formatBearing(bearingBetween(map.nodes[first],map.nodes[map.hunterStart])).slice(0,3);
+    await page.locator('#bearing-input').fill(toFirst);
+    await page.locator('#move-form button[type="submit"]').click();
+    await page.locator('#report-continue').click();
+    assert.equal(await page.locator('#move-form').count(),1,
+      'There is still one valid Hunter move available');
+    await page.locator('#protractor-toggle').click();
+    assert.equal(await page.locator('#protractor-group').count(),1);
+    await page.locator('#bearing-input').fill(back);
+    await page.locator('#move-form button[type="submit"]').click();
+    await page.locator('#report-continue').click();
+    assert.equal(await page.locator('#move-form,#bearing-input').count(),0);
+    assert.equal(await page.locator('#protractor-toggle,#protractor-group,.protractor-keys').count(),0,
+      'The out-of-moves view must remove the whole measuring interface');
+    assert.equal(await page.locator('#end-turn.monster-turn-cta').count(),1);
+    assert.equal(await page.locator('.hunter-board-piece').count(),1);
+    assert.match(await page.locator('.turn-complete-explainer').textContent(),/has NOT moved yet/);
+    assert.match(await page.locator('#end-turn').textContent(),/BEGIN MONSTER.S HIDDEN MOVEMENT/);
+    assert.equal(await page.locator('.monster-location').count(),0,
+      'No hidden Monster may appear before end-turn confirmation');
+    const box=await page.locator('#end-turn').boundingBox();
+    assert.ok(box&&box.width>=100&&box.height>=44,
+      viewport.name+' must show a large, tappable Monster-phase button');
+    assert.ok(box.y>=0&&box.y+box.height<=viewport.height+2,
+      viewport.name+' Monster-phase CTA clipped out of screen: '+JSON.stringify(box));
+    await page.screenshot({path:'visual/monster-handoff-'+viewport.name+'.png',fullPage:false});
+    await page.locator('#end-turn').click();
+    assert.equal(await page.locator('.monster-location').count(),0,
+      'Secret Monster position must remain hidden after AI turn');
+    assert.ok(await page.locator('.replay-screen,.turn-marker').count()>0,
+      'Pressing the Monster CTA must advance the game or complete it');
+    assert.deepEqual(errors,[],viewport.name+' console errors in Monster handoff');
+    handoffChecks.push({viewport:viewport.name,difficulty:viewport.difficulty,
+      hiddenBearingInput:true,hiddenProtractor:true,
+      explicitMonsterStart:true,ctaBox:box});
+    await page.close();
+  }
+  // The last round ends the hunt; a button promising another Monster move
+  // would be mathematically and narratively misleading.
+  const final=await browser.newPage({viewport:{width:1280,height:800}});
+  await final.goto(url,{waitUntil:'domcontentloaded'});
+  await final.locator('#start-solo-select').click();
+  await final.locator('[data-difficulty="intro"]').click();
+  await final.locator('#intro-begin').click();
+  for(let r=1;r<13;r++){
+    await final.locator('#end-turn').click();
+    if(await final.locator('.replay-screen').count())break;
+  }
+  if(await final.locator('.replay-screen').count()===0){
+    const map=MAPS.intro;
+    const first=map.adjacency[map.hunterStart][0];
+    await final.locator('#bearing-input').fill(
+      formatBearing(bearingBetween(map.nodes[map.hunterStart],map.nodes[first])).slice(0,3));
+    await final.locator('#move-form button[type="submit"]').click();
+    await final.locator('#report-continue').click();
+    await final.locator('#bearing-input').fill(
+      formatBearing(bearingBetween(map.nodes[first],map.nodes[map.hunterStart])).slice(0,3));
+    await final.locator('#move-form button[type="submit"]').click();
+    await final.locator('#report-continue').click();
+    assert.match(await final.locator('#end-turn').textContent(),/FINISH FINAL ROUND/);
+    assert.equal(await final.locator('#move-form,#protractor-toggle').count(),0);
+    await final.screenshot({path:'visual/monster-handoff-final-round.png',fullPage:false});
+    await final.locator('#end-turn').click();
+    assert.equal(await final.locator('.replay-screen').count(),1);
+  }
+  await final.close();
+  handoffChecks.push({viewport:'final-round',next:'results-not-monster'});
+  // Pass & Play must first show an opaque handoff instead of letting the
+  // private Monster board bleed through a role transition.
+  const multi=await browser.newPage({viewport:{width:390,height:844}});
+  await multi.goto(url,{waitUntil:'domcontentloaded'});
+  await multi.locator('#start-two').click();
+  await multi.locator('#reveal').click();
+  await multi.locator('#confirm-spawn').click();
+  await multi.locator('#reveal').click();
+  const origin=MAPS.intro.hunterStart;
+  const neighbour=MAPS.intro.adjacency[origin][0];
+  for(const [from,to] of [[origin,neighbour],[neighbour,origin]]){
+    await multi.locator('#bearing-input').fill(
+      formatBearing(bearingBetween(MAPS.intro.nodes[from],MAPS.intro.nodes[to])).slice(0,3));
+    await multi.locator('#move-form button[type="submit"]').click();
+    await multi.locator('#report-continue').click();
+  }
+  assert.match(await multi.locator('#end-turn').textContent(),/HAND OVER FOR MONSTER.S HIDDEN MOVE/);
+  assert.equal(await multi.locator('#move-form,#protractor-toggle').count(),0);
+  await multi.screenshot({path:'visual/monster-handoff-pass-and-play.png',fullPage:false});
+  await multi.locator('#end-turn').click();
+  assert.equal(await multi.locator('.world-svg,#guided-tour').count(),0,
+    'The pass screen must be fully sealed before the Monster plays');
+  await multi.locator('#reveal').click();
+  assert.equal(await multi.locator('#move-form').count(),1);
+  await multi.close();
+  handoffChecks.push({viewport:'pass-and-play',next:'sealed-monster-handoff'});
+  await writeFile('visual/monster-turn-handoff.json',JSON.stringify(handoffChecks,null,2));
+
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
   await writeFile('visual/four-world-consistency.json',JSON.stringify(consistencyChecks,null,2));
   console.log('Visual QA succeeded for '+report.length+' layouts and '+
