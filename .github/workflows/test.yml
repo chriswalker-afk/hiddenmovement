@@ -20,9 +20,13 @@ jobs:
           node-version: '22'
       - name: Run tests
         run: npm test
+      - name: Benchmark AI gameplay across seeded games
+        run: SIM_GAMES=40 npm run simulate
       - name: Verify script syntax
         run: |
           node --check src/app.mjs
           node --check src/engine.mjs
           node --check src/map.mjs
           node --check src/geometry.mjs
+          node --check src/ai.mjs
+          node --check scripts/simulate.mjs
