@@ -133,9 +133,18 @@ function makeRegion(id, title, subtitle, theme, rowLengths, locationNames) {
   const yMin = Math.min(...ys), yMax = Math.max(...ys);
   const fit = (value, low, high, targetLow, targetHigh) =>
     Math.round((targetLow + (value - low) * (targetHigh - targetLow) / (high - low)) * 10) / 10;
+  // Shift only the riverside bands onto their respective dry banks.
+  // Moving entire short rows keeps the hand-authored routes staggered,
+  // readable and non-crossing; no node is removed or renamed. The painted
+  // water channels in waterways.mjs occupy the gaps between these bands.
+  const riversideOffsets = {
+    marsh: {1:23, 3:-18},
+    eclipse: {3:-12, 4:18}
+  }[theme] || {};
   for (const node of dots) {
     node.x = fit(node.x, xMin, xMax, 95, 905);
-    node.y = fit(node.y, yMin, yMax, 95, 640);
+    node.y = fit(node.y, yMin, yMax, 95, 640) +
+      (riversideOffsets[node.row] || 0);
   }
 
   const middleRow = Math.floor((rowLengths.length - 1) / 2);
