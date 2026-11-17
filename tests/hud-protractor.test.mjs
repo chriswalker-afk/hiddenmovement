@@ -180,6 +180,7 @@ test('HUD exposes map and essential controls on one screen; secondary details ar
   click('guided-toggle');
   click('start-solo-select');
   click('difficulty-intro');
+  click('hud-tab-clues');
   assert.match(html(),/WATCHER SIGHTING/);
   assert.match(html(),/COMBINE CLUES ON THE MAP/);
   assert.doesNotMatch(html(),/class="clue-(?:ray|sector)"/);
