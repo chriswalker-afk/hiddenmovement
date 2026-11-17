@@ -22,7 +22,7 @@ export function serializeGame(game,ui={}) {
   if(!ACTIVE_PHASES.has(game.phase))throw new RangeError('Only active games may be saved');
   const data={version:VERSION,savedAt:Date.now(),
     mode:game.mode,difficulty:game.difficulty,scenario:game.scenario,
-    seed:game.seed};
+    guided:game.guided,seed:game.seed};
   for(const key of OWN)data[key]=game[key];
   const validMarks=Array.isArray(ui.marks)?ui.marks.filter(([id,mark])=>
     typeof id==='string'&&Object.hasOwn(game.map.nodes,id)&&['possible','ruled'].includes(mark)): [];
@@ -43,8 +43,12 @@ export function restoreGame(raw) {
   if(!['solo','multi'].includes(data.mode)||!['intro','apprentice','tracker','expert'].includes(data.difficulty)||
       !['classic','escape','beacons'].includes(data.scenario))return null;
   if(!finiteInt(data.seed,0,4294967295)||!finiteInt(data.randomState,0,4294967295))return null;
+  // Legacy solo saves predate the Standard/Guided split and used watcher
+  // sightings; reopen these as Guided rather than silently changing their rules.
+  if(data.guided!==undefined && typeof data.guided!=='boolean')return null;
+  const guided=data.guided===true || (data.guided===undefined && data.mode==='solo');
   const game=createGame({mode:data.mode,difficulty:data.difficulty,
-    scenario:data.scenario,seed:data.seed});
+    scenario:data.scenario,guided,seed:data.seed});
   const map=game.map;
   if(!Object.hasOwn(map.nodes,data.hunter))return null;
   if(data.monster!==null&&!Object.hasOwn(map.nodes,data.monster))return null;
