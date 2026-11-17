@@ -243,9 +243,6 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 .sighting-card{border-color:#83c5b7!important;background:#16383e}
 .sighting-card .clue-meta{color:#b0e2cb}
 .clue-meta{flex-wrap:wrap;line-height:1.45}
-.world-svg.theme-woodland>rect:first-of-type{fill:#223c34}
-.world-svg.theme-marsh>rect:first-of-type{fill:#1b3b42}
-.world-svg.theme-eclipse>rect:first-of-type{fill:#302a41}
 .theme-woodland .road-top{stroke:#d2b98a}
 .theme-marsh .road-top{stroke:#b1c9b9}
 .theme-eclipse .road-top{stroke:#b3a1c8}
@@ -512,3 +509,8 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 @media(prefers-reduced-motion:reduce){
   .map-frame,.illustrated-scenery{animation:none!important;transition:none!important}
 }
+
+/* Region background colours are painted inside the scenery layer in
+   src/scenery.mjs. Do not style .world-svg > rect: the final direct SVG
+   rectangles are foreground borders and grain, and opaque fills can hide
+   every route and location on a non-Intro map. */

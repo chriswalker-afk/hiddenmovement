@@ -362,8 +362,12 @@ function mapSvg(view) {
     hunterPath+monsterPath+
     '<g class="nodes">'+dots+'</g>' +
     '<g transform="translate(945 73)" class="north-mark"><circle r="27" fill="#0b1b27" fill-opacity=".72" stroke="#8aafaa" stroke-opacity=".55"/><path d="M0-21L6 2 0-2-6 2Z" fill="#d0b47b"/><path d="M0 21L6 2 0 6-6 2Z" fill="#7c969a"/><text y="-34" text-anchor="middle">N</text></g>' +
-    '<rect x="10" y="10" width="980" height="700" rx="7" fill="none" stroke="#8b9989" stroke-opacity=".45" stroke-width="2"/>' +
-    '<rect width="1000" height="720" fill="url(#moor-grain)" pointer-events="none"/>' +
+    // Keep decorative borders and grain isolated so generic SVG rect styles
+    // cannot accidentally paint an opaque layer over roads and game nodes.
+    '<g class="map-finish" pointer-events="none" aria-hidden="true">' +
+      '<rect x="10" y="10" width="980" height="700" rx="7" fill="none" stroke="#8b9989" stroke-opacity=".45" stroke-width="2"/>' +
+      '<rect width="1000" height="720" fill="url(#moor-grain)"/>' +
+    '</g>' +
     '</svg>';
 }
 
