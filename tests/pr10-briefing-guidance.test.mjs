@@ -83,7 +83,7 @@ test('Coach responds appropriately to errors, found clues, empty searches, rumou
   const base=viewForCurrentScreen(game),map=MAPS.expert;
   const coaching=overrides=>guidedCoach({...base,...overrides},map);
   assert.equal(coaching({stepsLeft:0}).stage,'end-turn');
-  assert.match(coaching({stepsLeft:0}).instruction,/END TURN/);
+  assert.match(coaching({stepsLeft:0}).instruction,/BEGIN MONSTER’S HIDDEN MOVEMENT/);
   assert.equal(coaching({feedback:'That bearing does not follow a connected road.'}).stage,'retry');
   assert.equal(coaching({hunterOutcome:{kind:'trace'}}).stage,'trace');
   assert.equal(coaching({hunterOutcome:{kind:'empty'}}).stage,'empty');
