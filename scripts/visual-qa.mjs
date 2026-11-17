@@ -835,6 +835,45 @@ try{
   assert.equal(await skipGuide.locator('.hunter-board-piece').count(),1);
   assert.equal(await skipGuide.locator('#hud-tab-coach').count(),1);
   await skipGuide.close();
+  // Pass-and-play: a monster-specific bearing prompt is visible ONLY when
+  // the Monster has revealed their own screen. Handoffs remain completely
+  // opaque, and the Hunter receives only a public post-turn explanation.
+  const duo=await browser.newPage({viewport:{width:1280,height:800}});
+  await duo.goto(url,{waitUntil:'domcontentloaded'});
+  await duo.locator('#guided-toggle').click();
+  await duo.locator('#start-two').click();
+  assert.equal(await duo.locator('.world-svg,#guided-tour').count(),0);
+  await duo.locator('#reveal').click();
+  const hiding=await duo.locator('#spawn-select').inputValue();
+  await duo.locator('#confirm-spawn').click();
+  assert.equal(await duo.locator('.world-svg,#guided-tour').count(),0);
+  await duo.locator('#reveal').click();
+  assert.equal(await duo.locator('#guided-tour').getAttribute('data-guided-step'),
+    'enable-protractor');
+  await duo.locator('#end-turn').click();
+  assert.equal(await duo.locator('.world-svg,#guided-tour').count(),0);
+  await duo.locator('#reveal').click();
+  assert.equal(await duo.locator('#guided-tour').getAttribute('data-guided-step'),
+    'monster-wait');
+  assert.match(await duo.locator('#guided-tour h3').textContent(),/Monster movement/);
+  assert.equal(await duo.locator('#bearing-input.guided-tour-target').count(),1);
+  await duo.screenshot({path:'visual/guided-pass-and-play-monster.png',fullPage:false});
+  const monsterTarget=MAPS.intro.adjacency[hiding][0];
+  const bearing=formatBearing(bearingBetween(
+    MAPS.intro.nodes[hiding],MAPS.intro.nodes[monsterTarget])).slice(0,3);
+  await duo.locator('#bearing-input').fill(bearing);
+  await duo.locator('#move-form button[type="submit"]').click();
+  assert.equal(await duo.locator('.world-svg,#guided-tour').count(),0);
+  await duo.locator('#reveal').click();
+  assert.equal(await duo.locator('#guided-tour').getAttribute('data-guided-step'),
+    'monster-moved');
+  assert.equal(await duo.locator('.monster-location').count(),0);
+  await duo.locator('#hud-tab-clues').click();
+  assert.equal(await duo.locator('#guided-tour').getAttribute('data-guided-step'),
+    'independent');
+  await duo.close();
+  guidedChecks.push({viewport:'multi-handoff',steps:'complete',
+    privacy:'sealed',monsterGuide:'role-only'});
   await writeFile('visual/guided-walkthrough.json',JSON.stringify(guidedChecks,null,2));
 
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
