@@ -79,6 +79,20 @@ try{
     await page.screenshot({path:'visual/'+size.name+'-protractor.png',fullPage:false});
     await page.locator('#hud-tab-notes').click();
     await page.screenshot({path:'visual/'+size.name+'-notes.png',fullPage:false});
+    if(size.name==='mobile'){
+      await page.locator('#protractor-toggle').click();
+      await page.locator('#hud-tab-clues').click();
+      for(let step=0;step<8;step++)
+        await page.locator('#map-zoom-in').click();
+      assert.equal((await page.locator('.map-zoom-controls output').textContent()).trim(),'300%',
+        'Dense mobile maps need a readable 300% detail zoom');
+      const pixelHeight=await page.locator('.nodes>.node .node-label').first()
+        .evaluate(el=>el.getBoundingClientRect().height);
+      assert.ok(pixelHeight>=10,
+        'Dense labels must become readable at maximum zoom; measured '+pixelHeight+'px');
+      await measure(page,'mobile-expert-detail-zoom');
+      await page.screenshot({path:'visual/mobile-expert-detail-zoom.png',fullPage:false});
+    }
     assert.deepEqual(errors,[],size.name+' browser console exceptions');
     await page.close();
   }
