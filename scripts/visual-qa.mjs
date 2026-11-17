@@ -3,6 +3,7 @@
  * Used only in CI; Playwright is not a runtime dependency of the game.
  */
 import { chromium } from 'playwright';
+import { MAPS } from '../src/map.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const url=process.env.PREVIEW_URL||'http://127.0.0.1:8765/';
@@ -88,6 +89,38 @@ try{
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="'+difficulty+'"]').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
+    const expectedNames=Object.values(MAPS[difficulty].nodes).map(n=>n.name);
+    const displayedNames=await page.locator('.nodes>.node .node-label').allTextContents();
+    assert.deepEqual(displayedNames,expectedNames,
+      difficulty+' should show the actual location names, never only numeric identifiers');
+    const labelGeometry=await page.evaluate(()=>{
+      const svg=document.querySelector('.world-svg');
+      const mapRect=svg.getBoundingClientRect();
+      const rect=el=>{
+        const r=el.getBoundingClientRect();
+        return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+      };
+      const labels=[...svg.querySelectorAll('.nodes>.node .node-label')]
+        .map(el=>({name:el.textContent,rect:rect(el)}));
+      const clipped=labels.filter(({rect:r})=>
+        r.left<mapRect.left-2||r.right>mapRect.right+2||
+        r.top<mapRect.top-2||r.bottom>mapRect.bottom+2).map(x=>x.name);
+      const collisions=[];
+      for(let i=0;i<labels.length;i++){
+        for(let j=i+1;j<labels.length;j++){
+          const a=labels[i].rect,b=labels[j].rect;
+          const overlapX=Math.min(a.right,b.right)-Math.max(a.left,b.left);
+          const overlapY=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+          if(overlapX>2&&overlapY>2)
+            collisions.push(labels[i].name+' / '+labels[j].name);
+        }
+      }
+      return {clipped,collisions};
+    });
+    assert.deepEqual(labelGeometry.clipped,[],difficulty+' has names off the visible map');
+    if(difficulty!=='intro')
+      assert.deepEqual(labelGeometry.collisions,[],
+        difficulty+' has overlapping location labels');
     assert.ok(await page.locator('.clue-card').count()>0,
       'All modes should retain public opening sighting clues');
     assert.equal(await page.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0,
