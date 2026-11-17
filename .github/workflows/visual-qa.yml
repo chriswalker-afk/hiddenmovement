@@ -6,6 +6,9 @@ on:
     paths:
       - 'src/app.mjs'
       - 'src/protractor.mjs'
+      - 'src/map.mjs'
+      - 'src/scenery.mjs'
+      - 'src/waterways.mjs'
       - 'style.css'
       - 'scripts/visual-qa.mjs'
       - '.github/workflows/visual-qa.yml'
