@@ -76,7 +76,7 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('tutorial-close');
   assert.match(html(),/SOLO HUNT/);
 
-  click('guided-toggle'); // Enable optional educational hints for this learning flow.
+  click('guided-toggle'); // Opt into manual clue plotting during teaching; textual clues are always present.
   click('start-solo-select');
   click('difficulty-intro');
   assert.match(html(),/WATCHER SIGHTING/);
