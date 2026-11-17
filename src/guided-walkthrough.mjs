@@ -119,7 +119,7 @@ export function tourStep(view,map,stage){
     },
     'place-protractor':{
       heading:'Put its centre on your Hunter',
-      text:'Find your Hunter character at '+name+'. Drag the small centre cross of the protractor onto the ROUND LOCATION MARKER immediately beside the character. That exact point is the FROM location for measuring a move. You can also press CENTER as a keyboard or touch alternative.',
+      text:'Find your Hunter character at '+name+'. Drag the small centre cross of the protractor onto the ROUND LOCATION MARKER immediately beside the character. That exact point is the FROM location for measuring a move. On phones or with a keyboard, choose CENTER ON HUNTER in this guide instead.',
       target:'.protractor-center-hit',secondary:'.hunter-board-piece',counter:'02 / 12'
     },
     'open-clue':{
