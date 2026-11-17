@@ -599,7 +599,8 @@ function mapSvg(view) {
     const lo=(-half).toFixed(1),hi=half.toFixed(1);
     // A muted stone/wood footbridge spans the actual painted water,
     // using the bearing of the existing road (not a second game route).
-    return '<g class="river-bridge" aria-hidden="true" transform="translate('+
+    return '<g class="river-bridge'+(currentMap().theme==='marsh'?' rookgate-city-bridge':'')+
+      '" aria-hidden="true" transform="translate('+
       bridge.x+' '+bridge.y+') rotate('+bridge.angle+')">'+
       '<line x1="'+lo+'" y1="0" x2="'+hi+'" y2="0" class="bridge-shadow"/>'+
       '<line x1="'+lo+'" y1="0" x2="'+hi+'" y2="0" class="bridge-deck"/>'+
@@ -758,7 +759,7 @@ function mapFrame(view) {
     '<span><b>' + esc(n.label) + '</b> ' + esc(n.name) + '</span>').join('') +
     '</div></details>' : '';
   return '<div class="map-section">' +
-    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + (map.id==='intro'||map.id==='apprentice'?'': 'Map of ') + esc(map.title) + '</h2></div>' +
+    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + (map.id==='intro'||map.id==='apprentice'||map.id==='tracker'?'': 'Map of ') + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
       (['hunter','monster'].includes(view.phase)?
         '<button type="button" id="protractor-toggle" class="protractor-toggle" aria-pressed="'+protractorVisible+'">'+
