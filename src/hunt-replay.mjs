@@ -17,12 +17,13 @@ export function buildHuntReplay(view,map){
   const name=id=>map.nodes[id]?.name||'Unknown location';
   const monsterName=typeof view.monsterName==='string'?view.monsterName:'The Monster';
   const hunterPath=[hunterStart],monsterPath=[monsterStart];
+  const monsterSegments=[];
   const discoveredBeacons=[];
   let hunter=hunterStart,monster=monsterStart;
   const frames=[{
     index:0,round:0,role:'start',action:'start',hunter,monster,
     hunterPath:[...hunterPath],monsterPath:[...monsterPath],
-    beaconVisits:[],movement:'',
+    monsterSegments:[],beaconVisits:[],movement:'',
     heading:'The hunt begins',
     description:'The Hunter starts at '+name(hunter)+' while '+monsterName+
       ' waits unseen at '+name(monster)+'. Both starting positions are now revealed.'
@@ -59,6 +60,7 @@ export function buildHuntReplay(view,map){
     }else{
       monster=dest;
       monsterPath.push(dest);
+      monsterSegments.push({from,to:dest,movement});
       const isBeacon=view.scenario==='beacons'&&
         view.objectives?.beacons?.includes(dest);
       if(isBeacon&&!discoveredBeacons.includes(dest))discoveredBeacons.push(dest);
@@ -85,6 +87,7 @@ export function buildHuntReplay(view,map){
       index:frames.length,round:event.round,role:event.role,action,
       movement,hunter,monster,from,to:dest,
       hunterPath:[...hunterPath],monsterPath:[...monsterPath],
+      monsterSegments:monsterSegments.map(part=>({...part})),
       beaconVisits:[...discoveredBeacons],heading,description
     });
   }
@@ -104,6 +107,7 @@ export function replayMapView(overView,frame){
     hunter:frame.hunter,monster:frame.monster,
     hunterTrail:[...frame.hunterPath],
     trail:frame.monsterPath.map((node,i)=>({id:'replay-'+i,node})),
+    replaySegments:frame.monsterSegments.map(part=>({...part})),
     beaconVisits:[...frame.beaconVisits]
   };
 }
