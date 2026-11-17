@@ -31,8 +31,7 @@ export function renderProtractor(x,y,bearing=0) {
     const degree=i*30,[tx,ty]=xy(86,degree);
     return '<text x="'+tx+'" y="'+(ty+3)+'" text-anchor="middle">'+pad(degree)+'</text>';
   }).join('');
-  const [armX,armY]=xy(119,value);
-  return '<g class="protractor-tool" role="group" aria-label="Manual 360-degree bearing protractor" '+
+  return '<g id="protractor-group" class="protractor-tool" role="group" aria-label="Manual 360-degree bearing protractor" '+
     'transform="translate('+x+' '+y+')">'+
     '<circle r="125" class="protractor-disc"/>'+
     '<circle r="120" class="protractor-rim"/>'+
@@ -40,12 +39,13 @@ export function renderProtractor(x,y,bearing=0) {
     ticks+labels+
     '<path d="M0-126V-137" class="protractor-north"/>'+
     '<text x="0" y="-144" text-anchor="middle" class="protractor-north-label">N</text>'+
-    '<line x1="0" y1="0" x2="'+armX+'" y2="'+armY+'" class="protractor-arm"/>'+
-    '<line x1="0" y1="0" x2="'+armX+'" y2="'+armY+
-      '" class="protractor-arm-hit" data-protractor-rotate="true"/>'+
-    '<circle cx="'+armX+'" cy="'+armY+'" r="14" class="protractor-tip" data-protractor-rotate="true"/>'+
+    '<g id="protractor-arm-group" transform="rotate('+value+')">'+
+      '<line x1="0" y1="0" x2="0" y2="-119" class="protractor-arm"/>'+
+      '<line x1="0" y1="0" x2="0" y2="-119" class="protractor-arm-hit" data-protractor-rotate="true"/>'+
+      '<circle cx="0" cy="-119" r="14" class="protractor-tip" data-protractor-rotate="true"/>'+
+    '</g>'+
     '<circle r="17" class="protractor-center-hit" data-protractor-move="true"/>'+
     '<path d="M-9 0H9M0-9V9" class="protractor-center-cross" pointer-events="none"/>'+
-    '<text y="30" text-anchor="middle" class="protractor-reading">'+pad(value)+'</text>'+
+    '<text id="protractor-number" y="30" text-anchor="middle" class="protractor-reading">'+pad(value)+'</text>'+
     '</g>';
 }
