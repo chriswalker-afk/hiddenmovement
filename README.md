@@ -13,7 +13,7 @@ On the title screen, choose **Solo Hunt**, then one of four difficulty levels. T
 | Difficulty | Locations | Trail clue accuracy | Trail lasts | Solo sightings | Monster style | Maximum rounds |
 |---|---:|---|---:|---|---|---:|
 | Intro | 14 — Blackfen Marsh | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
-| Apprentice | 18 — Thornwood Vale | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
+| Apprentice | 18 — Duskmere Village | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
 | Tracker | 26 — Sunken Lowlands | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
 | Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
 
@@ -41,7 +41,15 @@ A single illustrated **Blackfen Run** replaces the previous decorative river tha
 
 All 14 node IDs **A–N**, 29 connected roads, exact world coordinates, bearings, Hunter start, secret Monster spawns and scenario objectives are unchanged. The Last Gate still uses node L (**East Fen Gate**); Lanternfall beacons remain at L and G (**Lantern Inn**). Existing saved games use those stable IDs and remain valid. The original illustration uses no remote assets and is layered below the interactive node markers, protractor, clues and the customised moving Hunter.
 
-This is the first fully themed region. The names for **Duskmere Village**, **Rookgate District** and **Ravenmarch County** are approved in the [Map World Bible](docs/MAP_WORLD_BIBLE.md), but their live art and names will be replaced in separate later PRs. Student review should consider landmark recognisability and place-label legibility at 100% and 300% zoom.
+Blackfen was our first complete region. **Duskmere Village is now complete too (PR16)**; Rookgate District and Ravenmarch County remain planned in the [Map World Bible](docs/MAP_WORLD_BIBLE.md), and their current layouts are unchanged until their own scenery passes. Student review should consider landmark recognisability and place-label legibility at 100% and 300% zoom.
+
+## Duskmere Village — illustrated village and millstream (PR16)
+
+The **Apprentice map** is now **Duskmere Village**: 18 named, individually drawn landmarks, each tied to its original, stable node. Distinctive buildings and public spaces include Bell Chapel, North Gate, the leaning Crooked Inn, Baker's Row, Dovecote Hill, West Watch, Market Cross, Village Green, Old Well, Apple Orchard, Smithy Yard and South Beacon. The village uses original vector artwork with muted slate roofs, timber frames, warm windows, cobbled courts and apple-green common land.
+
+A coherent **Duskmere Millstream** winds along the southern node band. It crosses only three real connected roads: **A12–A16**, **A13–A17** and **A14–A18**. The central **Stone Bridge** is drawn exactly at the existing A13–A17 crossing and replaces the overlapping generic bridge decal; the other crossings retain small road-aligned decks. The stream passes Mill Stream, a dammed **Mill Pond** east of the causeway, and **Willow Bank**. No node position, bearing or Monster movement has changed.
+
+Duskmere keeps **18 node IDs, 33 connected roads and Hunter start A08**. The Last Gate goal remains **A03 (North Gate)** and Lanternfall retains **A03 (North Gate)** and **A18 (South Beacon)**. Existing saved games and replays use those same IDs. Artwork stays beneath the interactive map, with desktop, portrait-mobile and landscape checks.
 
 ## Monsters, powers and investigation reports (PR9)
 
@@ -50,7 +58,7 @@ Every Solo Hunt difficulty introduces a different illustrated monster before the
 | Level | Monster | Signature ability | Counterplay |
 |---|---|---|---|
 | Intro — Blackfen Marsh | **The Lantern Wisp** | None | A straightforward hunt with ordinary bearings and tracks |
-| Apprentice — Thornwood Vale | **The Briar Shade** | Briar Step teleport, 4-turn cooldown | Leaps 2–3 connected roads, but publicly exposes its previous location |
+| Apprentice — Duskmere Village | **The Briar Shade** | Briar Step teleport, 4-turn cooldown | Leaps 2–3 connected roads, but publicly exposes its previous location |
 | Tracker — Sunken Lowlands | **The Mire Mimic** | False Sighting, 4-turn cooldown | Plants an **unconfirmed** reported location that is debunked when the Hunter visits |
 | Expert — Eclipse Marches | **The Eclipse Herald** | Eclipse Shift teleport (5-turn cooldown) and Phantom Echo decoy (4-turn cooldown) | Combines the two fair rules, never both on one Monster turn |
 
@@ -176,7 +184,7 @@ A save is not tied to a user account, is not synced between devices, and is lost
 
 ## New original scenery and responsive maps
 
-The Blackfen Marsh, Thornwood Vale, Sunken Lowlands and Eclipse Marches have different original SVG scenery: woods, water, reeds, ruins and twilight landmarks. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
+Blackfen Marsh and Duskmere Village have complete location-specific inked SVG scenery; the Sunken Lowlands and Eclipse Marches retain their earlier illustrated worlds until their planned Rookgate and Ravenmarch replacements. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
 
 ## Preview and publishing
 
@@ -233,6 +241,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/scenarios.mjs` — original mission goals, public landmarks and legal spawns
 - `src/scenery.mjs` — shared original vector landscapes and title illustration
 - `src/blackfen.mjs` — Blackfen's canonical 14 place names, site artwork and hydrology-tied SVG countryside
+- `src/duskmere.mjs` — Duskmere's 18 named village landmarks, market/green, millpond and stream-backed artwork
 - `src/persistence.mjs` — validated local saves, Guided setting and safely resealed resume
 - `src/protractor.mjs` — manually rotatable SVG 360° bearings measuring tool
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
@@ -247,7 +256,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR15:** Design and build Duskmere Village as a coherent 18-location settlement; then Rookgate District and Ravenmarch County. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR16:** Build Rookgate District's 26-location canal city, then Ravenmarch County's 36-location region. Recheck road–canal bridge alignment before publishing their planned names. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 
