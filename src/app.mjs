@@ -4,6 +4,7 @@ import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
+import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
 import {
@@ -317,6 +318,20 @@ function mapSvg(view) {
     return '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-base"/>' +
       '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-top"/>';
   }).join('');
+  const bridgeDecks=riverRoadCrossings(currentMap()).map(bridge=>{
+    const half=bridge.span/2;
+    const lo=(-half).toFixed(1),hi=half.toFixed(1);
+    // A muted stone/wood footbridge spans the actual painted water,
+    // using the bearing of the existing road (not a second game route).
+    return '<g class="river-bridge" aria-hidden="true" transform="translate('+
+      bridge.x+' '+bridge.y+') rotate('+bridge.angle+')">'+
+      '<line x1="'+lo+'" y1="0" x2="'+hi+'" y2="0" class="bridge-shadow"/>'+
+      '<line x1="'+lo+'" y1="0" x2="'+hi+'" y2="0" class="bridge-deck"/>'+
+      '<line x1="'+lo+'" y1="-8.5" x2="'+hi+'" y2="-8.5" class="bridge-rail"/>'+
+      '<line x1="'+lo+'" y1="8.5" x2="'+hi+'" y2="8.5" class="bridge-rail"/>'+
+      '<line x1="'+lo+'" y1="0" x2="'+hi+'" y2="0" class="bridge-walkway"/>'+
+      '</g>';
+  }).join('');
   const trees = [[115,92],[280,90],[505,70],[675,110],[930,190],[125,510],[320,660],[515,535],[735,635],[885,675]]
     .map((pt,i)=>treeCluster(pt[0],pt[1],i)).join('');
   const clues = view.phase==='hunter' && view.guided && plotClue ? selectedClues(view) : [];
@@ -407,6 +422,7 @@ function mapSvg(view) {
       '<text x="691" y="691" class="terrain-label">'+esc(terrainNames[3])+'</text>'
       : '') +
     '<g class="roads">'+paths+'</g>' +
+    '<g class="river-bridges" pointer-events="none">'+bridgeDecks+'</g>' +
     '<g>'+plotted+'</g>' +
     hunterPath+monsterPath+
     '<g class="nodes">'+dots+'</g>' +
