@@ -843,12 +843,12 @@ function movementForm(view) {
         esc(transition.eyebrow)+'</div>'+
       '<h3>'+esc(transition.title)+'</h3>'+
       '<p class="turn-complete-location">Your Hunter is at <strong>'+esc(nameOf(location))+'</strong></p>'+
-      '<p id="monster-phase-help" class="turn-complete-explainer">'+esc(transition.hint)+'</p>'+
       '<button id="end-turn" type="button" class="monster-turn-cta" aria-describedby="monster-phase-help">'+
         '<span class="monster-turn-cta-symbol" aria-hidden="true">◆</span>'+
         '<strong>'+esc(transition.button)+'</strong>'+
         '<span class="monster-turn-cta-arrow" aria-hidden="true">→</span>'+
       '</button>'+
+      '<p id="monster-phase-help" class="turn-complete-explainer">'+esc(transition.hint)+'</p>'+
       '<p class="turn-complete-footnote">Your clues and map notes remain available while you decide.</p>'+
     '</section>';
   }
