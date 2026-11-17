@@ -40,6 +40,25 @@ For a scaffolded group, select **Enable Tutorial Help** before starting a hunt. 
 
 **Suggested differentiation:** Let students use the protractor for their first three moves, then ask them to estimate bearings before checking with the protractor. At the end, ask for written justification of one reverse bearing.
 
+## Working with the four monsters (PR9)
+
+The illustrated level-introduction screen explains the opponent *before play starts*. The monsters have escalating powers and a deliberate evidence-literacy progression:
+
+| Difficulty | Creature | Mathematical focus |
+|---|---|---|
+| Intro | The Lantern Wisp | Honest bearings, connected routes and recent trace clues; no power |
+| Apprentice | The Briar Shade | **Time-indexed location fixes.** A teleport moves 2–3 connected roads; the starting place of the jump is publicly known |
+| Tracker | The Mire Mimic | **Reliable vs unreliable evidence.** An unverified report might be false. Students must investigate the claimed location |
+| Expert | The Eclipse Herald | **Combining constraints with exceptions.** Students account for both public teleports and rumours without conflating them with certain observations |
+
+**Suggested classroom discussion:** Ask which clue can be used to *prove* something. An actual trail trace, a watcher bearing, a beacon location and a teleport **origin** are genuine game evidence. An unconfirmed local rumour is not. Until the Hunter visits that node, the claim must be kept separate rather than fed into mathematical intersections.
+
+A teleport reported in round 5 says only that the Monster was at the named starting location just before its round-5 movement and travelled **between two and three connected roads** during that turn. It does not reveal where the Monster ended up. The clue-combination tool therefore advances older observations across a bounded multi-road jump, not one ordinary road. This distinction is especially useful for AO2/AO3 reasoning.
+
+After every valid Hunter move, a large illustrated **investigation report** says either that the search yielded no evidence, gives the discovered bearing in a local-witness sentence, exposes a fake sighting or announces capture. The report is a narrative representation of the actual game result, not an extra hint or a new separate turn. Students can dismiss it to resume the same single-screen dashboard. A false sighting becomes disproved **only when the Hunter physically lands on it**.
+
+For 4MA1 Foundation, the most accessible progression is Intro followed by Apprentice. Introduce the Tracker's unverified sightings as an extension, asking students to distinguish credible mathematical evidence from a statement that needs verification. Class balancing of advanced Monster cooldowns has not yet been completed.
+
 ## Mathematical conventions
 
 | Concept | Example |
