@@ -754,7 +754,7 @@ function mapFrame(view) {
     '<span><b>' + esc(n.label) + '</b> ' + esc(n.name) + '</span>').join('') +
     '</div></details>' : '';
   return '<div class="map-section">' +
-    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>Map of ' + esc(map.title) + '</h2></div>' +
+    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + (map.id==='intro'?'': 'Map of ') + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
       (['hunter','monster'].includes(view.phase)?
         '<button type="button" id="protractor-toggle" class="protractor-toggle" aria-pressed="'+protractorVisible+'">'+
