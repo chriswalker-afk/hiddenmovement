@@ -26,7 +26,7 @@ async function measure(page,label){
     };
     const selectors=['.hud-screen','.hud-grid','.map-frame','.hud-move-panel',
       '#bearing-input','.bearing-entry button[type="submit"]','#end-turn',
-      '.hud-tabs','.hud-footer','#protractor-toggle'];
+      '.hud-tabs','.hud-footer','#save-exit','.hud-footer .feedback','#protractor-toggle'];
     return {
       width:innerWidth,height:innerHeight,
       scrollHeight:document.scrollingElement.scrollHeight,
@@ -43,7 +43,7 @@ async function measure(page,label){
   assert.ok(state.nodeCount>=14,label+' missing map locations');
   for(const selector of ['.map-frame','#bearing-input',
     '.bearing-entry button[type="submit"]','#end-turn',
-    '.hud-tabs','.hud-footer','#protractor-toggle']){
+    '.hud-tabs','.hud-footer','#save-exit','.hud-footer .feedback','#protractor-toggle']){
     const box=state.parts[selector];
     assert.ok(box && box.height>5,label+' missing important control '+selector);
     assert.ok(box.top>=-3 && box.bottom<=state.height+3,
@@ -55,6 +55,9 @@ async function measure(page,label){
     assert.ok(box.left>=parent.left-3 && box.right<=parent.right+3,
       label+' bearing entry clipped horizontally: '+selector+' '+JSON.stringify({box,parent}));
   }
+  assert.ok(Math.abs(state.parts['#save-exit'].top-
+    state.parts['.hud-footer .feedback'].top)<=3,
+    label+' save must share the same row as status, not consume extra height');
   assert.ok(state.parts['.map-frame'].height>=90,label+' map is too small to use');
 }
 try{
