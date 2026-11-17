@@ -63,7 +63,13 @@ export function createGame(config = {}) {
     ? config.difficulty : 'intro';
   const preset = mode === 'solo' ? DIFFICULTIES[difficulty] : {};
   const scenario = Object.hasOwn(SCENARIOS, config.scenario) ? config.scenario : 'classic';
-  const settings = { ...SETTINGS, ...preset, ...config };
+  // Standard play gives no unsolicited sightings or route-distance hints.
+  // Guided play restores these supports for students practising bearings.
+  const guided = config.guided === true;
+  const settings = { ...SETTINGS, ...preset, ...config,
+    guided,
+    ...(guided ? {} : { openingPulse:false, sightingInterval:0, distanceBandHalfWidth:null })
+  };
   const mapId = mode === 'solo' ? preset.mapId : 'intro';
   const objectives = computeObjectives(MAPS[mapId], scenario);
   const seed = (Math.trunc(Number(config.seed ?? 18251)) >>> 0) || 1;
@@ -71,6 +77,7 @@ export function createGame(config = {}) {
     phase: 'home',
     mode,
     difficulty,
+    guided,
     scenario,
     objectives,
     objectivePowers: SCENARIOS[scenario].powers,
@@ -117,7 +124,7 @@ function requirePhase(game, phase) {
 export function beginGame(game) {
   if (game.phase !== 'home' && game.phase !== 'over')
     return fail(game, 'Finish this game before starting another.');
-  Object.assign(game, createGame({ ...game.config, mode: game.mode, difficulty: game.difficulty, scenario: game.scenario, seed: game.seed }));
+  Object.assign(game, createGame({ ...game.config, mode: game.mode, difficulty: game.difficulty, scenario: game.scenario, guided: game.guided, seed: game.seed }));
   if (game.mode === 'solo') {
     const spawn = chooseMonsterSpawn(game);
     game.monster = spawn;
@@ -168,7 +175,7 @@ export function selectMonsterStart(game, nodeId) {
 export function viewForCurrentScreen(game) {
   const base = {
     phase: game.phase, round: game.round, feedback: game.feedback,
-    mapId: game.mapId, mode: game.mode, difficulty: game.difficulty,
+    mapId: game.mapId, mode: game.mode, difficulty: game.difficulty, guided: game.guided,
     scenario: game.scenario,
     objectives: {exitNode:game.objectives.exitNode,beacons:[...game.objectives.beacons]},
     beaconVisits:[...game.beaconVisits],
@@ -241,8 +248,10 @@ function matchedNeighbour(origin, text, game) {
     .filter(row => row.difference <= game.config.bearingTolerance)
     .sort((a,b) => a.difference - b.difference);
   if (!candidates.length) return {
-    error: 'No connected route is within ±' + game.config.bearingTolerance +
-      '° of ' + formatBearing(typed) + '. Check the compass and try again.'
+    error: game.guided
+      ? 'No connected route is within ±' + game.config.bearingTolerance +
+        '° of ' + formatBearing(typed) + '. Check the compass and try again.'
+      : 'That bearing does not follow a connected road. Measure again and retry.'
   };
   if (candidates.length > 1)
     return { error: 'Ambiguous bearing: choose a more precise direction.' };
@@ -319,7 +328,7 @@ function recordSighting(game,halfWidth,source='watcher') {
 
 /** Scheduled Solo Hunter sightings are time-stamped at the last Monster turn. */
 function addSighting(game,opening=false) {
-  if(game.mode!=='solo')return null;
+  if(game.mode!=='solo' || !game.guided)return null;
   if(opening && !game.config.openingPulse)return null;
   if(!opening && (!game.config.sightingInterval ||
     (game.round-1)%game.config.sightingInterval!==0))return null;
@@ -418,10 +427,12 @@ export function hunterMove(game, inputBearing) {
     return say(game, 'The monster was found at ' + destination + '! The Hunter wins.');
   }
   const clue = collectClue(game, game.hunter);
-  const message = 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination
-    + ' (error: ' + route.difference.toFixed(1) + '°; ' + game.stepsLeft + ' route'
-    + (game.stepsLeft === 1 ? '' : 's') + ' left).'
-    + (clue ? ' A fresh trace revealed a clue!' : '');
+  const message = (game.guided
+    ? 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination +
+      ' (error: ' + route.difference.toFixed(1) + '°; '
+    : 'Arrived at ' + destination + ' (')
+    + game.stepsLeft + ' route' + (game.stepsLeft === 1 ? '' : 's') + ' left).'
+    + (clue ? ' A trail clue was found!' : '');
   return say(game, message);
 }
 
