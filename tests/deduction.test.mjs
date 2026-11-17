@@ -95,7 +95,7 @@ test('all public solo sightings remain consistent with actual monster movement o
       for(let step=0;step<Math.min(g.config.maxRounds-1,9);step++){
         const publicView=viewForCurrentScreen(g);
         assert.equal(Object.hasOwn(publicView,'monster'),false);
-        const result=analyseClues(g.map,publicView.clues,publicView.round,{hunterLocation:publicView.hunter});
+        const result=analyseClues(g.map,publicView.clues,publicView.round,{hunterLocation:publicView.hunter,publicEvents:publicView.publicEvents});
         assert.ok(result.candidates.includes(g.monster),
           difficulty+' seed '+seed+' round '+g.round+' eliminated the real Monster');
         endHunterTurn(g);
