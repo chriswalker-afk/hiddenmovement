@@ -1180,6 +1180,9 @@ function tourHtml(view) {
         '<button type="button" id="guided-tour-skip" title="Skip the interactive walkthrough">SKIP TUTORIAL</button></div>'+
       '<h3>'+esc(step.heading)+'</h3>'+
       '<p>'+esc(step.text)+'</p>'+
+      (step.stage==='place-protractor'
+        ?'<button type="button" id="guided-tour-center" class="guided-tour-action">'+
+          'CENTER ON HUNTER · TOUCH / KEYBOARD OPTION →</button>':'')+
       (step.action?'<button type="button" id="guided-tour-next" class="guided-tour-action">'+
         esc(step.action)+' →</button>':'')+
       '<small>Follow the flashing arrow and highlighted control. Skip only the walkthrough, never the game.</small>'+
@@ -1196,6 +1199,11 @@ function bindGuidedTour(view){
   });
   document.getElementById('guided-tour-next')?.addEventListener('click',()=>{
     tourEvent(step.event);render();
+  });
+  document.getElementById('guided-tour-center')?.addEventListener('click',()=>{
+    // The toolbar's CENTER button is compact-screen hidden; its original
+    // handler still performs the real protractor positioning and stage change.
+    document.getElementById('protractor-center')?.click();
   });
   const target=document.querySelector?.(step.target||'#__no_target__');
   const companion=step.secondary?document.querySelector?.(step.secondary):null;
