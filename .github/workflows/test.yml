@@ -35,4 +35,5 @@ jobs:
           node --check src/scenarios.mjs
           node --check src/scenery.mjs
           node --check src/persistence.mjs
+          node --check src/protractor.mjs
           node --check scripts/package-site.mjs
