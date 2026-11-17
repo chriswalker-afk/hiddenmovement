@@ -267,3 +267,5 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
  .difficulty-card .mode-link{padding-top:15px}
  .location-index-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.clue-ray{stroke:#edc875;stroke-width:4;stroke-opacity:.9;stroke-dasharray:8 8;filter:drop-shadow(0 0 3px #1c2626)}
