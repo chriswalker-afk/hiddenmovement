@@ -2,7 +2,7 @@ import { MAP, MAPS, MONSTER_SPAWNS } from './map.mjs';
 import { bearingBetween, formatBearing } from './geometry.mjs';
 import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
-import { SCENARIOS, scenarioInstruction } from './scenarios.mjs';
+import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
 import {
@@ -49,6 +49,7 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     scenarioPicker=false;
     pendingScenario='classic';
     mapZoom=1;
+    selectedSpawn=eligibleMonsterStarts(game.map,game.scenario,game.objectives)[0] || MONSTER_SPAWNS[0];
   }
   render();
 }
