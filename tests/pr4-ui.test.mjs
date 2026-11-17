@@ -61,7 +61,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/125%/);
   assert.match(html(),/width:125%/);
   click('use-lantern');
-  assert.match(html(),/SIGNAL LANTERN/);
+  assert.match(html(),/Signal Lantern/i);
   assert.match(html(),/1 MOVE LEFT/);
   assert.equal(values.has(STORAGE_KEY),true,'Active solo hunt auto-saved');
   click('hud-tab-notes');
