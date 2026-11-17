@@ -218,7 +218,9 @@ function mapSvg(view) {
   }).join('');
   const trees = [[115,92],[280,90],[505,70],[675,110],[930,190],[125,510],[320,660],[515,535],[735,635],[885,675]]
     .map((pt,i)=>treeCluster(pt[0],pt[1],i)).join('');
-  const clues= view.phase==='hunter' && plotClue ? view.clues.slice(0,1) : [];
+  const clues = view.phase==='hunter' && plotClue ? selectedClues(view) : [];
+  const analysis = currentAnalysis(view);
+  const candidateSet = new Set(analysis?.candidates || []);
   const plotted=clues.map(clue => {
     const p=currentMap().nodes[clue.place];
     let direction;
@@ -246,6 +248,7 @@ function mapSvg(view) {
     const selected=view.phase==='monster-setup'&&selectedSpawn===n.id;
     const target=monsterNeighbours.has(n.id);
     const hasClue=view.phase==='hunter'&&view.clues.some(c=>c.place===n.id);
+    const mark = view.phase==='hunter' ? nodeMarks.get(n.id) : null;
     const cls=['node'];
     if(isHunter)cls.push('hunter-location');
     if(isMonsterHere)cls.push('monster-location');
@@ -253,11 +256,17 @@ function mapSvg(view) {
     if(possibleStart)cls.push('spawnable');
     if(selected)cls.push('selected');
     if(hasClue)cls.push('has-clue');
-    const nodeBody='<title>'+esc(n.name)+'</title><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
+    if(analysis?.constrained && candidateSet.has(n.id)) cls.push('candidate-location');
+    if(mark) cls.push('marked-'+mark);
+    const nodeBody='<title>'+esc(n.name)+'</title>' +
+      (analysis?.constrained && candidateSet.has(n.id)?'<circle r="25" class="candidate-halo"/>':'') +
+      '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
        isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':'')+
-      '<text y="-23" class="node-label" text-anchor="middle">'+esc(Object.keys(currentMap().nodes).length > 18 ? (n.label || n.name) : n.name)+'</text>';
+      '<text y="-23" class="node-label" text-anchor="middle">'+esc(Object.keys(currentMap().nodes).length > 18 ? (n.label || n.name) : n.name)+'</text>' +
+      (mark?'<text y="34" text-anchor="middle" class="mark-symbol">'+(mark==='possible'?'?':'×')+'</text>':'');
     if(possibleStart) return '<g role="button" tabindex="0" aria-label="Choose '+esc(n.name)+' as monster starting position" class="'+cls.join(' ')+'" data-spawn="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
+    if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
   return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
@@ -306,6 +315,8 @@ function mapFrame(view) {
       ((view.phase==='monster'||view.phase==='over')?'<span><i class="key-spot key-monster"></i> Monster</span>':'') +
       '<span><i class="key-spot key-route"></i> Connected road</span>' +
       ((view.phase==='monster-setup')?'<span><i class="key-spot key-available"></i> Eligible start</span>':'')+
+      ((view.phase==='hunter')?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
+        '<span><i class="key-spot key-watch"></i> Your suspect</span><span><i class="key-spot key-ruled"></i> Your ruled-out mark</span>':'')+
     '</div>'+index+'</div>';
 }
 
@@ -325,7 +336,8 @@ function movementForm(view) {
       '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="045" pattern="[0-9]{3}°?" '+(left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span><button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>' +
       '<small id="bearing-help">Clockwise from north · within ±6° of a connected road</small>' +
     '</form>' +
-    (!monster ? '<button id="end-turn" class="secondary-button">'+(view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' <span aria-hidden="true">→</span></button>' : '') +
+    (!monster ? '<button id="end-turn" class="secondary-button">'+(view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' <span aria-hidden="true">→</span></button>' +
+      '<button id="open-tutorial-game" class="field-guide-link">COMPASS &amp; REVERSE BEARING TRAINING ↗</button>' : '') +
     '</section>';
 }
 
