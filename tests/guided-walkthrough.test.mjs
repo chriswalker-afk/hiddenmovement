@@ -44,6 +44,13 @@ test('students genuinely position the ruler on the Hunter',()=>{
     assert.equal(nearHunter({x:actor.x+34,y:actor.y},actor),true);
     assert.equal(nearHunter({x:actor.x+65,y:actor.y},actor),false);
   }
+  const guidedMulti=createGame({mode:'multi',guided:true});
+  beginGame(guidedMulti);
+  assert.equal(tourStep({phase:'pass-monster',guided:true},MAPS.intro,'monster-wait'),null);
+  const monsterStep=tourStep({phase:'monster',guided:true},MAPS.intro,'monster-wait');
+  assert.equal(monsterStep.target,'#bearing-input');
+  assert.match(monsterStep.text,/Hunter must not see this screen/);
+  assert.equal(monsterStep.text.includes('monsterTrail'),false);
   assert.equal(nearHunter(null,MAPS.intro.nodes.A),false);
   assert.equal(nearHunter({x:NaN,y:0},MAPS.intro.nodes.A),false);
 });
