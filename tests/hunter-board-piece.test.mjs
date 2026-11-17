@@ -72,8 +72,8 @@ test('SVG animation follows only the actual old and new map location and can be 
   const moving=at(DEFAULT_HUNTER,{x:410,y:510,fromX:320,fromY:235,animate:true});
   assert.match(moving,/data-animated="true"/);
   assert.match(moving,/<animateTransform[^>]*type="translate"/);
-  assert.match(moving,/from="346 252"/);
-  assert.match(moving,/to="436 527"/);
+  assert.match(moving,/from="346 303"/);
+  assert.match(moving,/to="436 578"/);
   const staticPiece=at(DEFAULT_HUNTER,{x:410,y:510,fromX:320,fromY:235});
   assert.match(staticPiece,/data-animated="false"/);
   assert.ok(!staticPiece.includes('<animateTransform'));
@@ -91,11 +91,11 @@ test('SVG animation follows only the actual old and new map location and can be 
 
 test('miniature anchors inside the full map near northern, southern and eastern edges',()=>{
   const east=at(DEFAULT_HUNTER,{x:964,y:450});
-  assert.match(east,/transform="translate\(938 467\)"/);
+  assert.match(east,/transform="translate\(938 518\)"/);
   const north=at(DEFAULT_HUNTER,{x:300,y:40});
-  assert.match(north,/transform="translate\(326 116\)"/);
+  assert.match(north,/transform="translate\(326 108\)"/);
   const south=at(DEFAULT_HUNTER,{x:300,y:680});
-  assert.match(south,/transform="translate\(326 668\)"/);
+  assert.match(south,/transform="translate\(378 672\)"/);
   assert.match(at(DEFAULT_HUNTER,{replay:true}),/data-replay-actor="hunter"/);
   for(const map of Object.values(MAPS)){
     const start=map.nodes[map.hunterStart];
