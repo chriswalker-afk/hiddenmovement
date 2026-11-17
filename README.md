@@ -2,7 +2,7 @@
 
 **A hidden-movement adventure that makes three-figure bearings part of the strategy.**
 
-One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine them with additional sightings only when playing in optional Guided mode.
+One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine these with occasional public sightings in solo mode. Bearing values appear as text, not automatically drawn rays or sectors on the map.
 
 ## Playable modes (PR1 + PR2 + PR3 + PR4)
 
@@ -10,14 +10,14 @@ One player is the **Hunter**, following an unseen **Monster** through connected 
 
 On the title screen, choose **Solo Hunt**, then one of four difficulty levels. The Monster automatically takes a hidden move after each completed Hunter turn. The Hunter sees only public information and does not need to pass the device.
 
-| Difficulty | Locations | Trail clue accuracy | Trail lasts | Guided sightings | Monster style | Maximum rounds |
+| Difficulty | Locations | Trail clue accuracy | Trail lasts | Solo sightings | Monster style | Maximum rounds |
 |---|---:|---|---:|---|---|---:|
 | Intro | 14 — Hollow Moor | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
 | Apprentice | 18 — Thornwood Vale | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
 | Tracker | 26 — Sunken Lowlands | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
 | Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
 
-**Standard play is the default and gives no opening or periodic watcher sightings.** Students must measure bearings and earn evidence by finding the Monster’s recent tracks. In **Guided / Tutorial mode**, the previous opening sighting and difficulty-specific periodic sightings return, each dated to its observation round. Traces still award clues when the Hunter reaches a recent Monster visit in either mode.
+**Opening and periodic watcher sightings remain available in every solo difficulty, regardless of Standard or Guided mode.** Their bearings are given in the clue notebook as text; they are not drawn on the map. Every timed sighting remains stamped with its observation round. Hunters also earn trace clues when visiting recent Monster locations.
 
 Monster AI uses legal roads, the publicly visible Hunter location and history, and its own private recent trail. Four AI profiles vary evasion, avoidance of recent traces, route look-ahead and randomness. **The AI cannot see the Hunter's future decisions.** Given the same seed and moves, its decisions are reproducible for tests.
 
@@ -33,17 +33,17 @@ The original 14-location Hollow Moor mode remains available. The Monster picks a
 
 ## Single-screen HUD, optional protractor and teaching support (PR6)
 
-The active game is designed around a **single viewport**, rather than a vertically scrolling page. On desktop and projector screens, the map fills the left side; current location, remaining moves and bearing entry remain on the right. A compact status strip always shows the round and public mission objective. On portrait tablets/phones, the map is above a compact two-column control and information dock. You can browse long clue histories **within** the Clues tab, without scrolling the entire game. Tabs expose Clues, Notes and Mission details (and live mathematical Feedback in Guided mode); none of these can reveal the Monster's private location.
+The active game is designed around a **single viewport**, rather than a vertically scrolling page. On desktop and projector screens, the map fills the left side; current location, remaining moves and bearing entry remain on the right. A compact status strip always shows the round and public mission objective. On portrait tablets/phones, the map is above a compact two-column control and information dock. You can browse long clue histories **within** the Clues tab, without scrolling the entire game. Tabs expose Clues, Notes, Mission details and mathematical Feedback in every mode; none of these can reveal the Monster's private location.
 
 **Manual protractor:** Select **Protractor** above the map at any time during a movement turn. The translucent 360° instrument starts at the active player's location, with 000° north. **Drag its gold tip** to rotate the measuring arm clockwise; **drag its centre** to reposition the ring. Use the +/− buttons for precise one-degree adjustments and **Center** to align it with the current location again. Read the three-figure value and *enter it yourself* to move. The protractor does not choose roads, snap to exits, autofill the input or disclose a correct answer. Hide it whenever you wish.
 
-**Standard (default):** no free watcher sightings, automatically revealed road bearings, route-distance bands or coloured next-road hints. Errors ask the player to re-measure without giving the solution. **Earned track clues**, public mission events, and the one-use **Signal Lantern** ability are still part of the game.
+**Standard (default):** all the original *textual* gameplay hints remain, including watcher reports, earned track clues, route-distance bands on easier difficulties, bearing accuracy feedback and the Signal Lantern. However, clue bearings are **never automatically drawn as rays or sectors on the map**. Players must interpret the text and may use the optional, manually operated protractor.
 
-**Guided / Tutorial mode:** select **Enable Tutorial Help** on the title screen, mission selection or difficulty selection before starting. It restores opening and periodic watcher sightings in solo play, helpful road names, success-angle feedback, route-distance bands on easier solo levels and the optional clue-combination overlay. It is for practising or teacher demonstrations, not the default challenge.
+**Guided / Tutorial mode:** select **Enable Tutorial Help** on the title screen, mission selection or difficulty selection before starting. It provides **the same textual clues and hints** as Standard, but offers an optional **Combine Clues on the Map** control. This overlay remains off until a player deliberately opens it; it can then draw the selected clues for demonstration and be hidden again. The optional manual protractor is available in both modes.
 
 The existing four-question interactive Bearings Field Training is available separately from the menu and from either role’s navigation panel. Guided mode is a setting for the game itself, not a replacement for the training sequence.
 
-Saved games remember whether help was enabled. Older solo saves that predate the Standard/Guided split continue in Guided mode, preserving their original clue behaviour.
+Saved games remember whether optional visual assistance was enabled. Older solo saves continue with the same textual clues and their previous visual-assistance setting.
 
 ## Learning and deduction tools (PR3)
 
@@ -53,9 +53,9 @@ Saved games remember whether help was enabled. Older solo saves that predate the
 
 **Mark and annotate the map.** Click a location or use keyboard/Enter to cycle it through *suspected*, *ruled out*, and unmarked. A location selector offers the same action on phones or when keyboard navigation is preferred. The Hunter can keep written working in a private note area during the current game. Personal marks do not automatically change the mathematically computed candidate set. Marks and notes never appear on Monster or handoff screens and clear when a new game starts.
 
-**Guided route-distance hints.** When Guided is enabled, solo Intro traces also show exact shortest-path road distance at their observation time. Apprentice gives a ±1-road band. Tracker and Expert stay direction-only. These refer to connected roads, not straight-line screen distance.
+**Route-distance hints in every mode.** Solo Intro traces show exact shortest-path road distance at their observation time. Apprentice gives a ±1-road band. Tracker and Expert stay direction-only. These refer to connected roads, not straight-line screen distance.
 
-**Guided mathematics feedback.** With Guided assistance enabled, each successful route reports how far the entered bearing differed from the actual road direction. Invalid bearings never cost a movement. A Hunter progress panel shows successful routes, corrections and average angular error, with a short summary after the game.
+**Mathematics feedback in every mode.** Each successful route reports how far the entered bearing differed from the actual road direction. Invalid bearings never cost a movement. A Hunter progress panel shows successful routes, corrections and average angular error, with a short summary after the game.
 
 See the [Teacher's Guide](docs/TEACHING_GUIDE.md) for curriculum alignment and suggested activities.
 
@@ -132,7 +132,7 @@ npm run simulate
 npm run build:site
 ```
 
-`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, Guided hints versus Standard play, drag protractor maths, responsive HUD markup, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
+`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, equal textual hint availability in Standard and Guided play, no automatic clue plotting, manual protractor maths, responsive HUD markup, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
 
 `npm run simulate` runs **60 fixed-seed games per difficulty** with a baseline Hunter bot. That bot uses only its public view, not the Monster's hidden position. Override the sample size with `SIM_GAMES=200 npm run simulate`. The results report capture rates, average rounds, trace discoveries and sightings. They are debugging benchmarks, **not evidence of classroom balance**; student playtesting is still needed.
 
