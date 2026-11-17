@@ -84,7 +84,7 @@ test('two public beacon visits end the mission and produce trustworthy historica
     const clue=g.clues.find(c=>c.type==='beacon'&&c.pointNode===target);
     assert.ok(clue,'Missing public beacon location fix');
     assert.equal(clue.observedRound,i+1);
-    assert.deepEqual(analyseClues(g.map,[clue],i+2).candidates.includes(target),i===0?false:true===false?false:true);
+    assert.equal(analyseClues(g.map,[clue],i+2).candidates.includes(target),true);
     if(i===0){
       assert.equal(g.winner,null);
       assert.deepEqual(g.beaconVisits,[a]);
