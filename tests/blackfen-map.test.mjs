@@ -44,6 +44,10 @@ test('Blackfen Marsh has exactly fourteen planned places at the untouched Intro 
   assert.equal(new Set(EXPECTED.map(row=>row[1])).size,14);
   assert.ok(Object.values(BLACKFEN_LANDMARKS).every(s=>s.zone&&Number.isFinite(s.artDx)));
   assert.ok(Object.values(map.nodes).every(n=>Object.isFrozen(BLACKFEN_LANDMARKS[n.id])));
+  assert.ok(BLACKFEN_LANDMARKS.A.artDx<0,
+    'Warden Watch artwork must stand clear of the custom Hunter figurine');
+  assert.ok(BLACKFEN_LANDMARKS.A.x+BLACKFEN_LANDMARKS.A.artDx>=30,
+    'The watchtower must still be visibly inside the map');
 });
 
 test('the existing bearing calculations and all three mission objectives remain intact',()=>{
