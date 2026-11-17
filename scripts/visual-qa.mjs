@@ -179,8 +179,10 @@ try{
     else if(difficulty==='intro')
       assert.ok(decks>=2 && decks<=6,
         'Blackfen roads must cross the painted stream on actual, non-overlapping bridges');
-    else assert.equal(decks,0,
-      'The village should not acquire accidental river bridge markers');
+    else if(difficulty==='apprentice')
+      assert.equal(decks,2,
+        'Duskmere must show the two real smaller crossings alongside its custom Stone Bridge');
+    else assert.equal(decks,0,'Unexpected bridge decals on a map without a stream');
     if(difficulty==='intro'){
       assert.equal(MAPS.intro.title,'Blackfen Marsh');
       assert.equal(await page.locator('.blackfen-world').count(),0);
@@ -195,6 +197,25 @@ try{
         'No generic region labels should contradict the actual location names');
       assert.equal(await page.locator('.world-svg .road-top').count(),29,
         'Renaming the map must preserve all bearings roads');
+    }
+    if(difficulty==='apprentice'){
+      assert.equal(MAPS.apprentice.title,'Duskmere Village');
+      assert.equal(await page.locator('.illustrated-scenery[data-world="duskmere"]').count(),1);
+      assert.equal(await page.locator('.duskmere-landmark').count(),18,
+        'Duskmere should give all eighteen named places unique artwork');
+      assert.equal(await page.locator('.duskmere-landmark').evaluateAll(elements=>
+        new Set(elements.map(el=>el.dataset.landmarkId)).size),18);
+      for(const kind of ['bell-chapel','inn','market','green','stream',
+        'stone-bridge','pond','willow','orchard','smithy','beacon'])
+        assert.equal(await page.locator('.duskmere-landmark-'+kind).count(),1,
+          kind+' has not been drawn beside its named place');
+      assert.equal(await page.locator('.world-svg .road-top').count(),33,
+        'Duskmere must preserve all 33 legal road bearings');
+      assert.match(await page.locator('.map-heading h2').textContent(),/Duskmere Village/);
+      assert.equal(await page.locator('.world-svg .terrain-label').count(),0);
+      const bridge=await page.locator('.duskmere-landmark-stone-bridge').getAttribute('transform');
+      assert.equal(bridge,'translate(438.4 565.8)',
+        'Named Stone Bridge must align with the existing A13 to A17 creek crossing');
     }
     const expectedNames=Object.values(MAPS[difficulty].nodes).map(n=>n.name);
     const displayedNames=await page.locator('.nodes>.node .node-label').allTextContents();
@@ -268,6 +289,41 @@ try{
   assert.equal(await blackfen.locator('.illustrated-scenery').getAttribute('aria-hidden'),'true');
   assert.deepEqual(blackfenErrors,[],'Blackfen should render on mobile without exceptions');
   await blackfen.close();
+
+  // PR16: review Duskmere's eighteen buildings and connected millstream on
+  // portrait and landscape phones. Scenery cannot intercept numbered nodes,
+  // clues or the player's customised board piece.
+  for(const viewport of [
+    {name:'mobile',width:390,height:844},
+    {name:'landscape',width:844,height:390}
+  ]){
+    const village=await browser.newPage({viewport:{
+      width:viewport.width,height:viewport.height}});
+    const errors=[];
+    village.on('pageerror',e=>errors.push(String(e)));
+    await village.goto(url,{waitUntil:'domcontentloaded'});
+    await village.locator('#start-solo-select').click();
+    await village.locator('[data-difficulty="apprentice"]').click();
+    assert.match(await village.locator('.encounter-copy').textContent(),/DUSKMERE VILLAGE/i);
+    await village.locator('#intro-begin').click();
+    await village.locator('.hud-screen').waitFor({state:'visible'});
+    assert.equal(await village.locator('.duskmere-landmark').count(),18);
+    assert.equal(await village.locator('.river-bridges .river-bridge').count(),2);
+    assert.equal(await village.locator('.hunter-board-piece').count(),1);
+    assert.equal(await village.locator('.nodes>.node .node-label').count(),18);
+    assert.equal(await village.locator('.illustrated-scenery').getAttribute('aria-hidden'),'true');
+    assert.equal(await village.locator('.node[data-node-note="A13"]').count(),1);
+    assert.equal(await village.locator('.node[data-node-note="A14"]').count(),1);
+    assert.equal(await village.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0);
+    await measure(village,'duskmere-'+viewport.name);
+    await village.screenshot({path:'visual/duskmere-'+viewport.name+'-map.png',fullPage:false});
+    await village.locator('#map-zoom-in').click();
+    await village.locator('#map-zoom-in').click();
+    await measure(village,'duskmere-'+viewport.name+'-detail');
+    await village.screenshot({path:'visual/duskmere-'+viewport.name+'-zoom.png',fullPage:false});
+    assert.deepEqual(errors,[],viewport.name+' Duskmere browser errors');
+    await village.close();
+  }
 
   // PR11 Hunter Forge: each selected part and palette persists, and the same
   // original figure appears on mission briefings, field training and HUD.
