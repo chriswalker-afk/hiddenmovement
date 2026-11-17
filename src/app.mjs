@@ -460,7 +460,7 @@ function guidedChoiceHtml() {
   return '<div class="guidance-choice" aria-label="Optional step-by-step gameplay coaching">' +
     '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
     '<small>'+(guidedSelection
-      ?'Step-by-step Coach tab, worked bearing examples on request and optional clue plotting. All original clues stay.'
+      ?'On-screen arrows walk through the protractor, clue, deduction overlay, two Hunter moves and the secret Monster turn. Skip any time.'
       :'All original clues and sightings remain. Measure the bearings yourself; no clue rays are drawn automatically.')+
     '</small></div>' +
     '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
@@ -1039,8 +1039,10 @@ function monsterIntroductionHtml(view) {
         '<div class="briefing-steps" aria-label="Your first steps">'+
           '<span>1 · READ CLUES</span><span>2 · MEASURE BEARINGS</span><span>3 · SEARCH LOCATIONS</span>'+
         '</div>'+
+        (view.guided?'<p class="briefing-text briefing-guided">GUIDED MODE: Follow the on-screen arrows for your first turn. You can skip the walkthrough at any time.</p>':'')+
         '<div class="briefing-actions">'+
-          '<button id="intro-begin" type="button" class="primary-button">BEGIN THE HUNT →</button>'+
+          '<button id="intro-begin" type="button" class="primary-button">'+
+            (view.guided?'BEGIN GUIDED HUNT':'BEGIN THE HUNT')+' →</button>'+
           '<button id="intro-help" type="button" class="secondary-button">HOW TO PLAY</button>'+
         '</div>'+
       '</div></section></div>';
@@ -1064,6 +1066,10 @@ function searchReportHtml(view) {
         '<span class="encounter-kicker">'+category+'</span>'+
         '<h2 id="search-report-title">'+esc(report.heading)+'</h2>'+
         '<p class="report-story">'+esc(report.text)+'</p>'+
+        (view.guided&&tourStage==='search-report'&&view.phase==='hunter'
+          ?'<p class="guided-search-note"><strong>GUIDED STEP · SEARCH RESULTS</strong> '+
+            'You have searched this location. A trace is a dated clue, not the Monster’s live position. '+
+            'If you found nothing, that does not rule out the road. Read this report, then continue to your second move.</p>':'')+
         (report.clueId?'<p class="report-clue-note">The full dated clue is in your notebook.</p>':'')+
         '<div class="report-actions">'+
           '<button id="report-continue" type="button" class="primary-button">'+
