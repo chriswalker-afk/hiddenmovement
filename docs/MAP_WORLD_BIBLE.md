@@ -1,6 +1,6 @@
 # Shadow Bearings — Map World Bible v1
 
-> **Status: canonical design approved for map identity and proposed for node naming/artwork.** This is a planning document; it does **not** rename any live location or alter bearings, roads, objective IDs or scenery. The four identities below are locked by design decision. Individual names and local art cues remain reviewable before the visual implementation PR.
+> **Status: four identities locked; Blackfen Marsh's 14 names and matching landmark artwork implemented in PR15.** Duskmere Village, Rookgate District and Ravenmarch County remain proposals for later art/naming passes. The existing game graph, bearings, road IDs and spawn/objective algorithms are deliberately unchanged.
 
 ## Four locked identities
 
@@ -27,6 +27,8 @@ The existing graph IDs, coordinates, edge lists, Hunter spawn and objective algo
 ## Proposed canonical node-by-node roster
 
 ### Blackfen Marsh — 14 nodes
+
+**Implementation status: complete in PR15.** All 14 node names are live, backed by original location-specific SVG artwork. The previous generic stream was replaced with **Blackfen Run**, a shared-geometry watercourse connecting Old Swamp, Broken Mill, Moss Bridge and Blackwater Landing; non-overlapping road crossings are marked by bridge decks. Exact nodes, positions and 29 legal roads are preserved. Recheck these assertions during any future artwork retune.
 
 **Scope:** Haunted countryside. **Palette:** peat-brown, muted moss green, blackwater teal, stone-grey, lantern amber.
 
@@ -165,4 +167,4 @@ The existing graph IDs, coordinates, edge lists, Hunter spawn and objective algo
 5. **Ravenmarch County:** render regional terrain bands, mountain relief, woodlands, river valley, border gates and settlement clusters; ensure water crossings and objective markers line up with their names.
 6. **Final QA:** exact node count 14/18/26/36; all labels; collisions at mobile and desktop zoom; all three missions, story briefings, replay, player token and protractor; no bearings / graph / clue / AI regressions.
 
-**Outstanding art issue to solve explicitly:** the current Intro and Apprentice painted streams are decorative and not strongly coupled to landmark positions. Their hydrology must be deliberately replanned (or some names changed), especially **Moss Bridge**, **Stone Bridge**, **Mill Stream** and **Mill Pond**, before these names are published to students. We should not claim the geography already matches.
+**Remaining hydrology task:** Blackfen's stream and Moss Bridge are now coupled to the landmark coordinates. **Duskmere Village** still needs its southern millstream, Stone Bridge and Mill Pond designed against actual road crossings before its planned names go live. Rookgate and Ravenmarch have separate canal and river design phases.
