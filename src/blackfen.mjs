@@ -7,7 +7,7 @@ import { WATERWAYS, waterwayPath } from './waterways.mjs';
  * All SVG is original, deterministic, and below the playable graph layer.
  */
 const SITES = [
-  ['A',"Warden's Watch",100,380,'watch',45,61,'western approach'],
+  ['A',"Warden's Watch",100,380,'watch',-49,53,'western approach'],
   ['B','Pine Crossing',210,225,'pine',45,59,'northwest copse'],
   ['C','Broken Mill',240,470,'mill',53,44,'western millrace'],
   ['D','Crow Farm',360,120,'farm',47,70,'northern fields'],
