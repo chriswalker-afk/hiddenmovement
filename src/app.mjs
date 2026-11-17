@@ -1,5 +1,7 @@
 import { MAP, MAPS, MONSTER_SPAWNS } from './map.mjs';
-import { bearingBetween, formatBearing, sectorBounds } from './geometry.mjs';
+import { bearingBetween, formatBearing } from './geometry.mjs';
+import { analyseClues, clueMathExplanation } from './deduction.mjs';
+import { LESSONS, checkLesson } from './tutorial.mjs';
 import {
   SETTINGS, DIFFICULTIES, beginGame, createGame, endHunterTurn, hunterMove,
   monsterMove, revealTurn, sealTurn, selectMonsterStart, viewForCurrentScreen
@@ -9,6 +11,11 @@ const mount = document.getElementById('app');
 const game = createGame();
 let selectedSpawn = MONSTER_SPAWNS[0];
 let plotClue = false;
+let selectedClueIds = null;
+const nodeMarks = new Map();
+let tutorialOpen = false;
+let lessonStep = 0;
+let lessonOutcome = null;
 let showHowTo = false;
 let difficultyPicker = false;
 const currentMap = () => MAPS[game.mapId] || MAP;
@@ -23,10 +30,83 @@ function start(mode = 'multi', difficulty = 'intro') {
   const result = beginGame(game);
   if (result.ok) {
     plotClue = false;
+    selectedClueIds = null;
+    nodeMarks.clear();
+    tutorialOpen = false;
+    lessonStep = 0;
+    lessonOutcome = null;
     difficultyPicker = false;
     selectedSpawn = MONSTER_SPAWNS[0];
   }
   render();
+}
+
+
+function openTutorial() {
+  lessonStep=0;
+  lessonOutcome=null;
+  tutorialOpen=true;
+  render();
+}
+function selectedClues(view) {
+  return selectedClueIds === null ? view.clues : view.clues.filter(c=>selectedClueIds.has(c.id));
+}
+function currentAnalysis(view) {
+  if (view.phase!=='hunter' || !plotClue) return null;
+  const clues=selectedClues(view);
+  if(!clues.length) return null;
+  return analyseClues(currentMap(), clues, view.round, {hunterLocation:view.hunter});
+}
+function toggleNodeMark(id) {
+  const old=nodeMarks.get(id);
+  if(!old) nodeMarks.set(id,'possible');
+  else if(old==='possible') nodeMarks.set(id,'ruled');
+  else nodeMarks.delete(id);
+  render();
+}
+function tutorialHtml() {
+  const lesson=LESSONS[lessonStep];
+  const radians=lesson.bearing*Math.PI/180;
+  const x=130+75*Math.sin(radians),y=130-75*Math.cos(radians);
+  const compass='<svg class="lesson-compass" viewBox="0 0 260 260" role="img" aria-label="Compass with north at the top and a demonstration bearing">' +
+    '<circle cx="130" cy="130" r="94" fill="#172e36" stroke="#7faba6" stroke-width="2"/>' +
+    '<path d="M130 35 V225 M35 130 H225" stroke="#759b94" stroke-opacity=".34" stroke-width="1.5"/>' +
+    '<text x="130" y="24" text-anchor="middle">N</text><text x="241" y="134" text-anchor="middle">E</text>' +
+    '<text x="130" y="252" text-anchor="middle">S</text><text x="19" y="134" text-anchor="middle">W</text>' +
+    '<circle cx="130" cy="130" r="6" fill="#e2c387"/>' +
+    '<line x1="130" y1="130" x2="'+x+'" y2="'+y+'" stroke="#e7c58a" stroke-width="4" stroke-linecap="round"/>' +
+    '<circle cx="'+x+'" cy="'+y+'" r="7" fill="#f3dba5" stroke="#1a3539" stroke-width="2"/>' +
+    '<text x="130" y="161" text-anchor="middle" class="lesson-compass-hint">CLOCKWISE FROM NORTH</text></svg>';
+  return '<main class="tutorial-screen"><section class="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="lesson-title">' +
+    '<div class="tutorial-header"><span class="eyebrow">BEARINGS FIELD TRAINING · '+(lessonStep+1)+' / '+LESSONS.length+'</span>' +
+    '<button type="button" id="tutorial-close" class="tutorial-close" aria-label="Close bearings tutorial">✕ CLOSE</button></div>' +
+    '<div class="tutorial-steps" aria-hidden="true">'+LESSONS.map((_,i)=>'<span class="'+(i<=lessonStep?'completed-step':'')+'"></span>').join('')+'</div>' +
+    '<h1 id="lesson-title">'+esc(lesson.title)+'</h1><p class="tutorial-detail">'+esc(lesson.detail)+'</p>' +
+    '<div class="tutorial-lesson">'+compass+
+    '<div class="tutorial-task"><p class="eyebrow">YOUR TURN</p><h2>'+esc(lesson.prompt)+'</h2>' +
+    '<form id="lesson-form"><label for="lesson-answer">Enter a three-figure bearing</label>' +
+    '<div class="tutorial-answer"><input id="lesson-answer" type="text" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="000" aria-describedby="lesson-feedback" />' +
+    '<button type="submit" class="primary-button">CHECK</button></div></form>' +
+    '<p id="lesson-feedback" class="lesson-feedback '+(lessonOutcome?.correct?'correct-feedback':'')+'" role="status">'+
+      (lessonOutcome?esc(lessonOutcome.message):'Bearings are measured clockwise from north, using three figures.')+'</p>' +
+    (lessonOutcome?.correct ? '<button type="button" class="primary-button tutorial-next" id="lesson-next">'+
+      (lessonStep===LESSONS.length-1?'FINISH TRAINING':'NEXT CHALLENGE')+' →</button>' : '') +
+    '</div></div></section></main>';
+}
+function bindTutorial() {
+  document.getElementById('tutorial-close').addEventListener('click',()=>{tutorialOpen=false;render();});
+  document.getElementById('lesson-form').addEventListener('submit',e=>{
+    e.preventDefault();
+    lessonOutcome=checkLesson(lessonStep,document.getElementById('lesson-answer').value);
+    render();
+  });
+  document.getElementById('lesson-next')?.addEventListener('click',()=>{
+    if(lessonStep===LESSONS.length-1) tutorialOpen=false;
+    else lessonStep++;
+    lessonOutcome=null;
+    render();
+  });
+  if(!lessonOutcome?.correct) document.getElementById('lesson-answer')?.focus();
 }
 
 function difficultyHtml() {
@@ -78,6 +158,7 @@ function homeHtml() {
           '<span class="mode-link">SELECT DIFFICULTY →</span></button>' +
       '</div>' +
       '<button class="text-button" id="how-toggle" aria-expanded="' + showHowTo + '">HOW TO PLAY <span aria-hidden="true">⌄</span></button>' +
+      '<button class="text-button" id="open-tutorial">INTERACTIVE BEARINGS TRAINING ↗</button>' +
       (showHowTo ? howToHtml() : '') +
       '<p class="home-footer">CHAPTER I · THE HOLLOW MOOR <span>◈</span> FIRST PLAYABLE PROTOTYPE</p>' +
     '</div></div>';
@@ -366,6 +447,11 @@ function render() {
     });
     return;
   }
+  if(tutorialOpen && (view.phase==='home' || view.phase==='hunter')) {
+    mount.innerHTML=tutorialHtml();
+    bindTutorial();
+    return;
+  }
   if(view.phase==='home') {
     mount.innerHTML=homeHtml();
     if (difficultyPicker) {
@@ -377,6 +463,7 @@ function render() {
         button.addEventListener('click',()=> start('solo', button.dataset.difficulty));
       });
     } else {
+      document.getElementById('open-tutorial').addEventListener('click',openTutorial);
       document.getElementById('start-two').addEventListener('click',()=>start('multi'));
       document.getElementById('start-solo-select').addEventListener('click',()=>{
         difficultyPicker = true;
