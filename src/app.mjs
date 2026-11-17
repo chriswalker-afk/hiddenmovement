@@ -576,7 +576,7 @@ function notebook(view) {
       ' selected clue'+(analysis.cluesUsed===1?'':'s')+'</span>' +
       '<details><summary>Which locations remain?</summary><p>'+esc(locationText || 'No locations satisfy these clues.')+'</p></details>' +
       '<p class="muted compact">These are possible locations, not guaranteed positions. Older clues allow one road per normal Monster turn; a publicly announced teleport permits a 2–3-road jump.</p></div>'
-    : plotClue ? '<p class="muted compact">Select at least one clue to check possible locations.</p>' : '';
+    : plotClue ? '<p class="muted compact">Select a confirmed bearing or location clue. Unverified local rumours never constrain the mathematical candidate set.</p>' : '';
   const cards=view.clues.map((c,i)=>{
     const chosen=active.some(a=>a.id===c.id);
     const visit=c.type==='teleport-origin'?'CONFIRMED VANISHING POINT':
