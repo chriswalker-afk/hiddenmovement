@@ -483,33 +483,48 @@ function searchOutcome(game,location,clue,unmasked=[]) {
     text:'You search '+place+', but there is no evidence of '+creature+' here. Keep hunting.'};
 }
 
-export function hunterMove(game, inputBearing) {
-  if (requirePhase(game, 'hunter')) return { ok:false, message:game.feedback };
-  if (!game.stepsLeft) return fail(game, 'You have used both routes. Finish your turn.');
-  const route = matchedNeighbour(game.hunter, inputBearing, game);
+export function hunterMove(game,inputBearing) {
+  if(requirePhase(game,'hunter'))return {ok:false,message:game.feedback};
+  if(!game.stepsLeft)return fail(game,'You have used both routes. Finish your turn.');
+  const route=matchedNeighbour(game.hunter,inputBearing,game);
   game.hunterStats.attempts++;
-  if (route.error) {
+  if(route.error) {
     game.hunterStats.errors++;
-    return fail(game, route.error);
+    return fail(game,route.error);
   }
   game.hunterStats.successful++;
-  game.hunterStats.totalAngleError += route.difference;
-  game.hunter = route.to;
+  game.hunterStats.totalAngleError+=route.difference;
+  game.hunter=route.to;
   game.hunterTrail.push(route.to);
   game.stepsLeft--;
-  const destination = game.map.nodes[route.to].name;
-  game.history.push({ role:'hunter', round:game.round, node:route.to });
-  if (game.hunter === game.monster) {
-    game.phase = 'over';
-    game.winner = 'hunter';
-    return say(game, 'The monster was found at ' + destination + '! The Hunter wins.');
+  const destination=game.map.nodes[route.to].name;
+  game.history.push({role:'hunter',round:game.round,node:route.to});
+  if(game.hunter===game.monster) {
+    game.phase='over';game.winner='hunter';game.finishReason='capture';
+    game.hunterOutcome={
+      kind:'capture',place:route.to,heading:'The hunt is over!',
+      text:'You corner '+monsterFor(game.difficulty).name+' at '+
+        destination+'. The Monster is caught!'
+    };
+    return say(game,'The monster was found at '+destination+'! The Hunter wins.');
   }
-  const clue = collectClue(game, game.hunter);
-  const message = 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination +
-    ' (error: ' + route.difference.toFixed(1) + '°; ' +
-    game.stepsLeft + ' route' + (game.stepsLeft === 1 ? '' : 's') + ' left).' +
-    (clue ? ' A trail clue was found!' : '');
-  return say(game, message);
+
+  // A previously planted false position is exposed only when the Hunter
+  // actually enters that location. Do not confirm or debunk it earlier.
+  const falseReports=game.activeDecoys.filter(d=>!d.revealed&&d.node===route.to);
+  for(const decoy of falseReports){
+    decoy.revealed=true;
+    const report=game.clues.find(c=>c.id===decoy.id);
+    if(report)report.status='false';
+    game.publicEvents.push({type:'decoy-exposed',round:game.round,node:route.to});
+  }
+  const clue=collectClue(game,game.hunter);
+  game.hunterOutcome=searchOutcome(game,route.to,clue,falseReports);
+  const message='Travelled '+formatBearing(route.bearing)+' to '+destination+
+    ' (error: '+route.difference.toFixed(1)+'°; '+
+    game.stepsLeft+' route'+(game.stepsLeft===1?'':'s')+' left).'+
+    (falseReports.length?' A false sighting was exposed!':clue?' A trail clue was found!':'');
+  return say(game,message);
 }
 
 /**
@@ -517,26 +532,37 @@ export function hunterMove(game, inputBearing) {
  * only the resulting new Hunter view is rendered. No Monster screen exists.
  */
 export function endHunterTurn(game) {
-  if (requirePhase(game, 'hunter')) return { ok:false, message:game.feedback };
-  if (game.round >= game.config.maxRounds) {
-    game.phase = 'over';
-    game.winner = 'monster';
-    return say(game, 'The final lantern has gone out. The Monster survived!');
+  if(requirePhase(game,'hunter'))return {ok:false,message:game.feedback};
+  game.hunterOutcome=null;
+  if(game.round>=game.config.maxRounds) {
+    game.phase='over';game.winner='monster';
+    return say(game,'The final lantern has gone out. The Monster survived!');
   }
-  if (game.mode === 'solo') {
-    const destination=chooseMonsterMove(game);
-    const veil=shouldAiUseVeil(game,destination);
-    const outcome=applyMonsterStep(game,destination,veil);
+  if(game.mode==='solo') {
+    const movingRound=game.round;
+    const teleport=shouldTeleport(game);
+    const destination=teleport?chooseTeleportDestination(game):chooseMonsterMove(game);
+    const veil=!teleport&&shouldAiUseVeil(game,destination);
+    const outcome=applyMonsterStep(game,destination,veil,teleport);
     if(outcome.ended)return say(game,outcome.message);
+    // Only one signature monster power may activate during a Monster turn.
+    const decoy=!teleport && movingRound>=
+      (game.monsterCooldowns.decoyReadyRound??Infinity) &&
+      shouldPlantDecoy({...game,round:movingRound})
+        ?plantDecoy(game,movingRound):null;
     const pulse=addSighting(game);
-    const notice=outcome.beaconReached?'A signal beacon went dark. Its location was recorded in the notebook. ':
-      outcome.veiled?'A Veil was used. The newest trail may be concealed. ':'';
-    return say(game,notice+(pulse
-      ? 'A watcher reports a fresh bearing. Check your field notebook.'
-      : 'The Monster moved unseen. Continue the hunt.'));
+    const notice=outcome.beaconReached
+      ?'A signal beacon went dark. Its location was recorded in the notebook. '
+      :outcome.teleported?'A rift opened! The Monster’s exact departure point is now public. '
+      :outcome.veiled?'A Veil was used. The newest trail may be concealed. ':'';
+    const rumour=decoy
+      ?'An unconfirmed local sighting was reported. Check it on the map. ':'';
+    return say(game,notice+rumour+(pulse
+      ?'A watcher reports a fresh bearing. Check your field notebook.'
+      :'The Monster moved unseen. Continue the hunt.'));
   }
-  game.phase = 'pass-monster';
-  return say(game, 'Pass the device to the monster.');
+  game.phase='pass-monster';
+  return say(game,'Pass the device to the monster.');
 }
 
 export function monsterMove(game,inputBearing,options={}) {
