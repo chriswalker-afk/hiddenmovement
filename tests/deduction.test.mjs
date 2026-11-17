@@ -90,7 +90,7 @@ test('distance-band clues reduce candidates by route distance, not straight line
 test('all public solo sightings remain consistent with actual monster movement on four maps',()=>{
   for(const difficulty of Object.keys(MAPS)){
     for(let seed=1;seed<=15;seed++) {
-      const g=createGame({mode:'solo',difficulty,seed});
+      const g=createGame({mode:'solo',difficulty,seed,guided:true});
       beginGame(g);
       for(let step=0;step<Math.min(g.config.maxRounds-1,9);step++){
         const publicView=viewForCurrentScreen(g);
@@ -106,7 +106,7 @@ test('all public solo sightings remain consistent with actual monster movement o
 
 test('real trace distance hints are truthful in Intro and Apprentice, unavailable in harder levels',()=>{
   for(const difficulty of Object.keys(MAPS)){
-    const g=createGame({mode:'solo',difficulty,seed:12345});
+    const g=createGame({mode:'solo',difficulty,seed:12345,guided:true});
     beginGame(g);
     const initial=g.hunter;
     const next=g.map.adjacency[initial][0];
