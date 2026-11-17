@@ -998,3 +998,20 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 @media(prefers-reduced-motion:reduce){
   .encounter-backdrop,.encounter-card{animation:none!important}
 }
+
+
+/* Short landscape classroom devices: fit the entire monster introduction,
+   including the level heading, rather than scrolling to its focused button. */
+@media(max-height:520px) and (min-width:671px){
+  .monster-encounter .encounter-copy{padding:9px 16px 10px}
+  .monster-encounter .encounter-copy .eyebrow{font-size:.56rem}
+  .monster-encounter .encounter-kicker{margin:5px 0 2px;font-size:.52rem}
+  .monster-encounter h1{font-size:1.65rem;line-height:1.07;margin-bottom:1px}
+  .monster-encounter .encounter-title{font-size:.72rem;margin:1px 0 4px}
+  .monster-encounter .encounter-story{font-size:.72rem;line-height:1.36;margin:4px 0 7px}
+  .monster-encounter .monster-power-summary{padding:7px 10px;margin:3px 0 5px}
+  .monster-encounter .monster-power-summary strong{font-size:.74rem}
+  .monster-encounter .monster-power-summary p{font-size:.68rem;line-height:1.4;margin:3px 0 0}
+  .monster-encounter .encounter-tip{display:none}
+  .monster-encounter .primary-button{min-height:36px;padding:7px;font-size:.65rem}
+}
