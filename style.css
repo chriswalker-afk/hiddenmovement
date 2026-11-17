@@ -1418,3 +1418,185 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 @media(max-height:520px) and (min-width:801px){
   .forge-workspace{height:calc(100dvh - 135px);min-height:350px}
 }
+
+
+/* PR12 — chronological, skippable end-of-hunt movement replay. */
+.replay-mode{
+  height:100vh;height:100dvh;min-height:0;max-height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.replay-mode .app-header{flex:none;min-height:43px;padding:7px 16px}
+.replay-screen{
+  width:100%;max-width:1650px;margin:0 auto;flex:1;min-height:0;min-width:0;
+  padding:12px 18px 17px;
+  display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;overflow:hidden;
+}
+.replay-heading{
+  min-width:0;display:flex;align-items:center;justify-content:space-between;
+  gap:14px;border-bottom:1px solid #547067;padding-bottom:9px;
+}
+.replay-heading h1{
+  margin:4px 0;font:500 clamp(1.45rem,2.4vw,2.3rem) 'Cinzel',Georgia,serif;
+  color:#f0e3c6;letter-spacing:.06em;
+}
+.replay-heading h1 em{font-style:normal;color:#d9ba80}
+.replay-heading p{font-size:.74rem;line-height:1.42;color:#bbcfc1;margin:0}
+.replay-outcome{
+  flex:none;border:1px solid #b6a070;background:#324238;color:#f4dda4;
+  text-align:center;padding:13px 17px;
+  font:700 .83rem 'Cinzel',Georgia,serif;letter-spacing:.04em;
+}
+.replay-layout{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,350px);
+  gap:12px;min-height:0;min-width:0;
+}
+.replay-map,.replay-map .map-section{min-height:0;min-width:0}
+.replay-map .map-section{height:100%;display:flex;flex-direction:column;overflow:hidden}
+.replay-map .map-heading{flex:0 0 auto;min-height:32px;margin:0 0 6px}
+.replay-map .map-heading h2{font-size:.88rem;margin:0}
+.replay-map .map-toolbar{flex-wrap:nowrap}
+.replay-map .map-frame{
+  display:flex;flex:1 1 auto;min-height:0;max-height:none;
+  overflow:auto;align-items:flex-start;justify-content:flex-start;
+  background:#1a3439;
+}
+.replay-map .world-svg{
+  flex:none;display:block;min-width:0;max-height:none;
+  aspect-ratio:auto;overflow:visible;
+}
+.replay-map .map-key{
+  max-height:42px;min-height:18px;overflow:auto;
+  padding:6px 2px 0;gap:7px 15px;font-size:.66rem;
+}
+.replay-map .location-index{flex:0 0 auto;position:relative}
+.replay-map .location-index[open]{
+  position:absolute;bottom:0;left:0;right:0;z-index:10;
+  max-height:45%;overflow:auto;background:#172b34;
+}
+.replay-actor{filter:drop-shadow(0 2px 4px #08151bdd)}
+.replay-actor circle{stroke-width:3;stroke:#f2dfa9}
+.replay-actor text{
+  fill:#fff7e8;font:800 17px 'DM Sans',system-ui,sans-serif;
+  paint-order:stroke;stroke:#1b2e33;stroke-width:1;
+}
+.replay-actor-hunter circle{fill:#276d73;stroke:#b9ead7}
+.replay-actor-monster circle{fill:#74466c;stroke:#f0bfdc}
+.replay-teleport-line{
+  stroke:#eed49e!important;stroke-width:5!important;
+  stroke-dasharray:3 13!important;stroke-opacity:.9!important;
+}
+.replay-veil-line{stroke:#d4a0bb!important;stroke-opacity:.45!important}
+.replay-panel{
+  min-height:0;min-width:0;display:flex;flex-direction:column;overflow:auto;
+  border:1px solid #837d65;background:linear-gradient(150deg,#20383e,#172a36);
+  padding:16px;scrollbar-width:thin;scrollbar-color:#a09c76 #172a36;
+}
+.replay-panel>.eyebrow{font-size:.63rem;letter-spacing:.1em}
+.replay-progress-caption{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:9px;
+  margin:9px 0 9px
+}
+.replay-progress-caption strong{
+  font:600 1.16rem 'Cinzel',Georgia,serif;
+  color:#f0dab3;line-height:1.25;
+}
+.replay-progress-caption span{white-space:nowrap;font-size:.72rem;color:#bdc8bd}
+.replay-story{font-size:.84rem;line-height:1.55;color:#d9e3dc;min-height:70px;margin:0 0 15px}
+.replay-locations{display:grid;gap:9px;margin:3px 0 16px}
+.replay-locations>div{
+  display:flex;gap:10px;align-items:center;
+  border:1px solid #547269;background:#172e36;padding:10px
+}
+.replay-locations>div>span:last-child{display:flex;flex-direction:column;min-width:0;gap:2px}
+.replay-locations small{
+  color:#bdc5ae;letter-spacing:.07em;font-size:.61rem;line-height:1.35
+}
+.replay-locations strong{
+  color:#f3e8c7;font:600 .91rem 'Cinzel',Georgia,serif;line-height:1.25
+}
+.replay-dot{
+  border:2px solid #e9d49c;color:#fff7e3;border-radius:50%;
+  display:grid;place-items:center;flex:none;width:34px;height:34px;font-weight:900
+}
+.hunter-dot{background:#276d73}
+.monster-dot{background:#74466c}
+.replay-scrub-label{
+  display:block;font-size:.67rem;font-weight:800;letter-spacing:.06em;
+  color:#d9bd80;margin:0 0 8px
+}
+#replay-progress{
+  display:block;max-width:100%;width:100%;accent-color:#ecc986;
+  height:28px;cursor:pointer;margin:0 0 12px;
+}
+.replay-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.replay-buttons button,.replay-secondary-actions button{
+  min-height:40px;min-width:0;padding:7px 4px;
+  background:#27433f;border:1px solid #8b9784;
+  color:#f0e0b9;font-weight:700;font-size:.64rem;letter-spacing:.03em
+}
+.replay-buttons button:hover:not(:disabled),.replay-secondary-actions button:hover{
+  background:#3d5950;border-color:#e4ca97
+}
+.replay-secondary-actions{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.replay-complete{
+  font-size:.71rem;color:#d3e2ca;line-height:1.4;
+  background:#264335;border-left:2px solid #e4c58e;padding:8px;margin:12px 0 0;
+}
+.replay-panel #replay-skip{flex:none;margin-top:auto;min-height:45px;padding:9px;font-size:.69rem}
+.replay-panel #replay-skip:focus-visible{outline:3px solid #ffda9c}
+@media(max-width:800px){
+  .replay-screen{gap:6px;padding:6px 9px 8px}
+  .replay-heading{padding-bottom:5px;gap:8px}
+  .replay-heading h1{font-size:1.1rem;margin:3px 0}
+  .replay-heading p{display:none}
+  .replay-outcome{font-size:.63rem;padding:7px 8px;max-width:130px}
+  .replay-layout{grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,53fr) minmax(0,47fr);gap:6px}
+  .replay-map .map-heading h2{font-size:.73rem}
+  .replay-map .map-key{max-height:27px;padding:3px 2px;font-size:.6rem}
+  .replay-panel{padding:10px 12px;gap:0}
+  .replay-panel>.eyebrow{font-size:.56rem}
+  .replay-progress-caption{margin:5px 0}
+  .replay-progress-caption strong{font-size:.96rem}
+  .replay-story{min-height:0;font-size:.73rem;margin:0 0 7px;line-height:1.37}
+  .replay-locations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;margin:0 0 7px}
+  .replay-locations>div{min-width:0;padding:5px;gap:5px}
+  .replay-locations strong{font-size:.71rem}
+  .replay-dot{width:25px;height:25px;font-size:.66rem}
+  #replay-progress{height:19px;margin:0 0 5px}
+  .replay-scrub-label{font-size:.56rem;margin:0 0 3px}
+  .replay-buttons button,.replay-secondary-actions button{
+    min-height:30px;padding:5px 3px;font-size:.58rem
+  }
+  .replay-panel #replay-skip{min-height:34px;font-size:.61rem;padding:6px}
+  .replay-complete{margin:5px 0;font-size:.63rem;padding:5px}
+}
+@media(max-width:460px){
+  .replay-mode .app-header{min-height:36px;padding:5px 9px}
+  .replay-mode .app-header .brand{font-size:.7rem}
+  .replay-mode .header-right>.eyebrow{display:none}
+  .replay-heading h1{font-size:.96rem}
+  .replay-heading .eyebrow{font-size:.47rem;letter-spacing:.05em}
+  .replay-outcome{max-width:112px;font-size:.54rem}
+  .replay-layout{grid-template-rows:minmax(0,49fr) minmax(0,51fr)}
+  .replay-panel{padding:6px 9px}
+  .replay-progress-caption strong{font-size:.83rem}
+  .replay-locations small{font-size:.49rem}
+  .replay-locations strong{font-size:.61rem}
+  .replay-story{font-size:.64rem}
+  .replay-map .map-toolbar{gap:3px}
+  .replay-map .map-chip{display:none}
+  .replay-map .map-zoom-controls button{width:25px;height:25px}
+}
+@media(max-height:510px) and (min-width:801px){
+  .replay-screen{padding:4px 10px 5px;gap:4px}
+  .replay-heading h1{font-size:1.05rem}
+  .replay-heading p{display:none}
+  .replay-panel{padding:8px 10px}
+  .replay-story{min-height:0;margin-bottom:6px;font-size:.67rem}
+  .replay-locations{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-bottom:5px}
+  .replay-locations>div{padding:5px;gap:5px}
+  .replay-locations strong{font-size:.7rem}
+  .replay-buttons button{min-height:28px}
+}
