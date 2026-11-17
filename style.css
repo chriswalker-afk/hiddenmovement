@@ -604,7 +604,18 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   font:600 1rem 'Cinzel',serif;white-space:nowrap
 }
 .hud-move-panel .guided-route-help{margin:0 0 8px;font-size:.69rem;line-height:1.35}
-.hud-move-panel .bearing-form{gap:4px}
+.hud-move-panel .bearing-form{
+  gap:4px;min-width:0;grid-template-columns:minmax(0,1fr)
+}
+.hud-move-panel .bearing-entry{
+  min-width:0;width:100%;max-width:100%;overflow:hidden
+}
+.hud-move-panel .bearing-entry input{
+  flex:1 1 0%;width:0;min-width:0
+}
+.hud-move-panel .bearing-entry button{
+  flex:0 0 88px;min-width:0
+}
 .hud-move-panel .bearing-form label{font-size:.7rem}
 .hud-move-panel .bearing-entry input{height:39px;padding:6px 29px 6px 10px;font-size:1.1rem}
 .hud-move-panel .bearing-entry>span{top:6px;left:calc(100% - 119px);font-size:1.1rem}
@@ -781,7 +792,7 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .hud-move-panel .bearing-form label{font-size:.57rem}
   .hud-move-panel .bearing-form small{font-size:.51rem}
   .hud-move-panel .bearing-entry input{font-size:.9rem;height:34px;padding:5px 20px 5px 5px}
-  .hud-move-panel .bearing-entry button{min-width:58px;padding:0 5px;font-size:.57rem}
+  .hud-move-panel .bearing-entry button{flex-basis:58px;min-width:0;padding:0 5px;font-size:.57rem}
   .hud-move-panel .bearing-entry>span{left:calc(100% - 75px);top:5px;font-size:.9rem}
   .hud-move-panel .secondary-button{font-size:.53rem;padding:5px;min-height:29px}
   .hud-move-panel .field-guide-link{font-size:.48rem}
