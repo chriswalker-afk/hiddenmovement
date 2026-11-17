@@ -66,8 +66,8 @@ test('the existing bearing calculations and all three mission objectives remain 
   assert.equal(Object.values(MAPS.apprentice.nodes).length,18);
   assert.equal(Object.values(MAPS.tracker.nodes).length,26);
   assert.equal(Object.values(MAPS.expert.nodes).length,36);
-  assert.equal(MAPS.apprentice.title,'Thornwood Vale',
-    'Other worlds are not renamed until their own art and geometry are ready');
+  assert.equal(MAPS.apprentice.title,'Duskmere Village',
+    'The next completed world takes its own planned village identity');
 });
 
 test('every named place has its own recognisable, deterministic original vector landmark',()=>{

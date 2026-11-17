@@ -1,5 +1,6 @@
 import { angularDifference, bearingBetween, graphDistance } from './geometry.mjs';
 import { BLACKFEN_SITES } from './blackfen.mjs';
+import { DUSKMERE_SITES, DUSKMERE_LANDMARKS } from './duskmere.mjs';
 
 /** Blackfen's player-visible names and art are keyed to the stable graph IDs. */
 const points=BLACKFEN_SITES.map(s=>[s.id,s.name,s.x,s.y]);
@@ -70,7 +71,7 @@ export function getMonsterSpawns(map = MAP) {
  * coordinate graphs: every road has an unambiguous compass bearing.
  * Artwork themes and location names are independent of the geometry.
  */
-function makeRegion(id, title, subtitle, theme, rowLengths, locationNames) {
+function makeRegion(id, title, subtitle, theme, rowLengths, locationNames, sites=null) {
   const maxCols = Math.max(...rowLengths);
   const dx = Math.min(138, 800 / (maxCols - 0.3));
   const dy = Math.min(118, 545 / (rowLengths.length - 1));
@@ -132,6 +133,13 @@ function makeRegion(id, title, subtitle, theme, rowLengths, locationNames) {
     node.x = fit(node.x, xMin, xMax, 95, 905);
     node.y = fit(node.y, yMin, yMax, 95, 640) +
       (riversideOffsets[node.row] || 0);
+    if(sites){
+      const site=sites[node.id];
+      if(!site || site.name!==node.name ||
+        Math.abs(node.x-site.x)>0.05 || Math.abs(node.y-site.y)>0.05)
+        throw new Error('Landmark does not match the real '+id+' road map: '+node.id);
+      node.landmarkKind=site.kind;
+    }
   }
 
   const middleRow = Math.floor((rowLengths.length - 1) / 2);
@@ -140,15 +148,11 @@ function makeRegion(id, title, subtitle, theme, rowLengths, locationNames) {
 }
 
 const APPRENTICE_MAP = makeRegion(
-  'apprentice', 'Thornwood Vale', 'Every fork hides a choice.', 'woodland',
+  'apprentice', 'Duskmere Village',
+  'The lights are on, but every lane keeps a secret.', 'woodland',
   [3,4,4,4,3],
-  [
-    'Pine Rise','Hollow Oak','Hill Beacon',
-    'Old Weir','Briar Lane','Fallow Field','Moonwell',
-    'Wolf Path','Moss Bridge','Thorn Hall','Wishing Stone',
-    'West Ford','Foxglove','Fern Hollow','Mill Pond',
-    'Gates End','Stone Steps','Crow Watch'
-  ]
+  DUSKMERE_SITES.map(site=>site.name),
+  DUSKMERE_LANDMARKS
 );
 const TRACKER_MAP = makeRegion(
   'tracker', 'The Sunken Lowlands', 'Mist carries every whisper.', 'marsh',

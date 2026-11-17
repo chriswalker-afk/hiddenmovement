@@ -186,3 +186,17 @@
 - This is an **art and identity** pass: no gameplay, round, clues, powers or AI changes.
 
 **Next recommended PR16:** Duskmere Village — develop its 18 named structures as a geographically coherent settlement, design a real southern millstream with road-aligned Stone Bridge and Mill Pond, then test at mobile/projector zoom before merging.
+
+
+## PR16 — Duskmere Village completed Apprentice map (17 November 2026)
+
+- Ship 18 named village sites A01–A18 from the locked World Bible, linked to 18 distinct original SVG landmarks in src/duskmere.mjs.
+- Preserve the existing full **18-node/33-edge graph**, all coordinates and bearings, original A08 Hunter spawn, and objective node IDs **A03 North Gate** and **A18 South Beacon**.
+- Give the region its own slate roofs, half-timbered cottages, chapel, gate, market cross, great oak, old well, shepherd's pasture, orchard, forge, warm windows and settled colour identity.
+- Paint the shared-geometry WATERWAYS.woodland **Duskmere Millstream** and its connected Mill Pond south of the village; all playable nodes remain on dry ground.
+- Verify crossings exclusively on existing A12–A16, A13–A17 and A14–A18 roads. Place a custom road-aligned Stone Bridge at the central A13–A17 crossing, suppressing stacked generic decks; use small decks at the others.
+- Retain bearing entry, clue notebook, Hunter Forge token, Monster abilities and hidden trail, saved progress, replay, all overlays and sealed handoffs.
+- Test unique site identity, name/art links, unchanged graph, actual water path/clearance, bridge crossings and responsive visual QA on desktop, portrait and landscape phones.
+
+**Next planned PR17:** Rookgate District, the 26-location gothic city, with coherent blocks, two real canals, road-aligned stone bridges, dockyards, city gates and workshops. Then Ravenmarch County (PR18).
+

@@ -35,6 +35,7 @@ jobs:
           node --check src/scenarios.mjs
           node --check src/scenery.mjs
           node --check src/blackfen.mjs
+          node --check src/duskmere.mjs
           node --check src/waterways.mjs
           node --check src/monsters.mjs
           node --check src/monster-powers.mjs
