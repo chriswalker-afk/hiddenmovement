@@ -15,10 +15,10 @@ const SITES=[
   ['T03','Cloth Market',549.2,95,'cloth-market',52,11,'north market'],
   ['T04','North Gate',700.6,95,'north-gate',55,10,'north wall'],
   ['T05','Canal Steps',223.7,254.3,'canal-steps',51,-27,'north canal bank'],
-  ['T06','Ropewalk Yard',375.1,254.3,'ropewalk',51,49,'north quay industries'],
-  ['T07','Salt Wharf',526.5,254.3,'salt-wharf',54,-18,'north canal waterfront'],
-  ['T08','Customs House',677.9,254.3,'customs',51,45,'north customs court'],
-  ['T09','East Wharf',829.3,254.3,'east-wharf',56,-17,'east canal basin'],
+  ['T06','Ropewalk Yard',375.1,254.3,'ropewalk',51,-5,'north quay industries'],
+  ['T07','Salt Wharf',526.5,254.3,'salt-wharf',54,-53,'north canal waterfront'],
+  ['T08','Customs House',677.9,254.3,'customs',51,-20,'north customs court'],
+  ['T09','East Wharf',829.3,254.3,'east-wharf',56,-54,'east canal basin'],
   ['T10','West Watch',95,367.5,'west-watch',-48,58,'western entry'],
   ['T11',"Tanner's Row",246.4,367.5,'tanners',52,54,'western trades'],
   ['T12','Lantern Square',397.8,367.5,'lantern-square',52,56,'city centre'],
@@ -31,10 +31,10 @@ const SITES=[
   ['T19','Physic Garden',602.2,485.8,'physic-garden',52,34,'quiet south quarter'],
   ['T20','Prison Yard',753.6,485.8,'prison',52,34,'southeast ward'],
   ['T21','South Bastion',905,485.8,'bastion',-55,33,'south city wall'],
-  ['T22','Ferry Landing',170.7,640,'ferry',54,-23,'south canal bank'],
+  ['T22','Ferry Landing',170.7,640,'ferry',54,-68,'south canal bank'],
   ['T23','South Watch',322.1,640,'south-watch',54,25,'south canal watch'],
-  ['T24',"Miller's Wharf",473.5,640,'miller-wharf',51,-23,'south quay workshops'],
-  ['T25','Flood Lock',624.9,640,'flood-lock',53,-34,'southeast waterworks'],
+  ['T24',"Miller's Wharf",473.5,640,'miller-wharf',51,-52,'south quay workshops'],
+  ['T25','Flood Lock',624.9,640,'flood-lock',53,-69,'southeast waterworks'],
   ['T26','Fen Gate',776.3,640,'fen-gate',53,25,'southern outskirts']
 ];
 
