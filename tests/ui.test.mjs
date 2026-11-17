@@ -44,7 +44,7 @@ test('browser UI: solo selection, hidden AI turns and sealed two-player handoffs
   assert.match(html(),/SOLO HUNT/);
   assert.match(html(),/RAVENMARCH COUNTY/);
   assert.match(html(),/theme-eclipse/);
-  assert.match(html(),/LOCATION INDEX/);
+  assert.match(html(),/LOCATION FINDER/);
   assert.match(html(),/WATCHER SIGHTING/);
   assert.doesNotMatch(html(),/Pass this device to the monster and look away/);
   assert.doesNotMatch(html(),/MONSTER ONLY/);
