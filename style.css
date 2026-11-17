@@ -1679,3 +1679,23 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 .world-svg.theme-marsh .rookgate-quay-details{
   pointer-events:none
 }
+
+
+/* Ravenmarch's Blackwater bridges are local grey-stone river spans, not the
+   former violet Eclipse Marches footbridges. All five generic spans lie on
+   real historical roads; E21-E28 uses a single bespoke stone bridge. */
+.world-svg.theme-eclipse .ravenmarch-river-bridge .bridge-shadow{
+  stroke:#152b32;stroke-width:28;stroke-opacity:.94
+}
+.world-svg.theme-eclipse .ravenmarch-river-bridge .bridge-deck{
+  stroke:#a4b2a7;stroke-width:20;stroke-opacity:.97
+}
+.world-svg.theme-eclipse .ravenmarch-river-bridge .bridge-rail{
+  stroke:#d1cbb2;stroke-width:3
+}
+.world-svg.theme-eclipse .ravenmarch-river-bridge .bridge-walkway{
+  stroke:#778b86;stroke-width:7.6;stroke-opacity:.77
+}
+.world-svg.theme-eclipse .road-top{stroke:#c4cfb9}
+.world-svg.theme-eclipse .rookgate-landmark,
+.world-svg.theme-eclipse .ravenmarch-landmark{pointer-events:none}
