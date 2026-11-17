@@ -7,7 +7,8 @@ const ACTIVE_PHASES=new Set([
 ]);
 const OWN=['round','phase','hunter','monster','stepsLeft','randomState','nextTrailId',
   'veilCharges','lanternCharges','beaconVisits','publicEvents','monsterTrail',
-  'hunterTrail','collectedVisitIds','clues','history','hunterStats','feedback'];
+  'hunterTrail','collectedVisitIds','clues','history','hunterStats','feedback',
+  'monsterCooldowns','activeDecoys','hunterOutcome'];
 const isObject=v=>v!==null && typeof v==='object' && !Array.isArray(v);
 const finiteInt=(v,min,max)=>Number.isSafeInteger(v)&&v>=min&&v<=max;
 const validNodes=(array,map)=>Array.isArray(array)&&array.length<=300&&
@@ -30,7 +31,9 @@ export function serializeGame(game,ui={}) {
     marks:validMarks.slice(0,80),
     fieldNotes:typeof ui.fieldNotes==='string'?ui.fieldNotes.slice(0,400):'',
     selectedClueIds:Array.isArray(ui.selectedClueIds)?ui.selectedClueIds.filter(x=>typeof x==='string').slice(0,100):null,
-    plotClue:!!ui.plotClue
+    plotClue:!!ui.plotClue,
+    introSeen:ui.introSeen!==false,
+    reportSeen:ui.reportSeen!==false
   };
   return JSON.stringify(data);
 }
@@ -72,10 +75,32 @@ export function restoreGame(raw) {
   if(!Number.isFinite(data.hunterStats.totalAngleError)||
       data.hunterStats.totalAngleError<0||data.hunterStats.totalAngleError>10000)return null;
   if(typeof data.feedback!=='string'||data.feedback.length>1000)return null;
+  if(data.monsterCooldowns!==undefined) {
+    if(!isObject(data.monsterCooldowns))return null;
+    for(const key of ['teleportReadyRound','decoyReadyRound'])
+      if(data.monsterCooldowns[key]!==null &&
+        !finiteInt(data.monsterCooldowns[key],1,200))return null;
+  }
+  if(data.activeDecoys!==undefined) {
+    if(!Array.isArray(data.activeDecoys)||data.activeDecoys.length>50 ||
+      !data.activeDecoys.every(d=>isObject(d)&&
+        typeof d.id==='string'&&d.id.length<100 &&
+        Object.hasOwn(map.nodes,d.node)&&
+        finiteInt(d.createdRound,1,game.config.maxRounds)&&
+        typeof d.revealed==='boolean'))return null;
+  }
+  if(data.hunterOutcome!==undefined && data.hunterOutcome!==null) {
+    const o=data.hunterOutcome;
+    if(!isObject(o)||!['empty','trace','decoy','capture'].includes(o.kind)||
+      !Object.hasOwn(map.nodes,o.place)||typeof o.heading!=='string'||
+      typeof o.text!=='string'||o.text.length>1500)return null;
+  }
   if(data.mode==='multi'&&data.difficulty!=='intro')return null;
   if(data.phase==='monster-setup'&&data.monster!==null)return null;
   if(data.phase!=='monster-setup'&&data.phase!=='pass-monster-setup'&&data.monster===null)return null;
-  for(const key of OWN)game[key]=data[key];
+  // Older saved hunts predate monster abilities; defaults from createGame()
+  // remain valid when those newer optional fields are absent.
+  for(const key of OWN)if(Object.hasOwn(data,key))game[key]=data[key];
   // Even if a snapshot was created in the middle of a role turn, restore to
   // an entirely blank role handoff so refresh cannot expose the prior screen.
   sealTurn(game);
@@ -85,6 +110,7 @@ export function restoreGame(raw) {
   return {game,ui:{
     fieldNotes:typeof ui.fieldNotes==='string'?ui.fieldNotes.slice(0,400):'',
     marks,plotClue:!!ui.plotClue,
+    introSeen:ui.introSeen!==false,reportSeen:ui.reportSeen!==false,
     selectedClueIds:Array.isArray(ui.selectedClueIds)?
       ui.selectedClueIds.filter(x=>typeof x==='string').slice(0,100):null
   }};
