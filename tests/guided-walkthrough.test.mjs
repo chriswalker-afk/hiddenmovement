@@ -132,6 +132,7 @@ test('on-screen arrows and privacy preserving controls appear in source',()=>{
   }
   assert.match(css,/\.guided-tour-arrow/);
   assert.match(css,/@keyframes guided-target-pulse/);
+  assert.match(app,/guided-tour-center/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.ok(app.includes('view.guided && plotClue ? selectedClues(view)'));
   assert.ok(app.includes("view.phase.startsWith('pass-')"));
