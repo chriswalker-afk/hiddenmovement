@@ -6,6 +6,11 @@ import {
 import { chooseMonsterMove, chooseMonsterSpawn, shouldAiUseVeil } from './ai.mjs';
 import { SCENARIOS, computeObjectives, eligibleMonsterStarts } from './scenarios.mjs';
 import { quantizeBearing } from './deduction.mjs';
+import { monsterFor, initialMonsterCooldowns } from './monsters.mjs';
+import {
+  shouldTeleport,chooseTeleportDestination,shouldPlantDecoy,chooseDecoyDestination,
+  teleportTargets
+} from './monster-powers.mjs';
 
 export const SETTINGS = Object.freeze({
   maxRounds: 13,
@@ -84,6 +89,9 @@ export function createGame(config = {}) {
     veilCharges: SCENARIOS[scenario].powers ? 1 : 0,
     lanternCharges: SCENARIOS[scenario].powers ? 1 : 0,
     finishReason: null,
+    monsterCooldowns:initialMonsterCooldowns(difficulty),
+    activeDecoys:[],
+    hunterOutcome:null,
     mapId,
     map: MAPS[mapId],
     seed,
@@ -174,6 +182,7 @@ export function viewForCurrentScreen(game) {
   const base = {
     phase: game.phase, round: game.round, feedback: game.feedback,
     mapId: game.mapId, mode: game.mode, difficulty: game.difficulty, guided: game.guided,
+    monsterId:monsterFor(game.difficulty).id,
     scenario: game.scenario,
     objectives: {exitNode:game.objectives.exitNode,beacons:[...game.objectives.beacons]},
     beaconVisits:[...game.beaconVisits],
@@ -184,6 +193,7 @@ export function viewForCurrentScreen(game) {
   if (game.phase === 'hunter') return {
     ...base, hunter: game.hunter, stepsLeft: game.stepsLeft,
     clues: game.clues.map(c => publicClue(game,c)),
+    hunterOutcome:game.hunterOutcome ? {...game.hunterOutcome} : null,
     hunterTrail: [...game.hunterTrail],
     stats: publicStats(game),
     powers:{ lanternCharges:game.lanternCharges },
@@ -195,7 +205,9 @@ export function viewForCurrentScreen(game) {
   if (game.phase === 'monster') return {
     ...base, hunter: game.hunter, monster: game.monster,
     trail: game.monsterTrail.map(t => ({ ...t })),
-    powers:{veilCharges:game.veilCharges},
+    powers:{veilCharges:game.veilCharges,
+      teleportReadyRound:game.monsterCooldowns.teleportReadyRound,
+      decoyReadyRound:game.monsterCooldowns.decoyReadyRound},
     maxRounds: game.config.maxRounds
   };
   if (game.phase === 'over') return {
@@ -203,6 +215,7 @@ export function viewForCurrentScreen(game) {
     hunterTrail: [...game.hunterTrail],
     trail: game.monsterTrail.map(t => ({ ...t })),
     clues: game.clues.map(c => publicClue(game,c)),
+    hunterOutcome:game.hunterOutcome ? {...game.hunterOutcome} : null,
     stats: publicStats(game),
     finishReason:game.finishReason,
     maxRounds: game.config.maxRounds
