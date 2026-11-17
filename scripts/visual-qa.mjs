@@ -87,6 +87,14 @@ try{
     await page.screenshot({path:'visual/'+size.name+'-monster-intro.png',fullPage:false});
     await page.locator('#intro-begin').click();
     await page.locator('.hud-screen').waitFor({state:'visible'});
+    if(size.name==='landscape'){
+      assert.equal(await page.locator('.hud-mission-summary').evaluate(el=>
+        getComputedStyle(el).display),'none',
+        'On short landscape phones mission text must not overlap Follow the trail');
+      assert.ok(await page.locator('.hud-status-main h1').evaluate(el=>{
+        const b=el.getBoundingClientRect();return b.width>80 && b.right<innerWidth-80;
+      }),'Main Hunter heading should stay legible in landscape');
+    }
     // PR13: the same user-created Hunter is a real figurine on every map.
     const piece=page.locator('.world-svg .hunter-board-piece');
     assert.equal(await piece.count(),1,size.name+' missing Hunter board figurine');
