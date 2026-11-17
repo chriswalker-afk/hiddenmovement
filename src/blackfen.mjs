@@ -295,7 +295,7 @@ export function renderBlackfenScenery(){
       '<title>'+s.name.replaceAll('&','&amp;').replaceAll("'","&apos;")+'</title>'+
       glyph+'</g>';
   }).join('');
-  return '<g class="illustrated-scenery theme-scene-moor blackfen-world" aria-hidden="true">'+
+  return '<g class="illustrated-scenery theme-scene-moor" data-world="blackfen" aria-hidden="true">'+
     blackfenLandscape()+
     '<g class="blackfen-landmarks">'+landmarks+'</g>'+
     '<rect x="10" y="10" width="980" height="700" rx="7" '+
