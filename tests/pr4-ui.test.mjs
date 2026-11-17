@@ -28,7 +28,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
       const prop=match[1].replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase());
       const attr='data-'+match[1];
       return [...html().matchAll(new RegExp(attr+'="([^"]+)"','g'))].map(m=>{
-        const item=el(attr+'-'+m[1]);item.dataset[prop]=m[1];return item;
+        const item=el(match[1]==='hud-tab'?'hud-tab-'+m[1]:attr+'-'+m[1]);item.dataset[prop]=m[1];return item;
       });
     },
     addEventListener:(type,cb)=>callbacks.set('document:'+type,cb)
@@ -91,6 +91,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/Pass this device to the hunter and look away/);
   assert.doesNotMatch(html(),/world-svg/);
   click('reveal');
+  click('hud-tab-mission');
   assert.match(html(),/Lanternfall/);
   click('save-exit');
   assert.match(html(),/RESUME SAFELY/);
