@@ -185,8 +185,8 @@ try{
       assert.equal(decks,9,
         'Rookgate must paint exactly four north-canal and five south-canal bridges');
     else if(difficulty==='expert')
-      assert.ok(decks>=4 && decks<=18,
-        difficulty+' must mark crossings as bridges instead of floating roads');
+      assert.equal(decks,5,
+        'Ravenmarch uses five smaller Blackwater spans plus its bespoke bridge');
     else if(difficulty==='intro')
       assert.ok(decks>=2 && decks<=6,
         'Blackfen roads must cross the painted stream on actual, non-overlapping bridges');
@@ -255,6 +255,35 @@ try{
       assert.equal(await page.locator('.rookgate-landmark-flood-lock')
         .getAttribute('transform'),'translate(677.9 571)',
         'Flood Lock gates must actually sit across the southern canal');
+    }
+    if(difficulty==='expert'){
+      assert.equal(MAPS.expert.title,'Ravenmarch County');
+      assert.equal(await page.locator('.illustrated-scenery[data-world="ravenmarch"]').count(),1);
+      assert.equal(await page.locator('.ravenmarch-landmark').count(),36,
+        'Every Ravenmarch location must have its own original landmark artwork');
+      assert.equal(await page.locator('.ravenmarch-landmark').evaluateAll(items=>
+        new Set(items.map(el=>el.dataset.landmarkId)).size),36);
+      assert.equal(await page.locator('.world-svg .road-top').count(),65,
+        'Ravenmarch must preserve all 65 real bearing roads');
+      assert.equal(await page.locator('.ravenmarch-river-bridge').count(),5,
+        'Only the five smaller road crossings use generic bridges');
+      assert.equal(await page.locator('.ravenmarch-landmark-blackwater-bridge').count(),1,
+        'The E21–E28 crossing needs its own historically placed stone bridge');
+      assert.equal(await page.locator('.ravenmarch-landmark-frontier-gate').count(),1);
+      assert.equal(await page.locator('.ravenmarch-landmark-north-watch').count(),1);
+      assert.equal(await page.locator('.ravenmarch-landmark-frostmere').count(),1);
+      assert.equal(await page.locator('.ravenmarch-landmark-raven-keep').count(),1);
+      assert.equal(await page.locator('.ravenmarch-landmark-reedmere').count(),1);
+      assert.equal(await page.locator('.ravenmarch-landmark-hollow-mere').count(),1);
+      assert.equal(await page.locator('.illustrated-scenery[data-world="ravenmarch"]')
+        .getAttribute('clip-path'),'url(#ravenmarch-scene-clip)',
+        'The regional landscape must not spill beyond the map on mobile');
+      assert.match(await page.locator('.map-heading h2').textContent(),/Ravenmarch County/);
+      assert.equal(await page.locator('.world-svg .terrain-label').count(),0,
+        'Only actual named locations should label the map');
+      const bridge=await page.locator('.ravenmarch-landmark-blackwater-bridge')
+        .getAttribute('transform');
+      assert.equal(bridge,'translate(403.8 476)');
     }
     const expectedNames=Object.values(MAPS[difficulty].nodes).map(n=>n.name);
     const displayedNames=await page.locator('.nodes>.node .node-label').allTextContents();
@@ -402,6 +431,47 @@ try{
     await city.screenshot({path:'visual/rookgate-'+viewport.name+'-zoom.png',fullPage:false});
     assert.deepEqual(errors,[],viewport.name+' Rookgate rendering errors');
     await city.close();
+  }
+
+  // PR18 Ravenmarch County: the biggest map should stay legible at normal
+  // and 150% zoom, in both portrait and short landscape phone viewports.
+  for(const viewport of [
+    {name:'mobile',width:390,height:844},
+    {name:'landscape',width:844,height:390}
+  ]){
+    const county=await browser.newPage({viewport:{
+      width:viewport.width,height:viewport.height}});
+    const errors=[];
+    county.on('pageerror',error=>errors.push(String(error)));
+    await county.goto(url,{waitUntil:'domcontentloaded'});
+    await county.locator('#start-solo-select').click();
+    await county.locator('[data-difficulty="expert"]').click();
+    assert.match(await county.locator('.encounter-copy').textContent(),/RAVENMARCH COUNTY/i);
+    await county.locator('#intro-begin').click();
+    await county.locator('.hud-screen').waitFor({state:'visible'});
+    assert.equal(await county.locator('.illustrated-scenery[data-world="ravenmarch"]').count(),1);
+    assert.equal(await county.locator('.ravenmarch-landmark').count(),36);
+    assert.equal(await county.locator('.ravenmarch-landmark').evaluateAll(items=>
+      new Set(items.map(el=>el.dataset.landmarkId)).size),36);
+    assert.equal(await county.locator('.river-bridges .river-bridge').count(),5);
+    assert.equal(await county.locator('.world-svg .road-top').count(),65);
+    assert.equal(await county.locator('.world-svg .node-label').count(),36);
+    assert.equal(await county.locator('.hunter-board-piece').count(),1);
+    assert.equal(await county.locator('.node[data-node-note="E01"]').count(),1);
+    assert.equal(await county.locator('.node[data-node-note="E21"]').count(),1);
+    assert.equal(await county.locator('.node[data-node-note="E28"]').count(),1);
+    assert.equal(await county.locator('.node[data-node-note="E36"]').count(),1);
+    assert.equal(await county.locator('.ravenmarch-landmark-blackwater-bridge').count(),1);
+    assert.equal(await county.locator('.illustrated-scenery').getAttribute('aria-hidden'),'true');
+    assert.equal(await county.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0);
+    await measure(county,'ravenmarch-'+viewport.name);
+    await county.screenshot({path:'visual/ravenmarch-'+viewport.name+'-map.png',fullPage:false});
+    await county.locator('#map-zoom-in').click();
+    await county.locator('#map-zoom-in').click();
+    await measure(county,'ravenmarch-'+viewport.name+'-detail');
+    await county.screenshot({path:'visual/ravenmarch-'+viewport.name+'-zoom.png',fullPage:false});
+    assert.deepEqual(errors,[],viewport.name+' Ravenmarch rendering errors');
+    await county.close();
   }
 
   // PR11 Hunter Forge: each selected part and palette persists, and the same
