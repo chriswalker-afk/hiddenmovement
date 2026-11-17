@@ -430,28 +430,31 @@ function mapFrame(view) {
 }
 
 function movementForm(view) {
-  const monster = view.phase === 'monster';
+  const monster=view.phase==='monster';
   const location=monster?view.monster:view.hunter;
-  const place=nameOf(location);
   const left=monster?1:view.stepsLeft;
   const adjacent=currentMap().adjacency[location].map(id=>nameOf(id)).join(' · ');
-  return '<section class="panel move-panel">' +
-    '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>' +
-      '<span class="steps-badge">'+left+' '+(left===1?'MOVE':'MOVES')+' LEFT</span></div>' +
-    '<div class="you-are">Current location</div><h3>'+esc(place)+'</h3>' +
-    '<p class="muted compact">Roads lead to: '+esc(adjacent)+'</p>' +
-    '<form id="move-form" class="bearing-form">' +
-      '<label for="bearing-input">Your next three-figure bearing</label>' +
-      '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="045" pattern="[0-9]{3}°?" '+(left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span><button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>' +
-      '<small id="bearing-help">Clockwise from north · within ±6° of a connected road</small>' +
-      (monster && view.powers?.veilCharges>0?
-        '<label class="veil-option"><input id="veil-move" type="checkbox" /> USE THE VEIL · HIDE THIS NEW TRAIL (ONCE)</label>':'')+
-    '</form>' +
-    (!monster ? '<button id="end-turn" class="secondary-button">'+(view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' <span aria-hidden="true">→</span></button>' +
-      (view.powers?.lanternCharges>0?
-        '<button id="use-lantern" class="lantern-button" '+(left===0?'disabled':'')+
-        '>✧ SIGNAL LANTERN · ONE USE, COSTS ONE MOVE</button>':'')+
-      '<button id="open-tutorial-game" class="field-guide-link">COMPASS &amp; REVERSE BEARING TRAINING ↗</button>' : '') +
+  return '<section class="panel move-panel hud-move-panel">' +
+    '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>'+
+      '<span class="steps-badge">'+left+' '+(left===1?'MOVE':'MOVES')+' LEFT</span></div>'+
+    '<div class="hud-from"><span>FROM</span><h3>'+esc(nameOf(location))+'</h3></div>'+
+    (view.guided ? '<p class="muted compact guided-route-help">Roads lead to: '+esc(adjacent)+'</p>' : '')+
+    '<form id="move-form" class="bearing-form">'+
+      '<label for="bearing-input">Enter a three-figure bearing</label>'+
+      '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="000" pattern="[0-9]{3}°?" '+
+      (left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span>'+
+      '<button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>'+
+      '<small id="bearing-help">Clockwise from north · 000°–359°</small>'+
+      (monster&&view.powers?.veilCharges>0?
+        '<label class="veil-option"><input id="veil-move" type="checkbox" /> USE VEIL · CONCEAL THIS TRAIL</label>':'')+
+    '</form>'+
+    (!monster ? '<div class="hud-move-actions">'+
+      '<button id="end-turn" class="secondary-button">'+
+        (view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' →</button>'+
+      (view.powers?.lanternCharges>0?'<button id="use-lantern" class="lantern-button" '+
+        (left===0?'disabled':'')+'>✧ SIGNAL LANTERN · USE 1 MOVE</button>':'')+
+      '</div>' : '')+
+    '<button id="open-tutorial-game" class="field-guide-link" type="button">BEARINGS FIELD TRAINING ↗</button>'+
     '</section>';
 }
 
@@ -592,22 +595,61 @@ function savePanel() {
     '<p class="muted compact">Saved only on this device. In Pass &amp; Play, resuming always shows the handoff screen.</p></section>';
 }
 
+function hudMissionSummary(view) {
+  if(view.scenario==='escape')
+    return 'ESCAPE GATE: '+nameOf(view.objectives.exitNode)+' · OPENS ROUND 5';
+  if(view.scenario==='beacons')
+    return 'BEACONS '+view.beaconVisits.length+'/'+view.objectives.beacons.length+' EXTINGUISHED';
+  return 'FIND THE MONSTER BEFORE ROUND '+view.maxRounds;
+}
+
+function hudTabsHtml(view) {
+  const isMonster=view.phase==='monster';
+  const tabs=isMonster
+    ? [['trail','TRAIL'],['mission','MISSION']]
+    : [['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
+       ...(view.guided?[['stats','FEEDBACK']]:[])];
+  const chosen=tabs.some(([id])=>id===hudTab)?hudTab:tabs[0][0];
+  const tabBar=tabs.map(([id,label])=>'<button type="button" role="tab" id="hud-tab-'+id+
+    '" data-hud-tab="'+id+'" aria-controls="hud-tab-panel" aria-selected="'+(chosen===id)+
+    '" tabindex="'+(chosen===id?'0':'-1')+'">'+label+'</button>').join('');
+  const panels={
+    trail:()=>monsterTrailPanel(view),
+    clues:()=>notebook(view),
+    notes:()=>annotationsPanel(),
+    mission:()=>view.scenario==='classic'
+      ?'<section class="panel mission-panel"><span class="eyebrow">THE LONG HUNT</span>'+
+        '<h3>Find the monster</h3><p class="muted compact">Collect trail clues and intercept the Monster before the final round.</p></section>'
+      :missionPanel(view),
+    stats:()=>progressPanel(view)
+  };
+  return '<section class="hud-details" aria-label="Investigation information">'+
+    '<div class="hud-tabs" role="tablist" aria-label="Game information">'+tabBar+'</div>'+
+    '<div id="hud-tab-panel" class="hud-tab-panel" role="tabpanel" aria-labelledby="hud-tab-'+chosen+'">'+
+      panels[chosen]()+'</div></section>';
+}
+
 function playHtml(view) {
-  const isMonster = view.phase==='monster';
-  return '<div class="app-shell '+(isMonster?'monster-mode':'hunter-mode')+'">' + titleBar(true,view) +
-    '<main class="play-content">' +
-      '<div class="status-row"><div><span class="role-tag">'+(isMonster?'◆ THE MONSTER':(view.mode==='solo'?'✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER'))+'</span>' +
-        '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1>' +
-        '<p>'+(isMonster?'The Hunter is at '+esc(nameOf(view.hunter))+'. Your position is secret.' :
-          'Move up to two roads. Gather clues where the monster has passed.')+'</p>'+
-        (view.scenario!=='classic'?'<span class="mission-hud-tag">'+esc(SCENARIOS[view.scenario].name)+'</span>':'')+'</div>' +
-        '<div class="turn-marker"><small>ROUND</small><strong>'+view.round+' <span>/ '+view.maxRounds+'</span></strong></div></div>' +
-      '<div class="game-grid">'+mapFrame(view)+
-        '<aside class="sidebar">'+missionPanel(view)+movementForm(view) +
-        (isMonster?monsterTrailPanel(view):notebook(view)+annotationsPanel()+progressPanel(view)) +
-        '<p id="game-feedback" class="feedback" role="status" aria-live="polite">'+esc(view.feedback||'Use the map to work out your bearing.')+'</p>' +
-        savePanel() +
-        '</aside></div>' +
+  const isMonster=view.phase==='monster';
+  const mission=esc(hudMissionSummary(view));
+  return '<div class="app-shell hud-screen '+(isMonster?'monster-mode':'hunter-mode')+'">'+
+    titleBar(true,view)+
+    '<main class="play-content hud-content">'+
+      '<div class="status-row hud-status"><div class="hud-status-main">'+
+        '<span class="role-tag">'+(isMonster?'◆ THE MONSTER':view.mode==='solo'?
+          '✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER')+'</span>'+
+        '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1></div>'+
+        '<p class="hud-mission-summary" title="'+mission+'">'+mission+'</p>'+
+        '<div class="turn-marker"><small>ROUND</small><strong>'+view.round+
+          ' <span>/ '+view.maxRounds+'</span></strong></div></div>'+
+      '<div class="game-grid hud-grid">'+mapFrame(view)+
+        '<aside class="sidebar hud-sidebar">'+
+          movementForm(view)+
+          hudTabsHtml(view)+
+          '<div class="hud-footer"><p id="game-feedback" class="feedback" role="status" aria-live="polite">'+
+            esc(view.feedback||'Use the map and measure your next bearing.')+'</p>'+
+            '<button type="button" id="save-exit" class="hud-save" title="Save and return to the menu">SAVE</button>'+
+          '</div></aside></div>'+
     '</main></div>';
 }
 
