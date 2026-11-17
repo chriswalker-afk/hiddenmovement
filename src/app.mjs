@@ -1090,11 +1090,13 @@ function bindEncounters() {
   document.getElementById('intro-help')?.addEventListener('click',openTutorial);
   document.getElementById('report-continue')?.addEventListener('click',()=>{
     searchReportOpen=false;
+    tourEvent('report-dismissed');
     if(game.phase!=='over')persistNow();
     render();
   });
   document.getElementById('report-notebook')?.addEventListener('click',()=>{
     searchReportOpen=false;
+    tourEvent('report-dismissed');
     hudTab='clues';
     persistNow();
     render();
@@ -1418,6 +1420,16 @@ function resetProtractor(keepVisible = false) {
   protractorPosition=null;
   if(!keepVisible)protractorVisible=false;
 }
+function toggleProtractor(){
+  protractorVisible=!protractorVisible;
+  protractorPosition=null;
+  protractorBearing=0;
+  if(protractorVisible&&game.phase==='hunter'&&tourStage==='enable-protractor'){
+    protractorPosition=initialRulerPosition(currentMap().nodes[game.hunter]);
+    tourEvent('tool-on');
+  }
+  render();
+}
 
 /**
  * Manual tool only. No adjacent-road bearing or private Monster coordinate is
@@ -1425,12 +1437,7 @@ function resetProtractor(keepVisible = false) {
  * Pointer moves update stable SVG nodes without replacing the active element.
  */
 function bindProtractor() {
-  document.getElementById('protractor-toggle')?.addEventListener('click',()=>{
-    protractorVisible=!protractorVisible;
-    protractorPosition=null;
-    protractorBearing=0;
-    render();
-  });
+  document.getElementById('protractor-toggle')?.addEventListener('click',toggleProtractor);
   if(!protractorVisible)return;
   const showValue=()=>{
     const label=formatBearing(protractorBearing);
@@ -1449,6 +1456,7 @@ function bindProtractor() {
   document.getElementById('protractor-plus')?.addEventListener('click',()=>turn(1));
   document.getElementById('protractor-center')?.addEventListener('click',()=>{
     protractorPosition=null;
+    if(game.phase==='hunter')tourEvent('tool-centred');
     render();
   });
   const svg=document.querySelector?.('.world-svg');
@@ -1495,6 +1503,12 @@ function bindProtractor() {
         target.removeEventListener('pointerup',stop);
         target.removeEventListener('pointercancel',stop);
         target.releasePointerCapture?.(pointerId);
+        if(mode==='move'&&game.phase==='hunter'&&
+           tourStage==='place-protractor'&&
+           nearHunter(protractorPosition,currentMap().nodes[game.hunter])){
+          tourEvent('tool-centred');
+          render();
+        }
       };
       target.addEventListener('pointermove',move);
       target.addEventListener('pointerup',stop);
@@ -1580,6 +1594,8 @@ function saveAndExit() {
 
 function render() {
   const view=viewForCurrentScreen(game);
+  if(view.guided&&['hunter','over'].includes(view.phase))
+    tourStage=reconcileTour(tourStage,view);
   // Keep saved games on the home screen; clear completed games.
   if(view.phase==='over')clearSaved(storage());
   else if(view.phase!=='home')persistNow();
@@ -1716,18 +1732,14 @@ function render() {
   document.querySelectorAll('[data-hud-tab]').forEach(button=>{
     button.addEventListener('click',()=>{
       hudTab=button.dataset.hudTab;
+      if(hudTab==='clues')tourEvent('clues-open');
       render();
     });
   });
   document.getElementById('coach-open-clues')?.addEventListener('click',()=>{
-    hudTab='clues';render();
+    hudTab='clues';tourEvent('clues-open');render();
   });
-  document.getElementById('coach-open-protractor')?.addEventListener('click',()=>{
-    protractorVisible=!protractorVisible;
-    protractorPosition=null;
-    protractorBearing=0;
-    render();
-  });
+  document.getElementById('coach-open-protractor')?.addEventListener('click',toggleProtractor);
   document.getElementById('coach-reveal')?.addEventListener('click',()=>{
     coachAnswerVisible=true;render();
   });
@@ -1742,7 +1754,10 @@ function render() {
       :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
     if(before!==after) {
-      if(view.phase==='hunter')pendingHunterMotion={from:before,to:after};
+      if(view.phase==='hunter'){
+        pendingHunterMotion={from:before,to:after};
+        if(result.ok)tourEvent('hunter-moved');
+      }
       coachAnswerVisible=false;
       resetProtractor(view.phase==='hunter' && game.mode==='solo');
       if(view.phase==='hunter' && result.ok && game.hunterOutcome)
@@ -1753,7 +1768,8 @@ function render() {
   document.getElementById('end-turn')?.addEventListener('click',()=>{
     coachAnswerVisible=false;
     searchReportOpen=false;
-    endHunterTurn(game);
+    const outcome=endHunterTurn(game);
+    if(outcome.ok)tourEvent('turn-ended');
     resetProtractor(game.mode==='solo');
     render();
   });
@@ -1764,6 +1780,7 @@ function render() {
   document.getElementById('save-exit')?.addEventListener('click',saveAndExit);
   document.getElementById('plot-toggle')?.addEventListener('click',()=>{
     plotClue=!plotClue;
+    if(plotClue)tourEvent('deduction-on');
     render();
   });
   if(view.phase==='hunter') {
@@ -1795,8 +1812,11 @@ function render() {
       persistNow();
     });
   }
-  if(view.phase==='hunter' && view.stepsLeft===0 && !searchReportOpen)
-    document.getElementById('end-turn')?.focus();
+  if(view.phase==='hunter'){
+    bindGuidedTour(view);
+    if(view.stepsLeft===0 && !searchReportOpen&&tourStage==='done')
+      document.getElementById('end-turn')?.focus();
+  }
 }
 
 /** Re-seal when hidden so app-switch / returning to a tab cannot reveal a private view. */
