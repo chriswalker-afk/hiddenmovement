@@ -590,7 +590,8 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 }
 .hud-sidebar{
   min-height:0;min-width:0;height:100%;gap:7px;
-  display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) auto;
   overflow:hidden
 }
 .hud-move-panel{padding:11px 13px;min-height:0}
