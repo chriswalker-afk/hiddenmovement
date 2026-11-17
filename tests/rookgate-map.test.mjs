@@ -83,8 +83,8 @@ test('the city gates and public beacon goal keep their original valid positions'
   assert.match(monsterFor('tracker').flavour,/Rookgate/);
   assert.equal(MAPS.intro.title,'Blackfen Marsh');
   assert.equal(MAPS.apprentice.title,'Duskmere Village');
-  assert.equal(MAPS.expert.title,'The Eclipse Marches',
-    'Last region must remain unchanged for PR18');
+  assert.equal(MAPS.expert.title,'Ravenmarch County',
+    'Final world has its approved Ravenmarch County identity');
 });
 
 test('each node has an original named, distinctive illustrated urban landmark',()=>{
