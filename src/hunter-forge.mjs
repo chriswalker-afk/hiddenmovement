@@ -261,8 +261,16 @@ export function renderHunterBoardPiece(raw,options={}){
     '" data-hunter-palette="'+v.palette+
     '" data-hunter-complexion="'+v.complexion+'"';
   const replay=options.replay===true?' data-replay-actor="hunter"':'';
-  const from=(fromX+25)+' '+(fromY+17);
-  const to=(x+25)+' '+(y+17);
+  // Keep the figurine inside the map's boundary, including the outermost
+  // expert nodes. Prefer the node's right side, or left near the east edge.
+  const anchored=(px,py)=>[
+    px+(px>905?-26:26),
+    py+(py<96?76:py>665?-12:17)
+  ];
+  const fromPoint=anchored(fromX,fromY);
+  const toPoint=anchored(x,y);
+  const from=fromPoint[0]+' '+fromPoint[1];
+  const to=toPoint[0]+' '+toPoint[1];
   const animation=motion?
     '<animateTransform attributeName="transform" attributeType="XML" type="translate" '+
     'from="'+from+'" to="'+to+'" dur="'+ms+'ms" begin="0s" fill="freeze"/>' : '';
