@@ -455,7 +455,7 @@ function playHtml(view) {
         '<div class="turn-marker"><small>ROUND</small><strong>'+view.round+' <span>/ '+view.maxRounds+'</span></strong></div></div>' +
       '<div class="game-grid">'+mapFrame(view)+
         '<aside class="sidebar">'+movementForm(view) +
-        (isMonster?monsterTrailPanel(view):notebook(view)) +
+        (isMonster?monsterTrailPanel(view):notebook(view)+annotationsPanel()+progressPanel(view)) +
         '<p id="game-feedback" class="feedback" role="status" aria-live="polite">'+esc(view.feedback||'Use the map to work out your bearing.')+'</p>' +
         '</aside></div>' +
     '</main></div>';
@@ -487,7 +487,10 @@ function overHtml(view) {
       '<span class="eyebrow">THE HUNT HAS ENDED</span><div class="result-symbol">'+(hunterWin?'✦':'◆')+'</div>' +
       '<h1>'+(hunterWin?'THE HUNTER PREVAILS':'THE MONSTER ESCAPES')+'</h1>' +
       '<p>'+(hunterWin?'The monster has been found before the final lantern went dark.':'The monster survived every round without being captured.')+'</p>' +
-      '<div class="end-stats"><span>ROUND '+view.round+' / '+view.maxRounds+'</span><span>'+view.clues.length+' CLUES FOUND</span></div></div>' +
+      '<div class="end-stats"><span>ROUND '+view.round+' / '+view.maxRounds+'</span><span>'+view.clues.length+' CLUES FOUND</span>' +
+      (view.stats?'<span>'+view.stats.successful+' ACCURATE ROUTES</span><span>'+
+        (view.stats.meanAngularError===null?'NO ROUTES':view.stats.meanAngularError.toFixed(1)+'° MEAN ERROR')+'</span>':'')+
+      '</div></div>' +
       '<div class="end-map">'+mapFrame(view)+'</div>' +
       '<div class="final-route"><h3>Monster route revealed</h3><p>'+esc(route)+'</p></div>' +
       '<div class="end-actions"><button id="play-again" class="primary-button">PLAY AGAIN →</button><button id="main-menu" class="secondary-button">RETURN TO MENU</button></div>' +
@@ -499,6 +502,7 @@ function bindCommon() {
     event.preventDefault();
     if (confirm('Leave this game and return to the menu? Progress will be lost.')) {
       Object.assign(game, createGame());
+      nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       render();
     }
   });
@@ -571,6 +575,7 @@ function render() {
     document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty));
     document.getElementById('main-menu').addEventListener('click',()=>{
       Object.assign(game,createGame());
+      nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       difficultyPicker = false;
       render();
     });
@@ -593,6 +598,34 @@ function render() {
     plotClue=!plotClue;
     render();
   });
+  if(view.phase==='hunter') {
+    document.getElementById('open-tutorial-game')?.addEventListener('click',openTutorial);
+    document.querySelectorAll('[data-clue-toggle]').forEach(el=>{
+      el.addEventListener('change',e=>{
+        if(selectedClueIds===null) selectedClueIds=new Set(view.clues.map(c=>c.id));
+        if(e.target.checked) selectedClueIds.add(el.dataset.clueToggle);
+        else selectedClueIds.delete(el.dataset.clueToggle);
+        render();
+      });
+    });
+    document.querySelectorAll('[data-node-note]').forEach(el=>{
+      const toggle=()=>toggleNodeMark(el.dataset.nodeNote);
+      el.addEventListener('click',toggle);
+      el.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' ') {event.preventDefault();toggle();}
+      });
+    });
+    document.getElementById('mark-selected')?.addEventListener('click',()=>{
+      toggleNodeMark(document.getElementById('mark-location').value);
+    });
+    document.getElementById('clear-marks')?.addEventListener('click',()=>{
+      nodeMarks.clear();
+      render();
+    });
+    document.getElementById('field-notes')?.addEventListener('input',event=>{
+      fieldNotes=event.target.value;
+    });
+  }
   if(view.phase==='hunter' && view.stepsLeft===0) document.getElementById('end-turn')?.focus();
 }
 
