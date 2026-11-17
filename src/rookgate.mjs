@@ -406,8 +406,8 @@ function quayDetails(){
 
 function cityBackground(){
   const channels=WATERWAYS.marsh;
-  if(!channels||channels.length!==2||channels[0].id!=='northern-river'||
-     channels[1].id!=='southern-creek')
+  if(!channels||channels.length!==2||channels[0].id!=='rookgate-north-canal'||
+     channels[1].id!=='rookgate-south-canal')
     throw new Error('Rookgate requires both shared canal geometries');
   let svg='<defs>'+
     '<linearGradient id="region-marsh" x1="0" y1="0" x2=".8" y2="1">'+
