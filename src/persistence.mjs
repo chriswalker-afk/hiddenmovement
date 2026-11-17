@@ -23,7 +23,7 @@ export function serializeGame(game,ui={}) {
   if(!ACTIVE_PHASES.has(game.phase))throw new RangeError('Only active games may be saved');
   const data={version:VERSION,savedAt:Date.now(),
     mode:game.mode,difficulty:game.difficulty,scenario:game.scenario,
-    guided:game.guided,seed:game.seed,maxRounds:game.config.maxRounds};
+    guided:game.guided,seed:game.seed};
   for(const key of OWN)data[key]=game[key];
   const validMarks=Array.isArray(ui.marks)?ui.marks.filter(([id,mark])=>
     typeof id==='string'&&Object.hasOwn(game.map.nodes,id)&&['possible','ruled'].includes(mark)): [];
@@ -50,14 +50,8 @@ export function restoreGame(raw) {
   // sightings; reopen these as Guided rather than silently changing their rules.
   if(data.guided!==undefined && typeof data.guided!=='boolean')return null;
   const guided=data.guided===true || (data.guided===undefined && data.mode==='solo');
-  // Pre-PR10 saves did not record the time limit. Preserve their 13/15/18/21
-  // round campaigns rather than silently shortening an ongoing hunt.
-  const previousLimits={intro:13,apprentice:15,tracker:18,expert:21};
-  const storedMaxRounds=data.maxRounds===undefined
-    ?previousLimits[data.difficulty]:data.maxRounds;
-  if(![15,previousLimits[data.difficulty]].includes(storedMaxRounds))return null;
   const game=createGame({mode:data.mode,difficulty:data.difficulty,
-    scenario:data.scenario,guided,seed:data.seed,maxRounds:storedMaxRounds});
+    scenario:data.scenario,guided,seed:data.seed});
   const map=game.map;
   if(!Object.hasOwn(map.nodes,data.hunter))return null;
   if(data.monster!==null&&!Object.hasOwn(map.nodes,data.monster))return null;
