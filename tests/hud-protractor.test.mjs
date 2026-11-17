@@ -26,52 +26,63 @@ test('manual bearing tool is truly clockwise from north and never knows the road
   assert.doesNotMatch(svg,/monsterTrail|graphDistance|road-target/);
 });
 
-test('standard play gives no automatic watcher sightings, distance clues, snap hints or exact answers',()=>{
+test('standard play preserves existing bearing sightings, route-distance hints and earned clues',()=>{
   for(const difficulty of Object.keys(MAPS)){
     const g=createGame({mode:'solo',difficulty,seed:1083});
     assert.equal(g.guided,false);
-    assert.equal(g.config.openingPulse,false);
-    assert.equal(g.config.sightingInterval,0);
-    assert.equal(g.config.distanceBandHalfWidth,null);
+    assert.equal(g.config.openingPulse,true);
+    assert.ok(g.config.sightingInterval>0);
+    assert.equal(g.config.distanceBandHalfWidth,
+      difficulty==='intro'?0:difficulty==='apprentice'?1:null);
     beginGame(g);
     assert.equal(g.phase,'hunter');
-    assert.equal(g.clues.length,0,'No free opening clue in '+difficulty);
+    assert.equal(g.clues.length,1,'Every difficulty still provides the opening textual clue');
+    assert.equal(g.clues[0].type,'sighting');
     const neighbour=g.map.adjacency[g.hunter][0];
     if(neighbour!==g.monster){
       g.monsterTrail.push({id:'controlled-trace',node:neighbour,round:0});
       const angle=formatBearing(bearingBetween(g.map.nodes[g.hunter],g.map.nodes[neighbour]));
       const result=hunterMove(g,angle);
       assert.equal(result.ok,true);
-      assert.match(result.message,/Arrived at/);
-      assert.doesNotMatch(result.message,/error:|Travelled \d{3}°/);
-      assert.equal(g.clues[0].type,'trace','Earned trail clues must be retained');
-      assert.equal(Object.hasOwn(g.clues[0],'distanceMin'),false);
+      assert.match(result.message,/Travelled \d{3}°/);
+      assert.match(result.message,/error:/);
+      assert.equal(g.clues[0].type,'trace','Earned trail clues remain available');
+      assert.equal(Object.hasOwn(g.clues[0],'distanceMin'),
+        difficulty==='intro'||difficulty==='apprentice');
     }
     endHunterTurn(g);
     const publicView=viewForCurrentScreen(g);
     assert.equal(publicView.guided,false);
-    assert.ok(publicView.clues.every(c=>c.type!=='sighting'));
+    assert.ok(publicView.clues.some(c=>c.type==='sighting'));
     assert.equal(Object.hasOwn(publicView,'monster'),false);
   }
 });
 
-test('guided mode restores optional teaching sightings, route accuracy and distance clues',()=>{
-  const g=createGame({mode:'solo',difficulty:'intro',guided:true,seed:1083});
-  assert.equal(g.guided,true);
-  assert.equal(g.config.openingPulse,true);
-  assert.equal(g.config.sightingInterval,2);
-  beginGame(g);
-  assert.equal(g.clues.length,1);
-  assert.equal(g.clues[0].type,'sighting');
-  const neighbour=g.map.adjacency[g.hunter][0];
-  if(neighbour!==g.monster){
-    g.monsterTrail.push({id:'training-trace',node:neighbour,round:0});
-    const angle=formatBearing(bearingBetween(g.map.nodes[g.hunter],g.map.nodes[neighbour]));
-    const result=hunterMove(g,angle);
-    assert.equal(result.ok,true);
-    assert.match(result.message,/Travelled \d{3}°/);
-    assert.equal(g.clues[0].distanceMin,g.clues[0].distanceMax);
+test('Guided changes visual assistance only; exact same gameplay clues in both modes',()=>{
+  const common={mode:'solo',difficulty:'intro',seed:1083};
+  const regular=createGame(common),guided=createGame({...common,guided:true});
+  beginGame(regular);
+  beginGame(guided);
+  assert.equal(guided.guided,true);
+  assert.equal(regular.guided,false);
+  assert.deepEqual(regular.clues,guided.clues);
+  assert.equal(regular.monster,guided.monster);
+  assert.equal(regular.config.openingPulse,guided.config.openingPulse);
+  assert.equal(regular.config.sightingInterval,guided.config.sightingInterval);
+  assert.equal(regular.config.distanceBandHalfWidth,guided.config.distanceBandHalfWidth);
+  const neighbour=regular.map.adjacency[regular.hunter][0];
+  if(neighbour!==regular.monster){
+    for(const game of [regular,guided])
+      game.monsterTrail.push({id:'matching-trace',node:neighbour,round:0});
+    const angle=formatBearing(bearingBetween(regular.map.nodes[regular.hunter],
+      regular.map.nodes[neighbour]));
+    const one=hunterMove(regular,angle),two=hunterMove(guided,angle);
+    assert.deepEqual(one,two);
+    assert.deepEqual(regular.clues,guided.clues);
   }
+  endHunterTurn(regular);
+  endHunterTurn(guided);
+  assert.deepEqual(regular.clues,guided.clues);
 });
 
 test('CSS constrains the game viewport and scrolls only optional tab content',()=>{
@@ -139,8 +150,11 @@ test('HUD exposes map and essential controls on one screen; secondary details ar
   assert.match(html(),/protractor-toggle/);
   assert.match(html(),/map-zoom-in/);
   assert.match(html(),/ROUND/);
-  assert.match(html(),/CLUES \(0\)/);
-  assert.doesNotMatch(html(),/WATCHER SIGHTING|COMBINE CLUES ON THE MAP|Roads lead to:/);
+  assert.match(html(),/CLUES \(1\)/);
+  assert.match(html(),/WATCHER SIGHTING/);
+  assert.match(html(),/Roads lead to:/);
+  assert.doesNotMatch(html(),/COMBINE CLUES ON THE MAP/);
+  assert.doesNotMatch(html(),/class="clue-(?:ray|sector)"/);
   click('hud-tab-notes');
   assert.match(html(),/YOUR OWN NOTES/);
   click('hud-tab-mission');
@@ -158,7 +172,21 @@ test('HUD exposes map and essential controls on one screen; secondary details ar
   click('protractor-toggle');
   assert.doesNotMatch(html(),/id="protractor-group"/);
   click('end-turn');
-  assert.equal(html().includes('WATCHER SIGHTING'),false);
+  assert.match(html(),/WATCHER SIGHTING/);
+  assert.doesNotMatch(html(),/class="clue-(?:ray|sector)"/);
+
+  // Guided has the same textual clues; the map plot appears only after clicking.
+  click('brand-link');
+  click('guided-toggle');
+  click('start-solo-select');
+  click('difficulty-intro');
+  assert.match(html(),/WATCHER SIGHTING/);
+  assert.match(html(),/COMBINE CLUES ON THE MAP/);
+  assert.doesNotMatch(html(),/class="clue-(?:ray|sector)"/);
+  click('plot-toggle');
+  assert.match(html(),/class="clue-(?:ray|sector)"/);
+  click('plot-toggle');
+  assert.doesNotMatch(html(),/class="clue-(?:ray|sector)"/);
 
   // Shared-device handoffs must never retain the ruler or former player state.
   click('brand-link');
