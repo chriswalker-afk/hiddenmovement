@@ -514,3 +514,285 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
    src/scenery.mjs. Do not style .world-svg > rect: the final direct SVG
    rectangles are foreground borders and grain, and opaque fills can hide
    every route and location on a non-Intro map. */
+
+
+/* Single-screen gameplay HUD — only auxiliary panel contents may scroll.
+   Home, training, handoff, setup and game-over screens retain their layouts. */
+.hud-screen{
+  height:100vh;height:100dvh;min-height:0;max-height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.hud-screen .app-header{
+  flex:0 0 auto;min-height:43px;padding:6px 16px;gap:9px;
+}
+.hud-screen .brand{font-size:.88rem}
+.hud-screen .brand-symbol{height:28px;width:28px}
+.hud-screen .header-right{gap:12px}
+.hud-content{
+  flex:1 1 auto;min-height:0;min-width:0;width:100%;max-width:1800px;
+  margin:0 auto;padding:8px 13px 10px;
+  display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;
+  overflow:hidden;
+}
+.hud-status{margin:0;min-height:44px;gap:10px;overflow:hidden}
+.hud-status-main{display:flex;align-items:baseline;gap:13px;min-width:0;white-space:nowrap}
+.hud-status h1{font-size:1.05rem;margin:0}
+.hud-status .role-tag{font-size:.62rem;white-space:nowrap}
+.hud-mission-summary{
+  flex:1 1 auto;min-width:0;text-align:right;margin:0;color:#d5c397;
+  font-size:.68rem;line-height:1.35;letter-spacing:.035em;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis
+}
+.hud-status .turn-marker{padding:5px 12px;min-width:90px}
+.hud-status .turn-marker small{font-size:.49rem;margin-bottom:0}
+.hud-status .turn-marker strong{font-size:1rem}
+.hud-grid{
+  height:100%;min-height:0;min-width:0;overflow:hidden;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(304px,350px);
+  gap:10px;align-items:stretch
+}
+.hud-screen .map-section{
+  min-height:0;min-width:0;position:relative;
+  display:flex;flex-direction:column;overflow:hidden
+}
+.hud-screen .map-heading{flex:0 0 auto;min-height:31px;gap:8px;margin:0 0 5px}
+.hud-screen .map-heading h2{font-size:.9rem;margin:0}
+.hud-screen .map-heading .eyebrow{display:none}
+.hud-screen .map-toolbar{justify-content:flex-end;gap:5px;flex-wrap:nowrap}
+.hud-screen .map-chip{font-size:.52rem;white-space:nowrap;gap:5px}
+.hud-screen .map-frame{
+  flex:1 1 auto;min-height:0;min-width:0;max-height:none;
+  overflow:auto;border-color:#708981;
+  display:flex;justify-content:center;align-items:center;
+  scrollbar-width:thin;scrollbar-color:#78978f #172d35
+}
+.hud-screen .world-svg{
+  display:block;flex:none;width:100%;height:100%;max-height:none;
+  aspect-ratio:auto;min-width:0;overflow:visible
+}
+.hud-screen .map-key{
+  flex:0 0 auto;max-height:38px;min-height:21px;overflow:auto;
+  padding:4px 2px;gap:5px 10px;font-size:.61rem;line-height:1.35
+}
+.hud-screen .key-spot{width:9px;height:9px}
+.hud-screen .key-route{width:15px;height:3px}
+.hud-screen .location-index{
+  flex:0 0 auto;max-height:22px;margin:0;padding:0 8px;
+  border-color:#3d6663;overflow:visible
+}
+.hud-screen .location-index summary{
+  font-size:.58rem;line-height:1;padding:6px 0
+}
+.hud-screen .location-index[open]{
+  position:absolute;bottom:10px;left:8px;right:8px;z-index:15;
+  max-height:min(60%,350px);padding:6px 10px;overflow:auto;
+  background:#17323a;box-shadow:0 0 20px #081820e0
+}
+.hud-sidebar{
+  min-height:0;min-width:0;height:100%;gap:7px;
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  overflow:hidden
+}
+.hud-move-panel{padding:11px 13px;min-height:0}
+.hud-move-panel .panel-top{margin-bottom:6px}
+.hud-move-panel .steps-badge{padding:5px 7px;font-size:.58rem}
+.hud-from{display:flex;align-items:baseline;gap:9px;min-width:0;margin-bottom:8px}
+.hud-from span{color:var(--muted);font-size:.58rem;font-weight:700;letter-spacing:.15em}
+.hud-from h3{
+  min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;
+  font:600 1rem 'Cinzel',serif;white-space:nowrap
+}
+.hud-move-panel .guided-route-help{margin:0 0 8px;font-size:.69rem;line-height:1.35}
+.hud-move-panel .bearing-form{gap:4px}
+.hud-move-panel .bearing-form label{font-size:.7rem}
+.hud-move-panel .bearing-entry input{height:39px;padding:6px 29px 6px 10px;font-size:1.1rem}
+.hud-move-panel .bearing-entry>span{top:6px;left:calc(100% - 119px);font-size:1.1rem}
+.hud-move-panel .bearing-entry button{min-width:88px;padding:0 11px}
+.hud-move-panel .bearing-form small{font-size:.6rem;line-height:1.2}
+.hud-move-actions{display:grid;gap:5px;margin-top:7px}
+.hud-move-panel .secondary-button{
+  min-height:32px;padding:7px 9px;margin:0;font-size:.64rem
+}
+.hud-move-panel .lantern-button{min-height:31px;padding:5px 9px;margin:0;font-size:.63rem}
+.hud-move-panel .veil-option{padding:6px 8px;margin:5px 0 0;font-size:.63rem}
+.hud-move-panel .veil-option input{width:15px;height:15px}
+.hud-move-panel .field-guide-link{
+  width:100%;padding:5px 0 0;margin:4px 0 0;font-size:.58rem;border:0
+}
+.hud-details{
+  min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid var(--edge);background:#152c35
+}
+.hud-tabs{display:flex;flex:0 0 auto;background:#0d252e;border-bottom:1px solid #49655f;min-height:35px}
+.hud-tabs button{
+  border:0;border-right:1px solid #35504b;min-width:0;flex:1;
+  background:transparent;color:#a9c1b8;font-size:.62rem;
+  font-weight:700;letter-spacing:.02em;padding:8px 5px;white-space:nowrap
+}
+.hud-tabs button[aria-selected=true]{
+  background:#29443e;color:#f3d7a0;box-shadow:inset 0 -2px 0 #d6b57a
+}
+.hud-tabs button:hover{color:#fff0c6}
+.hud-tab-panel{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+.hud-tab-panel>.panel{border:0;border-radius:0;box-shadow:none;background:transparent;padding:10px}
+.hud-tab-panel .panel-top{margin-bottom:5px}
+.hud-tab-panel .panel h3{font-size:.97rem;margin:5px 0 8px}
+.hud-tab-panel .clue-list{max-height:none;overflow:visible}
+.hud-tab-panel .clue-card{padding:9px}
+.hud-tab-panel .clue-card p{font-size:.72rem;line-height:1.5}
+.hud-tab-panel .clue-meta{font-size:.55rem}
+.hud-tab-panel .empty-evidence{font-size:.73rem;line-height:1.5}
+.hud-tab-panel .plot-toggle{margin-bottom:7px;padding:7px;font-size:.6rem}
+.hud-tab-panel .compact{font-size:.7rem;line-height:1.5}
+.hud-tab-panel .notes-label{font-size:.67rem}
+.hud-tab-panel .annotations-panel textarea{min-height:55px;margin-top:5px;padding:7px}
+.hud-tab-panel .annotation-controls{gap:5px}
+.hud-tab-panel .annotation-controls select{padding:6px}
+.hud-tab-panel .annotation-controls .secondary-button{min-height:30px;padding:6px;margin:0;font-size:.61rem}
+.hud-tab-panel .mark-legend{margin:6px 0 9px;font-size:.67rem}
+.hud-tab-panel .trail-row{padding:6px 0;font-size:.7rem}
+.hud-tab-panel .mission-events{margin:6px 0}
+.hud-footer{
+  min-height:38px;display:grid;grid-template-columns:minmax(0,1fr) 57px;
+  align-items:stretch;gap:6px
+}
+.hud-footer .feedback{
+  min-height:38px;max-height:54px;overflow:auto;display:flex;align-items:center;
+  margin:0;padding:7px 8px;font-size:.7rem;line-height:1.3;border-left-width:2px
+}
+.hud-save{
+  border:1px solid #698881;background:#183940;color:#e7d39f;
+  font-weight:700;font-size:.59rem;letter-spacing:.06em;min-height:38px
+}
+.hud-save:hover{background:#315b54}
+.protractor-toggle{
+  border:1px solid #bd9d6b;background:#283b38;color:#efd59e;
+  font-size:.59rem;font-weight:800;letter-spacing:.035em;
+  padding:5px 8px;min-height:29px;white-space:nowrap
+}
+.protractor-toggle[aria-pressed=true]{background:#665333;color:#fff2ca}
+.protractor-keys{
+  display:flex;align-items:center;min-height:29px;
+  border:1px solid #819d90;background:#172d34
+}
+.protractor-keys button{
+  border:0;background:transparent;color:#f4d8a6;
+  font-size:.85rem;font-weight:700;padding:4px 7px;min-height:26px
+}
+.protractor-keys button:hover{background:#294d4b}
+.protractor-keys output{min-width:37px;text-align:center;color:#f6e6bd;font-size:.68rem;font-weight:700}
+#protractor-center{font-size:.49rem;letter-spacing:.04em}
+.hud-screen .map-zoom-controls button{width:27px;height:27px}
+.hud-screen .map-zoom-controls output{min-width:32px;font-size:.61rem}
+.protractor-tool{pointer-events:none;color:#f1d09e}
+.protractor-disc{fill:#102b32;fill-opacity:.59;stroke:#edd4a4;stroke-opacity:.6;stroke-width:2}
+.protractor-rim,.protractor-inner{fill:none;stroke:#f6e2b8;stroke-opacity:.72;stroke-width:1.6}
+.protractor-tool text{fill:#fff3d2;paint-order:stroke;stroke:#112a32;stroke-width:3;font:700 9px 'DM Sans',sans-serif}
+.protractor-tick{stroke:#d8dbc6;stroke-width:1.2;stroke-opacity:.8}
+.protractor-tick-major{stroke:#ffe8ac;stroke-width:2.8}
+.protractor-north{stroke:#ffda8a;stroke-width:3;fill:none}
+.protractor-tool .protractor-north-label{font-size:15px;fill:#ffe2a1}
+.protractor-arm{stroke:#f7d182;stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 3px #001820)}
+.protractor-arm-hit{stroke:transparent;stroke-width:23;pointer-events:stroke;touch-action:none;cursor:crosshair}
+.protractor-tip{
+  fill:#ffe9bb;stroke:#405b56;stroke-width:3;
+  pointer-events:all;touch-action:none;cursor:crosshair
+}
+.protractor-center-hit{
+  fill:#efc881;stroke:#112930;stroke-width:4;
+  pointer-events:all;touch-action:none;cursor:move
+}
+.protractor-center-cross{stroke:#16272b;stroke-width:2;fill:none}
+.protractor-tool .protractor-reading{font-size:14px;fill:#ffecc5;font-weight:800}
+/* Guidance setting is available at the start of every play flow. */
+.guidance-choice{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:16px auto;padding:12px 15px;
+  max-width:780px;background:#152e38;border:1px solid #64837b;text-align:left
+}
+.guidance-choice div{display:grid;gap:4px}
+.guidance-choice strong{font-size:.77rem;letter-spacing:.08em;color:#f1d39a}
+.guidance-choice small{font-size:.7rem;color:#b6cbc2;line-height:1.4}
+.guidance-choice button{
+  border:1px solid #c7aa75;background:#2a453f;color:#e8d6ac;
+  font-size:.64rem;font-weight:800;min-width:142px;padding:10px;white-space:nowrap
+}
+.guidance-choice button[aria-pressed=true]{background:#755f3c}
+/* Landscape tablet and laptops: fit all turn controls, map and tab strip. */
+@media(max-height:750px) and (min-width:801px){
+  .hud-content{padding:5px 9px;gap:5px}
+  .hud-status{min-height:36px}
+  .hud-status h1{font-size:.93rem}
+  .hud-move-panel{padding:7px 10px}
+  .hud-move-panel .field-guide-link{padding:3px 0 0}
+  .hud-move-panel .panel-top{margin-bottom:2px}
+  .hud-from{margin-bottom:4px}
+  .hud-sidebar{gap:5px}
+}
+@media(max-width:800px){
+  .hud-content{padding:6px 8px;gap:5px}
+  .hud-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,52fr) minmax(0,48fr);gap:6px}
+  .hud-screen .map-heading h2{font-size:.78rem}
+  .hud-status .hud-mission-summary{display:none}
+  .hud-sidebar{grid-template-columns:minmax(0,1fr) minmax(170px,1fr);
+    grid-template-rows:minmax(0,1fr) auto;gap:6px}
+  .hud-move-panel{grid-column:1;grid-row:1;min-height:0;overflow:auto;padding:8px}
+  .hud-details{grid-column:2;grid-row:1;min-height:0}
+  .hud-footer{grid-column:1/-1;grid-row:2}
+  .hud-move-panel .panel-top{margin-bottom:3px}
+  .hud-from{margin-bottom:4px}
+  .hud-move-panel .field-guide-link{margin-top:3px}
+  .hud-screen .map-key{max-height:29px;gap:4px 8px;font-size:.59rem}
+  .hud-screen .map-chip{display:none}
+}
+@media(max-width:490px){
+  .hud-screen .app-header{min-height:36px;padding:4px 9px}
+  .hud-screen .header-right>.eyebrow{display:none}
+  .hud-screen .brand{font-size:.72rem}
+  .hud-screen .brand-symbol{height:25px;width:25px}
+  .hud-status{min-height:32px}
+  .hud-status-main{gap:5px}
+  .hud-status .role-tag{font-size:.51rem;letter-spacing:.06em}
+  .hud-status h1{font-size:.81rem}
+  .hud-status .turn-marker{padding:4px 7px;min-width:70px}
+  .hud-status .turn-marker strong{font-size:.87rem}
+  .hud-screen .map-toolbar{gap:3px}
+  .hud-screen .map-heading h2{max-width:33vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem}
+  .protractor-toggle{font-size:.51rem;padding:4px 5px;min-height:25px}
+  .protractor-keys button{padding:3px 4px}
+  .protractor-keys output{min-width:31px;font-size:.58rem}
+  #protractor-center{display:none}
+  .hud-screen .map-zoom-controls button{width:24px;height:24px}
+  .hud-screen .map-zoom-controls output{min-width:27px;font-size:.52rem}
+  .hud-screen .map-key{font-size:.54rem}
+  .hud-grid{grid-template-rows:minmax(0,50fr) minmax(0,50fr)}
+  .hud-sidebar{grid-template-columns:minmax(0,1fr) minmax(132px,.95fr)}
+  .hud-move-panel .eyebrow{font-size:.53rem;letter-spacing:.06em}
+  .hud-move-panel .steps-badge{font-size:.52rem;letter-spacing:0}
+  .hud-from h3{font-size:.8rem}
+  .hud-move-panel .bearing-form label{font-size:.57rem}
+  .hud-move-panel .bearing-form small{font-size:.51rem}
+  .hud-move-panel .bearing-entry input{font-size:.9rem;height:34px;padding:5px 20px 5px 5px}
+  .hud-move-panel .bearing-entry button{min-width:58px;padding:0 5px;font-size:.57rem}
+  .hud-move-panel .bearing-entry>span{left:calc(100% - 75px);top:5px;font-size:.9rem}
+  .hud-move-panel .secondary-button{font-size:.53rem;padding:5px;min-height:29px}
+  .hud-move-panel .field-guide-link{font-size:.48rem}
+  .hud-tabs button{font-size:.5rem;letter-spacing:0;padding:5px 2px}
+  .hud-tabs{min-height:30px}
+  .hud-tab-panel>.panel{padding:7px}
+  .hud-tab-panel .panel h3{font-size:.8rem}
+  .hud-tab-panel .clue-card p{font-size:.65rem}
+  .guidance-choice{flex-direction:column;align-items:stretch;margin:11px auto}
+  .guidance-choice button{min-width:0}
+}
+@media(max-height:550px){
+  .hud-content{padding-top:3px;padding-bottom:3px}
+  .hud-status{min-height:28px}
+  .hud-screen .map-heading{min-height:25px;margin-bottom:3px}
+  .hud-screen .map-key{max-height:20px;min-height:18px;padding:2px}
+  .hud-from{margin-bottom:3px}
+  .hud-move-panel .panel-top{margin-bottom:2px}
+  .hud-move-panel .field-guide-link{display:none}
+  .hud-move-panel .guided-route-help{display:none}
+  .hud-footer .feedback{max-height:37px}
+}
