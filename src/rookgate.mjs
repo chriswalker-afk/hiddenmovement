@@ -481,8 +481,13 @@ export function renderRookgateScenery(){
       '<title>'+s.name.replaceAll('&','&amp;').replaceAll("'","&apos;")+'</title>'+
       landmark(s.kind)+'</g>'
   ).join('');
+  // Clipping applies to SCENERY ONLY. Near landscape-screen aspect ratios
+  // the world SVG is centred within a wider map frame. Canal paths extend
+  // from x=-60 to x=1060 so must not spill outside the illustrated border.
   return '<g class="illustrated-scenery theme-scene-marsh" '+
-    'data-world="rookgate" aria-hidden="true">'+
+    'data-world="rookgate" aria-hidden="true" clip-path="url(#rookgate-scene-clip)">'+
+      '<defs><clipPath id="rookgate-scene-clip">'+
+        '<rect x="0" y="0" width="1000" height="720"/></clipPath></defs>'+
       cityBackground()+
       '<g class="rookgate-landmarks">'+landmarks+'</g>'+
       '<rect x="10" y="10" width="980" height="700" rx="7" fill="none" '+
