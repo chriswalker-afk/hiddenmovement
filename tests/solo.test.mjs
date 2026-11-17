@@ -89,7 +89,14 @@ test('AI never steps onto the Hunter and never chooses an illegal road',()=>{
         assert.ok(g.map.adjacency[origin].includes(selected),id+' illegal move');
         assert.notEqual(selected,g.hunter,id+' walked onto Hunter');
         assert.equal(endHunterTurn(g).ok,true);
-        assert.equal(g.monster,selected);
+        const usedTeleport=g.history.at(-1)?.movement==='teleport';
+        if(usedTeleport) {
+          const d=graphDistance(origin,g.monster,g.map);
+          assert.ok(d>=2 && d<=3,id+' teleport must span 2–3 roads');
+          assert.equal(g.publicEvents.at(-1).type==='teleport'||g.publicEvents.some(e=>
+            e.type==='teleport'&&e.round===step+1),true);
+        } else assert.equal(g.monster,selected);
+        assert.notEqual(g.monster,g.hunter,'AI must not teleport onto the Hunter');
         assert.equal(g.round,step+2);
         assert.equal(g.phase,'hunter');
         assert.equal(g.stepsLeft,2);
