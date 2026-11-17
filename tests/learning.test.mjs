@@ -82,6 +82,7 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('guided-toggle'); // Opt into manual clue plotting during teaching; textual clues are always present.
   click('start-solo-select');
   click('difficulty-intro');
+  click('hud-tab-clues');
   assert.match(html(),/WATCHER SIGHTING/);
   click('hud-tab-stats');
   assert.match(html(),/MATHS FEEDBACK/);
