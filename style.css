@@ -1646,3 +1646,14 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 @media(prefers-reduced-motion:reduce){
   .hunter-board-piece animateTransform{display:none}
 }
+
+
+/* Compact landscape phones: the full mission banner duplicates the briefing
+   and previously collided with "Follow the trail" at ~844px wide. Keep the
+   role, Hunter portrait, complete heading and round counter readable. */
+@media (orientation:landscape) and (max-height:500px) and
+       (min-width:801px) and (max-width:1000px){
+  .hud-status .hud-mission-summary{display:none}
+  .hud-status-main{flex:1 1 auto;overflow:hidden;min-width:0}
+  .hud-status-main h1{min-width:0;overflow:hidden;text-overflow:ellipsis}
+}
