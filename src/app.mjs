@@ -286,6 +286,8 @@ function mapSvg(view) {
   const candidateSet = new Set(analysis?.candidates || []);
   const plotted=clues.map(clue => {
     const p=currentMap().nodes[clue.place];
+    if(clue.type==='beacon')
+      return '<circle cx="'+p.x+'" cy="'+p.y+'" r="34" class="beacon-sighting-ring"/>';
     let direction;
     if (clue.halfWidth === 0) {
       const radians=clue.sectorCenter*Math.PI/180;
@@ -312,7 +314,12 @@ function mapSvg(view) {
     const target=monsterNeighbours.has(n.id);
     const hasClue=view.phase==='hunter'&&view.clues.some(c=>c.place===n.id);
     const mark = view.phase==='hunter' ? nodeMarks.get(n.id) : null;
+    const exit = view.scenario==='escape' && view.objectives?.exitNode===n.id;
+    const beacon = view.scenario==='beacons' && view.objectives?.beacons?.includes(n.id);
+    const dark = beacon && view.beaconVisits?.includes(n.id);
     const cls=['node'];
+    if(exit)cls.push('escape-location');
+    if(beacon)cls.push(dark?'beacon-dark':'beacon-lit');
     if(isHunter)cls.push('hunter-location');
     if(isMonsterHere)cls.push('monster-location');
     if(target)cls.push('monster-target');
@@ -321,12 +328,16 @@ function mapSvg(view) {
     if(hasClue)cls.push('has-clue');
     if(analysis?.constrained && candidateSet.has(n.id)) cls.push('candidate-location');
     if(mark) cls.push('marked-'+mark);
-    const nodeBody='<title>'+esc(n.name)+'</title>' +
+    const nodeBody='<title>'+esc(n.name)+(exit?' — Escape Gate':beacon?(dark?' — Extinguished beacon':' — Lit beacon'):'')+'</title>' +
+      (exit?'<circle r="28" class="escape-goal-ring"/>':'') +
+      (beacon?'<circle r="26" class="beacon-goal-ring"/>':'') +
       (analysis?.constrained && candidateSet.has(n.id)?'<circle r="25" class="candidate-halo"/>':'') +
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
        isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':'')+
       '<text y="-23" class="node-label" text-anchor="middle">'+esc(Object.keys(currentMap().nodes).length > 18 ? (n.label || n.name) : n.name)+'</text>' +
+      (exit?'<text x="25" y="8" class="goal-label">GATE</text>':'')+
+      (beacon?'<text x="23" y="8" class="goal-label">'+(dark?'OUT':'BEACON')+'</text>':'')+
       (mark?'<text y="34" text-anchor="middle" class="mark-symbol">'+(mark==='possible'?'?':'×')+'</text>':'');
     if(possibleStart) return '<g role="button" tabindex="0" aria-label="Choose '+esc(n.name)+' as monster starting position" class="'+cls.join(' ')+'" data-spawn="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
@@ -338,16 +349,7 @@ function mapSvg(view) {
       '<pattern id="moor-grain" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1" fill="#b7c8b7" opacity=".075"/><circle cx="25" cy="26" r="1" fill="#b7c8b7" opacity=".08"/></pattern>' +
       '<filter id="moor-glow"><feGaussianBlur stdDeviation="11"/></filter>' +
     '</defs>' +
-    '<rect x="0" y="0" width="1000" height="720" fill="url(#moor-bg)"/>' +
-    '<path d="M0 60Q180 30 280 70T530 30T820 75T1000 42V0H0Z" fill="#284840" opacity=".5"/>' +
-    '<path d="M0 570Q220 520 390 610T730 580T1000 530V720H0Z" fill="#34514a" opacity=".33"/>' +
-    '<path d="M-60 140 C70 180 150 110 285 180 S520 260 600 315 S790 420 1060 360" stroke="#0c2633" stroke-width="76" fill="none" opacity=".75"/>' +
-    '<path d="M-60 140 C70 180 150 110 285 180 S520 260 600 315 S790 420 1060 360" stroke="#356478" stroke-width="50" fill="none" opacity=".85"/>' +
-    '<path d="M-60 140 C70 180 150 110 285 180 S520 260 600 315 S790 420 1060 360" stroke="#7aa7a9" stroke-width="2" stroke-dasharray="5 25" fill="none" opacity=".35"/>' +
-    '<ellipse cx="110" cy="645" rx="140" ry="62" fill="#55766a" opacity=".24"/>' +
-    '<ellipse cx="864" cy="588" rx="128" ry="70" fill="#547063" opacity=".27"/>' +
-    '<g>'+trees+'</g>' +
-    '<path d="M280 570L335 525L355 552L410 520L455 590" fill="none" stroke="#a0a995" stroke-width="2" opacity=".24"/>' +
+    renderScenery(currentMap().theme) +
     '<text x="65" y="70" class="terrain-label">'+esc(terrainNames[0])+'</text>' +
     '<text x="633" y="53" class="terrain-label">'+esc(terrainNames[1])+'</text>' +
     '<text x="41" y="691" class="terrain-label">'+esc(terrainNames[2])+'</text>' +
@@ -378,6 +380,8 @@ function mapFrame(view) {
       ((view.phase==='monster'||view.phase==='over')?'<span><i class="key-spot key-monster"></i> Monster</span>':'') +
       '<span><i class="key-spot key-route"></i> Connected road</span>' +
       ((view.phase==='monster-setup')?'<span><i class="key-spot key-available"></i> Eligible start</span>':'')+
+      ((view.scenario==='escape')?'<span><i class="key-spot key-goal"></i> Escape Gate</span>':'')+
+      ((view.scenario==='beacons')?'<span><i class="key-spot key-beacon"></i> Signal beacon</span>':'')+
       ((view.phase==='hunter')?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
         '<span><i class="key-spot key-watch"></i> Your suspect</span><span><i class="key-spot key-ruled"></i> Your ruled-out mark</span>':'')+
     '</div>'+index+'</div>';
