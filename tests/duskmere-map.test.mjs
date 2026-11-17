@@ -72,7 +72,7 @@ test('all scenarios preserve the historical objective IDs, not art-based guesses
     assert.ok(Number.isFinite(bearingBetween(m.nodes[a],m.nodes[b])));
   }
   assert.equal(MAPS.intro.title,'Blackfen Marsh');
-  assert.equal(MAPS.tracker.title,'The Sunken Lowlands');
+  assert.equal(MAPS.tracker.title,'Rookgate District');
   assert.equal(MAPS.expert.title,'The Eclipse Marches');
 });
 
