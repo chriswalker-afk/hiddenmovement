@@ -135,12 +135,25 @@
 **Implementation:**
 - Add an original illustrated hunter-creation screen called **Hunter Forge** with accessible part choices, live layered SVG rendering, randomise/reset/save/cancel controls, and a clear device-local saving explanation.
 - Four interchangeable **heads**, **torsos**, and **legs**, six coordinated colour schemes, and four optional complexions. Art favours angular hand-inked shapes, weathered leather and armour, sombre colours, and distinctive silhouette readability; it is not copied from any established franchise.
-- Share a strictly validated `hunterAppearance` model across editor, compact menu preview, Solo level briefing, the How-to-Hunt guide and Hunter HUD. The board token still uses its original visible marker until PR12.
+- Share a strictly validated `hunterAppearance` model across editor, compact menu preview, Solo level briefing, the How-to-Hunt guide and Hunter HUD. The board token still uses its original visible marker until the follow-up token milestone.
 - Persist the appearance separately from the existing hunt save format, safe on old saves and storage failure. Saved choices are cosmetic and never enter the secret Monster state or influence rules.
 - Regression suite for option counts, malicious/corrupt storage data, deterministic randomisation, SVG variants and source integration. Browser QA covers character editing, saved reload, briefing and HUD rendering at desktop and mobile resolutions.
 - Update the standard test and syntax-check workflows. Keep the allowlisted build compatible with the new src module.
 - Preserve opaque Pass & Play handoff, normal clue timing and bearings, and the PR10 tutorial/monster abilities.
 
-**PR12 next:** create a legible avatar-matched moveable character token for each map, retaining tappable node interactions, bearings, clue overlays and device zoom. Add animation only if motion cannot obscure investigation markers, and test on phone/projector.
+**Follow-up after replay (planned PR13):** create a legible avatar-matched moving character token for each map, retaining tappable node interactions, bearings, clue overlays and device zoom. Add animation only if motion cannot obscure investigation markers, and test on phone/projector.
 
 **Shipping gate:** green CI tests, site preview and responsive browser QA. PR11 is a reviewable feature branch; it should be merged only after these gates pass.
+
+## PR12 — automatic, skippable endgame movement replay (17 November 2026)
+
+**Scope:** Each completed Solo Hunt or Pass & Play game now proceeds to **The Hunt, Replayed**, a responsive original-map timeline revealing the actual positions of **both** participants in the exact order their successful moves occurred. Early objective victories, captures (including a Monster walking onto the Hunter), normal turn-limit survival, and all four difficulties use the same actual recorded events.
+
+- Append explicit end-of-turn and Signal Lantern events, and annotate Monster teleports/Veil moves; preserve the validated v1 active save format and current move histories.
+- Expose a copy of this chronological history only in the **over** game projection, never on live Hunter/Monster views or opaque pass-and-play transitions. Avoid guessing where the Monster went when the older save has no recorded movement.
+- Build initial-position and event-specific frames with progressive paths, current locations, round labels, monster art/identity and explanations. Mark teleport segments differently from ordinary roads; two high-contrast pieces remain visible when both actors occupy one node.
+- Automatically run replay after the final report, with controls for play/pause, step back/forward, speed toggle, timeline scrub, restart and skip-to-results. Offer **Watch the Hunt Again** from the results page.
+- Maintain the existing result statistics and full Monster route, with original replay-safe map zoom. Respect reduced-motion settings and do not autoplay behind the last search-report modal.
+- Add unit regressions for chronological positions, round-zero starts, captures, idle turns, secret-state isolation, teleport/Veil/Signal Lantern, incomplete histories and UI wiring; browser QA verifies desktop/mobile/landscape replay controls and layouts.
+
+**Remaining after PR12:** finish Hunter Forge by replacing the generic live map marker with the matching modular Hunter board character; add a cohesive miniature token, smooth route movement and responsive art QA. Planned as **PR13 — Hunter Forge board piece**.
