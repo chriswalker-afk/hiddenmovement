@@ -1,22 +1,8 @@
 import { angularDifference, bearingBetween, graphDistance } from './geometry.mjs';
+import { BLACKFEN_SITES } from './blackfen.mjs';
 
-/** Illustrated hand-authored introductory board; all x/y positions are SVG coordinates. */
-const points = [
-  ['A', 'Watchtower', 100, 380],
-  ['B', 'Pine Crossing', 210, 225],
-  ['C', 'Old Mill', 240, 470],
-  ['D', 'Briar Farm', 360, 120],
-  ['E', 'Whisper Grove', 420, 345],
-  ['F', 'Chapel Ruins', 390, 590],
-  ['G', 'Lantern Inn', 590, 185],
-  ['H', 'Moonbridge', 620, 445],
-  ['I', 'Blackwater Dock', 800, 315],
-  ['J', 'Ash Hill', 790, 85],
-  ['K', 'Stone Circle', 800, 575],
-  ['L', "Raven's Gate", 930, 410],
-  ['M', 'Marsh End', 145, 640],
-  ['N', 'Bone Quarry', 575, 640],
-];
+/** Blackfen's player-visible names and art are keyed to the stable graph IDs. */
+const points=BLACKFEN_SITES.map(s=>[s.id,s.name,s.x,s.y]);
 
 const paths = [
   'A-B','A-C','A-M','B-D','B-E','B-C','C-E','C-F','C-M',
@@ -25,7 +11,8 @@ const paths = [
   'J-L','K-L','K-N'
 ];
 
-const nodes = Object.fromEntries(points.map(([id, name, x, y]) => [id, { id, name, x, y }]));
+const nodes = Object.fromEntries(BLACKFEN_SITES.map(s =>
+  [s.id, { id:s.id,name:s.name,x:s.x,y:s.y,landmarkKind:s.kind }]));
 const edges = paths.map(path => path.split('-'));
 const adjacency = Object.fromEntries(points.map(([id]) => [id, []]));
 for (const [a,b] of edges) {
@@ -36,8 +23,8 @@ for (const key of Object.keys(adjacency)) adjacency[key].sort();
 export const MAP = Object.freeze({
   id: 'intro',
   theme: 'moor',
-  title: 'The Hollow Moor',
-  subtitle: 'The lanterns are going out, one by one.',
+  title: 'Blackfen Marsh',
+  subtitle: 'The fen remembers every footstep.',
   nodes,
   edges,
   adjacency,
