@@ -1,9 +1,10 @@
 import { MAP, MAPS, getMonsterSpawns } from './map.mjs';
 import {
-  angularDifference, bearingBetween, formatBearing, parseBearing,
+  angularDifference, bearingBetween, formatBearing, graphDistance, parseBearing,
   reverseBearing, sectorBounds
 } from './geometry.mjs';
 import { chooseMonsterMove, chooseMonsterSpawn } from './ai.mjs';
+import { quantizeBearing } from './deduction.mjs';
 
 export const SETTINGS = Object.freeze({
   maxRounds: 13,
@@ -14,7 +15,8 @@ export const SETTINGS = Object.freeze({
   sightingInterval: 0,
   sightingHalfWidth: 0,
   openingPulse: false,
-  clueAgeStyle: 'exact'
+  clueAgeStyle: 'exact',
+  distanceBandHalfWidth: null
 });
 
 /** Initial balancing parameters, not final capture-rate targets. */
@@ -22,7 +24,7 @@ export const DIFFICULTIES = Object.freeze({
   intro: Object.freeze({
     id: 'intro', name: 'Intro', tagline: 'Find your bearings',
     mapId: 'intro', nodes: 14, maxRounds: 13,
-    trailLifetime: 5, clueHalfWidth: 0,
+    trailLifetime: 5, clueHalfWidth: 0, distanceBandHalfWidth: 0,
     sightingInterval: 2, sightingHalfWidth: 25, openingPulse: true,
     clueAgeStyle: 'exact',
     summary: 'Small map, exact trail clues, a wandering monster and frequent sightings.'
@@ -30,7 +32,7 @@ export const DIFFICULTIES = Object.freeze({
   apprentice: Object.freeze({
     id: 'apprentice', name: 'Apprentice', tagline: 'The woods grow darker',
     mapId: 'apprentice', nodes: 18, maxRounds: 15,
-    trailLifetime: 4, clueHalfWidth: 15,
+    trailLifetime: 4, clueHalfWidth: 15, distanceBandHalfWidth: 1,
     sightingInterval: 3, sightingHalfWidth: 35, openingPulse: true,
     clueAgeStyle: 'exact',
     summary: 'A larger woodland, ±15° trail clues and a wary opponent.'
@@ -38,7 +40,7 @@ export const DIFFICULTIES = Object.freeze({
   tracker: Object.freeze({
     id: 'tracker', name: 'Tracker', tagline: 'Follow the faintest trace',
     mapId: 'tracker', nodes: 26, maxRounds: 18,
-    trailLifetime: 3, clueHalfWidth: 30,
+    trailLifetime: 3, clueHalfWidth: 30, distanceBandHalfWidth: null,
     sightingInterval: 4, sightingHalfWidth: 55, openingPulse: true,
     clueAgeStyle: 'approximate',
     summary: 'Broad ±30° clues, fading tracks and a more elusive opponent.'
@@ -46,7 +48,7 @@ export const DIFFICULTIES = Object.freeze({
   expert: Object.freeze({
     id: 'expert', name: 'Expert', tagline: 'Face the eclipse',
     mapId: 'expert', nodes: 36, maxRounds: 21,
-    trailLifetime: 2, clueHalfWidth: 45,
+    trailLifetime: 2, clueHalfWidth: 45, distanceBandHalfWidth: null,
     sightingInterval: 5, sightingHalfWidth: 75, openingPulse: true,
     clueAgeStyle: 'vague',
     summary: 'An extensive network, ±45° clues, short-lived tracks and cunning AI.'
@@ -82,7 +84,8 @@ export function createGame(config = {}) {
     nextTrailId: 1,
     winner: null,
     feedback: '',
-    history: []
+    history: [],
+    hunterStats: { attempts:0, successful:0, errors:0, totalAngleError:0 }
   };
 }
 
@@ -162,6 +165,7 @@ export function viewForCurrentScreen(game) {
     ...base, hunter: game.hunter, stepsLeft: game.stepsLeft,
     clues: game.clues.map(c => publicClue(game,c)),
     hunterTrail: [...game.hunterTrail],
+    stats: publicStats(game),
     maxRounds: game.config.maxRounds
   };
   if (game.phase === 'monster-setup') return {
@@ -177,9 +181,18 @@ export function viewForCurrentScreen(game) {
     hunterTrail: [...game.hunterTrail],
     trail: game.monsterTrail.map(t => ({ ...t })),
     clues: game.clues.map(c => publicClue(game,c)),
+    stats: publicStats(game),
     maxRounds: game.config.maxRounds
   };
   return base;
+}
+
+function publicStats(game) {
+  const s = game.hunterStats;
+  return { attempts:s.attempts, successful:s.successful, errors:s.errors,
+    meanAngularError:s.successful ? Math.round(s.totalAngleError/s.successful*10)/10 : null,
+    trailClues:game.clues.filter(c=>c.type==='trace').length,
+    sightings:game.clues.filter(c=>c.type==='sighting').length };
 }
 
 function publicClue(game, clue) {
@@ -237,7 +250,14 @@ function collectClue(game, location) {
   if (toward === null) return null; // Capture must already have been detected.
   const reverse = (game.mode === 'solo' ? game.clues.filter(c => c.type === 'trace').length : game.clues.length) % 2 === 1;
   const observedRound = game.round - 1;
-  const displayed = reverse ? reverseBearing(toward) : toward;
+  // Fixed compass sectors provide real uncertainty: the true bearing is
+  // *somewhere inside*, not always at the sector midpoint.
+  const trueDisplayed = reverse ? reverseBearing(toward) : toward;
+  const displayed = quantizeBearing(trueDisplayed, game.config.clueHalfWidth);
+  const sectorCenter = reverse ? reverseBearing(displayed) : displayed;
+  const distanceHalf = game.mode === 'solo' ? game.config.distanceBandHalfWidth : null;
+  const routeDistance = Number.isInteger(distanceHalf)
+    ? graphDistance(location,game.monster,game.map) : null;
   const clue = {
     id: trace.id,
     type: 'trace',
@@ -247,9 +267,13 @@ function collectClue(game, location) {
     observedRound,
     kind: reverse ? 'reverse' : 'direct',
     center: displayed,
-    sectorCenter: toward,
+    sectorCenter,
     halfWidth: game.config.clueHalfWidth,
-    bounds: sectorBounds(displayed, game.config.clueHalfWidth)
+    bounds: sectorBounds(displayed, game.config.clueHalfWidth),
+    ...(routeDistance === null ? {} : {
+      distanceMin: Math.max(0, routeDistance - distanceHalf),
+      distanceMax: routeDistance + distanceHalf
+    })
   };
   game.clues.unshift(clue);
   return clue;
@@ -264,6 +288,7 @@ function addSighting(game, opening = false) {
   const toward = bearingBetween(game.map.nodes[game.hunter], game.map.nodes[game.monster]);
   if (toward === null) return null;
   const half = game.config.sightingHalfWidth;
+  const displayed = quantizeBearing(toward, half);
   const clue = {
     id: 'sighting-' + (game.round - 1),
     type: 'sighting',
@@ -271,8 +296,8 @@ function addSighting(game, opening = false) {
     foundRound: game.round,
     observedRound: game.round - 1,
     kind: 'direct',
-    center: toward, sectorCenter: toward, halfWidth: half,
-    bounds: sectorBounds(toward, half)
+    center: displayed, sectorCenter: displayed, halfWidth: half,
+    bounds: sectorBounds(displayed, half)
   };
   game.clues.unshift(clue);
   return clue;
@@ -282,7 +307,13 @@ export function hunterMove(game, inputBearing) {
   if (requirePhase(game, 'hunter')) return { ok:false, message:game.feedback };
   if (!game.stepsLeft) return fail(game, 'You have used both routes. Finish your turn.');
   const route = matchedNeighbour(game.hunter, inputBearing, game);
-  if (route.error) return fail(game, route.error);
+  game.hunterStats.attempts++;
+  if (route.error) {
+    game.hunterStats.errors++;
+    return fail(game, route.error);
+  }
+  game.hunterStats.successful++;
+  game.hunterStats.totalAngleError += route.difference;
   game.hunter = route.to;
   game.hunterTrail.push(route.to);
   game.stepsLeft--;
@@ -295,7 +326,8 @@ export function hunterMove(game, inputBearing) {
   }
   const clue = collectClue(game, game.hunter);
   const message = 'Travelled ' + formatBearing(route.bearing) + ' to ' + destination
-    + ' (' + game.stepsLeft + ' route' + (game.stepsLeft === 1 ? '' : 's') + ' left).'
+    + ' (error: ' + route.difference.toFixed(1) + '°; ' + game.stepsLeft + ' route'
+    + (game.stepsLeft === 1 ? '' : 's') + ' left).'
     + (clue ? ' A fresh trace revealed a clue!' : '');
   return say(game, message);
 }
