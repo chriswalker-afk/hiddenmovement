@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="520" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
 <title id="title">The Eclipse Herald</title><desc id="desc">A regal shadow creature with an eclipse halo, fractured obsidian armour, pale violet eyes and a star cloak.</desc>
 <defs><radialGradient id="bg"><stop stop-color="#51405e"/><stop offset=".57" stop-color="#29233d"/><stop offset="1" stop-color="#101c30"/></radialGradient>
 <radialGradient id="halo"><stop stop-color="#ead8b4" stop-opacity=".83"/><stop offset=".48" stop-color="#b69dbb" stop-opacity=".36"/><stop offset="1" stop-color="#b69dbb" stop-opacity="0"/></radialGradient>
