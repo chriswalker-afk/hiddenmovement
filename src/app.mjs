@@ -1141,6 +1141,83 @@ function guidedCoachPanel(view) {
     '</div></section>';
 }
 
+
+// Each step follows an actual control action rather than a timer or an
+// invented path. Stage data is harmless public UI, not secret game state.
+function tourEvent(event) {
+  if(!game.guided||tourStage==='done')return false;
+  const next=advanceTour(tourStage,event);
+  if(next===tourStage)return false;
+  tourStage=next;
+  if(['read-bearing','enable-deduction','explain-deduction','independent'].includes(next))
+    hudTab='clues';
+  if(['first-move','second-move'].includes(next))hudTab='coach';
+  return true;
+}
+function tourHtml(view) {
+  if(monsterIntroOpen||searchReportOpen||tutorialOpen)return '';
+  const step=tourStep(view,currentMap(),tourStage);
+  if(!step)return '';
+  return '<section id="guided-tour" class="guided-tour" role="status" '+
+    'aria-live="polite" data-guided-step="'+esc(step.stage)+'">'+
+      '<div class="guided-tour-progress">GUIDED HUNT · STEP '+esc(step.counter)+
+        '<button type="button" id="guided-tour-skip" title="Skip the interactive walkthrough">SKIP TUTORIAL</button></div>'+
+      '<h3>'+esc(step.heading)+'</h3>'+
+      '<p>'+esc(step.text)+'</p>'+
+      (step.action?'<button type="button" id="guided-tour-next" class="guided-tour-action">'+
+        esc(step.action)+' →</button>':'')+
+      '<small>Follow the flashing arrow and highlighted control. Skip only the walkthrough, never the game.</small>'+
+    '</section>'+
+    '<span id="guided-tour-arrow" class="guided-tour-arrow" aria-hidden="true">➜</span>';
+}
+function bindGuidedTour(view){
+  const panel=document.getElementById('guided-tour');
+  if(!panel||view.phase!=='hunter')return;
+  const step=tourStep(view,currentMap(),tourStage);
+  if(!step)return;
+  document.getElementById('guided-tour-skip')?.addEventListener('click',()=>{
+    tourEvent('skip');render();
+  });
+  document.getElementById('guided-tour-next')?.addEventListener('click',()=>{
+    tourEvent(step.event);render();
+  });
+  const target=document.querySelector?.(step.target||'#__no_target__');
+  const companion=step.secondary?document.querySelector?.(step.secondary):null;
+  target?.classList?.add('guided-tour-target');
+  companion?.classList?.add('guided-tour-companion');
+  if(!target?.getBoundingClientRect||!panel.style)return;
+  const arrow=document.getElementById('guided-tour-arrow');
+  const point=()=>{
+    if(!arrow?.style)return;
+    const box=target.getBoundingClientRect();
+    const viewportW=globalThis.innerWidth||0,viewportH=globalThis.innerHeight||0;
+    if(!viewportW||!viewportH||box.width===0)return;
+    const rect=panel.getBoundingClientRect();
+    const w=Math.min(viewportW-24,rect.width||310);
+    const h=rect.height||165;
+    let x,y;
+    if(viewportW<800){
+      x=12;
+      y=box.top>viewportH*.52?12:viewportH-h-12;
+    }else{
+      x=box.left>viewportW*.54?box.left-w-22:box.right+22;
+      x=Math.max(12,Math.min(viewportW-w-12,x));
+      y=Math.max(12,Math.min(viewportH-h-12,box.top-10));
+    }
+    panel.style.left=x+'px';panel.style.top=Math.max(12,y)+'px';
+    panel.style.right='auto';panel.style.bottom='auto';
+    const left=Math.max(9,Math.min(viewportW-46,box.left+box.width/2-19));
+    const above=box.top>=48;
+    arrow.style.left=left+'px';
+    arrow.style.top=Math.max(4,Math.min(viewportH-43,
+      above?box.top-44:box.bottom+2))+'px';
+    arrow.textContent=above?'⬇':'⬆';
+  };
+  point();
+  document.querySelector?.('.map-frame')?.addEventListener('scroll',point,{passive:true});
+  document.querySelector?.('.hud-tab-panel')?.addEventListener('scroll',point,{passive:true});
+}
+
 function hudTabsHtml(view) {
   const isMonster=view.phase==='monster';
   const tabs=isMonster
@@ -1191,7 +1268,7 @@ function playHtml(view) {
             esc(view.feedback||'Use the map and measure your next bearing.')+'</p>'+
             '<button type="button" id="save-exit" class="hud-save" title="Save and return to the menu">SAVE</button>'+
           '</div></aside></div>'+
-    '</main></div>';
+    '</main>'+tourHtml(view)+'</div>';
 }
 
 function setupHtml(view) {
