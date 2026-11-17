@@ -75,6 +75,9 @@ try{
     assert.ok(await page.locator('.monster-encounter img').evaluate(async img=>{
       await img.decode();return img.naturalWidth>200;
     }),size.name+' monster artwork failed to load');
+    const fullyReadable=await page.locator('.monster-encounter .encounter-copy')
+      .evaluate(el=>el.scrollHeight<=el.clientHeight+6);
+    assert.ok(fullyReadable,size.name+' monster introduction scrolls or clips its level heading');
     await page.screenshot({path:'visual/'+size.name+'-monster-intro.png',fullPage:false});
     await page.locator('#intro-begin').click();
     await page.locator('.hud-screen').waitFor({state:'visible'});
