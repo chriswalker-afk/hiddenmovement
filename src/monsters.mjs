@@ -14,8 +14,8 @@ export const MONSTERS=Object.freeze({
   }),
   apprentice:Object.freeze({
     id:'briar-shade',name:'The Briar Shade',title:'The Vanishing Thorn',
-    home:'Thornwood Vale',art:'./assets/monsters/briar-shade.svg',
-    flavour:'The trees whisper when it passes. The Briar Shade slips from one thicket to another.',
+    home:'Duskmere Village',art:'./assets/monsters/briar-shade.svg',
+    flavour:'A shadow slips between Duskmere’s crooked lanes, orchards and shuttered windows. Follow the thorn-marked trail before it vanishes.',
     powerTitle:'Briar Step',powerText:'Can leap 2–3 roads every 4 monster turns. Its previous location is revealed each time.',
     teleport:Object.freeze({firstRound:4,cooldown:4,minHops:2,maxHops:3}),decoy:null,tint:'#b2d1a0'
   }),
