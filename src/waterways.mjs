@@ -11,6 +11,22 @@
  *                      [ctrl2X,ctrl2Y],[endX,endY]]
  */
 export const WATERWAYS = Object.freeze({
+  // Blackfen Run links Old Swamp, the Broken Mill waterwheel, Moss Bridge
+  // and Blackwater Landing. The same cubics drive scenic painting and
+  // detection of real bridge-road crossings; no extra graph routes are added.
+  moor: Object.freeze([
+    Object.freeze({
+      id:'blackfen-run',width:28,
+      segments:[
+        [[-60,706],[45,691],[110,667],[168,628]],
+        [[168,628],[195,606],[188,539],[230,508]],
+        [[230,508],[270,476],[310,515],[365,517]],
+        [[365,517],[460,522],[520,490],[604,463]],
+        [[604,463],[699,435],[754,345],[802,337]],
+        [[802,337],[880,317],[920,331],[1060,311]]
+      ]
+    })
+  ]),
   marsh: Object.freeze([
     Object.freeze({
       id: 'northern-river', width: 72,

@@ -176,8 +176,26 @@ try{
     if(['tracker','expert'].includes(difficulty))
       assert.ok(decks>=4 && decks<=18,
         difficulty+' must mark crossings as bridges instead of floating roads');
+    else if(difficulty==='intro')
+      assert.ok(decks>=2 && decks<=6,
+        'Blackfen roads must cross the painted stream on actual, non-overlapping bridges');
     else assert.equal(decks,0,
-      'Other maps should not acquire accidental river bridge markers');
+      'The village should not acquire accidental river bridge markers');
+    if(difficulty==='intro'){
+      assert.equal(MAPS.intro.title,'Blackfen Marsh');
+      assert.equal(await page.locator('.blackfen-world').count(),0);
+      assert.equal(await page.locator('.illustrated-scenery[data-world="blackfen"]').count(),1);
+      assert.equal(await page.locator('.blackfen-landmark').count(),14,
+        'All fourteen named locations need their own real landmark artwork');
+      assert.equal(await page.locator('.blackfen-landmark-bridge').count(),1);
+      assert.equal(await page.locator('.blackfen-landmark-landing').count(),1);
+      assert.ok(await page.locator('.world-svg').getAttribute('aria-label')
+        .then(s=>s.includes('Blackfen Marsh')));
+      assert.equal(await page.locator('.world-svg .terrain-label').count(),0,
+        'No generic region labels should contradict the actual location names');
+      assert.equal(await page.locator('.world-svg .road-top').count(),29,
+        'Renaming the map must preserve all bearings roads');
+    }
     const expectedNames=Object.values(MAPS[difficulty].nodes).map(n=>n.name);
     const displayedNames=await page.locator('.nodes>.node .node-label').allTextContents();
     assert.deepEqual(displayedNames,expectedNames,
@@ -218,6 +236,38 @@ try{
     await page.screenshot({path:'visual/map-'+difficulty+'.png',fullPage:false});
   }
   await page.close();
+
+  // PR15 Blackfen Marsh: review the same complete 14-landmark map on a real
+  // mobile viewport at both default zoom and a legible detailed zoom.
+  const blackfen=await browser.newPage({viewport:{width:390,height:844}});
+  const blackfenErrors=[];
+  blackfen.on('pageerror',error=>blackfenErrors.push(String(error)));
+  await blackfen.goto(url,{waitUntil:'domcontentloaded'});
+  await blackfen.locator('#start-solo-select').click();
+  await blackfen.locator('[data-difficulty="intro"]').click();
+  assert.match(await blackfen.locator('.encounter-copy').textContent(),/BLACKFEN MARSH/i);
+  await blackfen.locator('#intro-begin').click();
+  await blackfen.locator('.hud-screen').waitFor({state:'visible'});
+  assert.equal(await blackfen.locator('.blackfen-landmark').count(),14);
+  assert.equal(await blackfen.locator('.blackfen-landmark').evaluateAll(elems=>
+    new Set(elems.map(e=>e.dataset.landmarkId)).size),14);
+  assert.equal(await blackfen.locator('.blackfen-landmark-swamp').count(),1);
+  assert.equal(await blackfen.locator('.blackfen-landmark-mill').count(),1);
+  assert.equal(await blackfen.locator('.blackfen-landmark-chapel').count(),1);
+  assert.equal(await blackfen.locator('.blackfen-landmark-gate').count(),1);
+  assert.equal(await blackfen.locator('.nodes>.node .node-label').count(),14);
+  await measure(blackfen,'blackfen-mobile');
+  await blackfen.screenshot({path:'visual/blackfen-mobile-map.png',fullPage:false});
+  await blackfen.locator('#map-zoom-in').click();
+  await blackfen.locator('#map-zoom-in').click();
+  await measure(blackfen,'blackfen-mobile-zoom');
+  await blackfen.screenshot({path:'visual/blackfen-mobile-zoom.png',fullPage:false});
+  // The canvas decorations are aria-hidden and never intercept map notes.
+  assert.equal(await blackfen.locator('.node[data-node-note="M"]').count(),1);
+  assert.equal(await blackfen.locator('.node[data-node-note="H"]').count(),1);
+  assert.equal(await blackfen.locator('.illustrated-scenery').getAttribute('aria-hidden'),'true');
+  assert.deepEqual(blackfenErrors,[],'Blackfen should render on mobile without exceptions');
+  await blackfen.close();
 
   // PR11 Hunter Forge: each selected part and palette persists, and the same
   // original figure appears on mission briefings, field training and HUD.

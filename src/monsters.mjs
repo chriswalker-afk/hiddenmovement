@@ -7,8 +7,8 @@
 export const MONSTERS=Object.freeze({
   intro:Object.freeze({
     id:'lantern-wisp',name:'The Lantern Wisp',title:'The Lost Light',
-    home:'The Hollow Moor',art:'./assets/monsters/lantern-wisp.svg',
-    flavour:'A lonely glow dances between the standing stones. Follow its trail before the final light goes out.',
+    home:'Blackfen Marsh',art:'./assets/monsters/lantern-wisp.svg',
+    flavour:'A lonely glow drifts from the drowned reeds to the old stones. Follow it across Blackfen before the last lantern goes dark.',
     powerTitle:'No special power',powerText:'A straightforward first hunt: learn the roads, read bearing clues and catch the Wisp.',
     teleport:null,decoy:null,tint:'#e7d49e'
   }),

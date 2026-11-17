@@ -173,3 +173,16 @@
 **Quality gate:** tests, AI simulation, preview build and desktop/mobile/landscape visual checks before merging.
 
 **Follow-up:** collect student feedback on miniature size and movement timing.
+
+
+## PR15 — Blackfen Marsh completed illustrated Intro map (17 November 2026)
+
+- Implement all **14 World Bible names** at their exact unchanged A–N IDs and coordinates, maintaining **29 roads**, safe spawns, three-figure bearings and scenario goal IDs L/G.
+- Draw hand-inked, muted gothic countryside: individual SVG landmarks for watch, pine crossroads, ruined watermill, crow farm, whispering wood, ruined chapel, lit inn, Moss Bridge, Blackwater dock, barrow, standing stones, passable exit gate, swamp and quarry.
+- Introduce a physically coherent Blackfen Run stream through wet south-west terrain and the mill/bridge/landing corridor; shared cubic control points in `WATERWAYS.moor` drive both drawn water and road crossing detection.
+- Mark road-water crossings with actual road-aligned decks; use the custom landmark bridge/landing at H and I rather than three overlapping generic crossings.
+- Remove unrelated generic landscape labels; preserve existing node hit areas, Hunter Forge miniature, clue rings, replay and map zoom.
+- Add unit tests for geometry/name/landmark reconciliation, creek distance to named wet landmarks, noncrossing routes and scenario objective IDs, plus desktop/mobile browser screenshot QA.
+- This is an **art and identity** pass: no gameplay, round, clues, powers or AI changes.
+
+**Next recommended PR16:** Duskmere Village — develop its 18 named structures as a geographically coherent settlement, design a real southern millstream with road-aligned Stone Bridge and Mill Pond, then test at mobile/projector zoom before merging.

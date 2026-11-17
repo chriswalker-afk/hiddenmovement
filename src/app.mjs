@@ -569,12 +569,6 @@ function sectorShape(origin,center,half) {
 }
 
 function mapSvg(view) {
-  const terrainNames = {
-    moor: ['BLACKPINE WOODS','ASH RIDGE','HOLLOW MARSHES','THE STANDING STONES'],
-    woodland: ['THORNWOOD FOREST','THE HILL TRAIL','FOXGLOVE MEADOW','THE OLD VALLEY'],
-    marsh: ['SILVER WATER','NORTHERN DELTA','THE REED FIELDS','LOWLAND FOG'],
-    eclipse: ['RUINED HIGHLANDS','ASHEN SKY','DARK CITADEL','THE ECLIPSE'],
-  }[currentMap().theme];
   const isMonster=view.phase==='monster' || view.phase==='monster-setup';
   const actingNode=view.phase==='monster'?view.monster:view.hunter;
   const activeNode=currentMap().nodes[actingNode];
@@ -587,7 +581,16 @@ function mapSvg(view) {
     return '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-base"/>' +
       '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-top"/>';
   }).join('');
-  const bridgeDecks=riverRoadCrossings(currentMap()).map(bridge=>{
+  const bridgeDecks=riverRoadCrossings(currentMap())
+    .filter(bridge=>{
+      if(currentMap().theme!=='moor')return true;
+      const at=currentMap().nodes;
+      const near=(node,radius)=>Math.hypot(bridge.x-node.x,bridge.y-node.y)<radius;
+      // H is an illustrated, road-aligned stone bridge and I a raised
+      // waterside landing. Avoid three overlapping generic bridge decals
+      // directly on top of those two large bespoke landmarks.
+      return !near(at.H,65)&&!near(at.I,46);
+    }).map(bridge=>{
     const half=bridge.span/2;
     const lo=(-half).toFixed(1),hi=half.toFixed(1);
     // A muted stone/wood footbridge spans the actual painted water,
@@ -723,14 +726,8 @@ function mapSvg(view) {
       '<filter id="moor-glow"><feGaussianBlur stdDeviation="11"/></filter>' +
     '</defs>' +
     renderScenery(currentMap().theme) +
-    // Scenic captions belong to the sparsely populated Intro illustration.
-    // On larger maps, reserve this space for genuine named locations.
-    (mapNodeCount<=14 ?
-      '<text x="65" y="70" class="terrain-label">'+esc(terrainNames[0])+'</text>' +
-      '<text x="633" y="53" class="terrain-label">'+esc(terrainNames[1])+'</text>' +
-      '<text x="41" y="691" class="terrain-label">'+esc(terrainNames[2])+'</text>' +
-      '<text x="691" y="691" class="terrain-label">'+esc(terrainNames[3])+'</text>'
-      : '') +
+    // No invented terrain labels: every readable map name belongs to a real
+    // named landmark. The terrain is conveyed by its actual artwork.
     '<g class="roads">'+paths+'</g>' +
     '<g class="river-bridges" pointer-events="none">'+bridgeDecks+'</g>' +
     '<g>'+plotted+'</g>' +
@@ -757,7 +754,7 @@ function mapFrame(view) {
     '<span><b>' + esc(n.label) + '</b> ' + esc(n.name) + '</span>').join('') +
     '</div></details>' : '';
   return '<div class="map-section">' +
-    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>Map of ' + esc(map.title) + '</h2></div>' +
+    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + (map.id==='intro'?'': 'Map of ') + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
       (['hunter','monster'].includes(view.phase)?
         '<button type="button" id="protractor-toggle" class="protractor-toggle" aria-pressed="'+protractorVisible+'">'+

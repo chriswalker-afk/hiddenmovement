@@ -12,7 +12,7 @@ On the title screen, choose **Solo Hunt**, then one of four difficulty levels. T
 
 | Difficulty | Locations | Trail clue accuracy | Trail lasts | Solo sightings | Monster style | Maximum rounds |
 |---|---:|---|---:|---|---|---:|
-| Intro | 14 — Hollow Moor | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
+| Intro | 14 — Blackfen Marsh | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
 | Apprentice | 18 — Thornwood Vale | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
 | Tracker | 26 — Sunken Lowlands | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
 | Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
@@ -29,9 +29,19 @@ The Tracker and Expert modes provide progressively less precise information abou
 
 ### Pass & Play — Hunter versus a human Monster
 
-The original 14-location Hollow Moor mode remains available. The Monster picks a secret starting point, then the two players alternate.
+The original 14-location graph now appears as the fully illustrated **Blackfen Marsh** countryside. The Monster picks a secret starting point, then the two players alternate.
 
 **Handoff privacy:** all board, clue and position information is replaced by an entirely blank role-transition view containing only the requested handoff text and a reveal button. Switching away from the page re-seals an active two-player role view. In Solo Hunt, the Monster never has a visible role view.
+
+## Blackfen Marsh — first complete landmark world (PR15)
+
+The introductory map is now **Blackfen Marsh**, an original dark, ink-and-watercolour countryside. Its **14 named locations** match 14 distinct locally rendered SVG landmarks rather than generic trees: a timber watch post, pine crossroads, ruined watermill, crow farm, whispering wood, fen chapel, lantern-lit inn, mossy bridge, Blackwater dock, barrow hill, standing stones, timber escape gate, swamp pools and an old quarry.
+
+A single illustrated **Blackfen Run** replaces the previous decorative river that did not match the geography. It visibly connects **Old Swamp → Broken Mill → Moss Bridge → Blackwater Landing**. Where existing road segments cross the stream, compact road-aligned bridge decks are placed from the real shared cubic-water geometry; overlapping generic decks are suppressed around the landmark bridge and dock. The old unrelated decorative terrain captions are gone.
+
+All 14 node IDs **A–N**, 29 connected roads, exact world coordinates, bearings, Hunter start, secret Monster spawns and scenario objectives are unchanged. The Last Gate still uses node L (**East Fen Gate**); Lanternfall beacons remain at L and G (**Lantern Inn**). Existing saved games use those stable IDs and remain valid. The original illustration uses no remote assets and is layered below the interactive node markers, protractor, clues and the customised moving Hunter.
+
+This is the first fully themed region. The names for **Duskmere Village**, **Rookgate District** and **Ravenmarch County** are approved in the [Map World Bible](docs/MAP_WORLD_BIBLE.md), but their live art and names will be replaced in separate later PRs. Student review should consider landmark recognisability and place-label legibility at 100% and 300% zoom.
 
 ## Monsters, powers and investigation reports (PR9)
 
@@ -39,7 +49,7 @@ Every Solo Hunt difficulty introduces a different illustrated monster before the
 
 | Level | Monster | Signature ability | Counterplay |
 |---|---|---|---|
-| Intro — Hollow Moor | **The Lantern Wisp** | None | A straightforward hunt with ordinary bearings and tracks |
+| Intro — Blackfen Marsh | **The Lantern Wisp** | None | A straightforward hunt with ordinary bearings and tracks |
 | Apprentice — Thornwood Vale | **The Briar Shade** | Briar Step teleport, 4-turn cooldown | Leaps 2–3 connected roads, but publicly exposes its previous location |
 | Tracker — Sunken Lowlands | **The Mire Mimic** | False Sighting, 4-turn cooldown | Plants an **unconfirmed** reported location that is debunked when the Hunter visits |
 | Expert — Eclipse Marches | **The Eclipse Herald** | Eclipse Shift teleport (5-turn cooldown) and Phantom Echo decoy (4-turn cooldown) | Combines the two fair rules, never both on one Monster turn |
@@ -166,7 +176,7 @@ A save is not tied to a user account, is not synced between devices, and is lost
 
 ## New original scenery and responsive maps
 
-The Hollow Moor, Thornwood Vale, Sunken Lowlands and Eclipse Marches have different original SVG scenery: woods, water, reeds, ruins and twilight landmarks. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
+The Blackfen Marsh, Thornwood Vale, Sunken Lowlands and Eclipse Marches have different original SVG scenery: woods, water, reeds, ruins and twilight landmarks. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
 
 ## Preview and publishing
 
@@ -221,7 +231,8 @@ The application remains dependency-free at runtime. Sources:
 - `src/map.mjs` — four connected maps with validation
 - `src/ai.mjs` — deterministic random generator, spawning and evasion logic
 - `src/scenarios.mjs` — original mission goals, public landmarks and legal spawns
-- `src/scenery.mjs` — four original vector landscapes and title illustration
+- `src/scenery.mjs` — shared original vector landscapes and title illustration
+- `src/blackfen.mjs` — Blackfen's canonical 14 place names, site artwork and hydrology-tied SVG countryside
 - `src/persistence.mjs` — validated local saves, Guided setting and safely resealed resume
 - `src/protractor.mjs` — manually rotatable SVG 360° bearings measuring tool
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
@@ -236,7 +247,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR13:** Student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR15:** Design and build Duskmere Village as a coherent 18-location settlement; then Rookgate District and Ravenmarch County. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 

@@ -1,4 +1,5 @@
 import { WATERWAYS, waterwayPath } from './waterways.mjs';
+import { renderBlackfenScenery } from './blackfen.mjs';
 
 /**
  * Original hand-drawn-in-SVG scenery for each region. Art is intentionally
@@ -44,6 +45,7 @@ function concentric(x,y,rx,ry,color){
 }
 
 export function renderScenery(theme='moor') {
+  if(theme==='moor')return renderBlackfenScenery();
   const t=TONES[theme]||TONES.moor;
   let extra='';
   const shore='M-60 135 C65 170 120 110 263 175 S515 266 603 315 S814 424 1060 355';
