@@ -6,6 +6,9 @@ import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenari
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { MONSTERS, monsterFor } from './monsters.mjs';
 import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
+import { FORGE_CHOICES, FORGE_PALETTES, FORGE_COMPLEXIONS,
+  DEFAULT_HUNTER, normalizeHunter, randomHunter, loadHunter, saveHunter,
+  renderHunterSvg } from './hunter-forge.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
@@ -31,6 +34,10 @@ let coachAnswerVisible = false;
 let showHowTo = false;
 let difficultyPicker = false;
 let scenarioPicker = false;
+let forgeOpen = false;
+let hunterAppearance = normalizeHunter(null);
+let forgeDraft = normalizeHunter(null);
+let forgeNotice = '';
 let pendingScenario = 'classic';
 let mapZoom = 1;
 let hudTab = 'clues';
@@ -40,7 +47,11 @@ let protractorBearing = 0;
 let protractorPosition = null;
 let monsterIntroOpen = false;
 let searchReportOpen = false;
-const storage = () => globalThis.localStorage || null;
+const storage = () => {
+  try{return globalThis.localStorage || null;}
+  catch{return null;}
+};
+hunterAppearance=loadHunter(storage());
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -110,12 +121,126 @@ function resumeHunt() {
   render();
 }
 
+
+function forgeLaunchHtml(){
+  return '<div class="forge-launch" aria-label="Your personalised hunter">'+
+    '<span class="forge-launch-portrait">'+
+      renderHunterSvg(hunterAppearance,{bust:true,className:'forge-launch-art'})+'</span>'+
+    '<span class="forge-launch-copy"><strong>YOUR HUNTER</strong>'+
+      '<small>Choose your own look before the hunt.</small></span>'+
+    '<button id="forge-open" type="button" class="forge-launch-button">⚒ HUNTER FORGE →</button>'+
+    '</div>';
+}
+function openForge(){
+  forgeDraft=normalizeHunter(hunterAppearance);
+  forgeNotice='';
+  forgeOpen=true;
+  render();
+}
+function renderForgeWithScroll(){
+  const before=document.querySelector('.forge-choices-scroll')?.scrollTop||0;
+  render();
+  const next=document.querySelector('.forge-choices-scroll');
+  if(next)next.scrollTop=before;
+}
+function forgeHtml(){
+  const groups=[
+    ['head','HEAD / HEADWEAR','A silhouette to recognise at a glance'],
+    ['torso','COAT / ARMOUR','Tools and clothing for your hunt'],
+    ['legs','BOOTS / LEGS','Equipment for the road'],
+    ['palette','COLOUR SCHEME','A coordinated set of inked colours'],
+    ['complexion','COMPLEXION','Choose the face beneath the headwear']
+  ];
+  const choose=groups.map(([part,label,hint])=>
+    '<section class="forge-choice-section" role="group" aria-labelledby="forge-label-'+part+'">'+
+      '<div class="forge-section-head"><h2 id="forge-label-'+part+'">'+label+'</h2>'+
+      '<small>'+hint+'</small></div>'+
+      '<div class="forge-option-grid">'+FORGE_CHOICES[part].map(option=>{
+        const selected=forgeDraft[part]===option.id;
+        const swatch=part==='palette'
+          ?'<span class="forge-colour-chip" style="--chip-1:'+option.cloth+
+            ';--chip-2:'+option.dark+';--chip-3:'+option.metal+'"></span>'
+          :part==='complexion'
+            ?'<span class="forge-skin-chip" style="background:'+option.skin+'"></span>'
+            :'<span class="forge-choice-mark" aria-hidden="true">'+
+              ({head:'◈',torso:'◆',legs:'▲'})[part]+'</span>';
+        return '<button type="button" class="forge-option" data-forge-part="'+part+
+          '" data-forge-value="'+option.id+'" aria-pressed="'+selected+'">'+
+          swatch+'<span>'+option.label+'</span></button>';
+      }).join('')+'</div></section>'
+  ).join('');
+  const chosenPalette=FORGE_PALETTES.find(x=>x.id===forgeDraft.palette);
+  return '<main class="forge-shell"><div class="forge-inner">'+
+    '<header class="forge-header"><div><span class="eyebrow">MONSTER HUNTER OUTFITTERS</span>'+
+      '<h1 id="forge-title">HUNTER <em>FORGE</em></h1>'+
+      '<p>Every hunter has a story. Assemble yours in our original, inked gothic-fantasy style.</p>'+
+      '</div><button id="forge-cancel" type="button" class="forge-back">← BACK WITHOUT SAVING</button></header>'+
+    '<div class="forge-workspace">'+
+      '<section class="forge-display" aria-label="Live hunter preview">'+
+        '<div class="forge-art-stage">'+renderHunterSvg(forgeDraft,{className:'forge-preview-portrait'})+'</div>'+
+        '<div class="forge-display-footer"><span class="eyebrow">CURRENT OUTFIT</span>'+
+          '<strong>'+chosenPalette.label+'</strong>'+
+          '<small>Head + torso + legs + colours combine into one character.</small></div>'+
+        '<div class="forge-preview-actions">'+
+          '<button id="forge-randomise" type="button">✧ RANDOMISE</button>'+
+          '<button id="forge-reset" type="button">RESET TO DEFAULT</button>'+
+        '</div>'+
+      '</section>'+
+      '<section class="forge-settings" aria-label="Customise your hunter">'+
+        '<div class="forge-settings-header"><strong>CHOOSE YOUR EQUIPMENT</strong>'+
+        '<span>All choices are cosmetic — no gameplay advantage.</span></div>'+
+        '<div class="forge-choices-scroll">'+choose+'</div>'+
+        '<div class="forge-bottom"><p class="forge-saving-note" role="status">'+
+          (forgeNotice||'Save to keep this outfit for future hunts on this device.')+'</p>'+
+          '<button id="forge-save" type="button" class="primary-button">SAVE MY HUNTER →</button>'+
+          (forgeNotice?'<button id="forge-use-session" class="forge-session-button" type="button">USE THIS HUNTER FOR THIS SESSION →</button>':'')+
+        '</div>'+
+      '</section>'+
+    '</div>'+
+    '<p class="forge-future-note">Your design appears in introductions, training and the game HUD. A matching moving board token arrives in PR12.</p>'+
+  '</div></main>';
+}
+function bindForge(){
+  document.getElementById('forge-cancel').addEventListener('click',()=>{forgeOpen=false;forgeNotice='';render();});
+  document.querySelectorAll('[data-forge-part]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const part=button.dataset.forgePart;
+      if(!Object.hasOwn(FORGE_CHOICES,part))return;
+      const value=button.dataset.forgeValue;
+      if(!FORGE_CHOICES[part].some(option=>option.id===value))return;
+      forgeDraft=normalizeHunter({...forgeDraft,[part]:value});
+      forgeNotice='';
+      renderForgeWithScroll();
+    });
+  });
+  document.getElementById('forge-randomise').addEventListener('click',()=>{
+    forgeDraft=randomHunter();forgeNotice='';renderForgeWithScroll();
+  });
+  document.getElementById('forge-reset').addEventListener('click',()=>{
+    forgeDraft=normalizeHunter(DEFAULT_HUNTER);forgeNotice='';renderForgeWithScroll();
+  });
+  document.getElementById('forge-save').addEventListener('click',()=>{
+    if(saveHunter(storage(),forgeDraft)){
+      hunterAppearance=normalizeHunter(forgeDraft);
+      forgeOpen=false;forgeNotice='';render();
+    }else{
+      forgeNotice='Browser storage is blocked or full. You can still use this outfit for this session, but it will not survive a reload.';
+      renderForgeWithScroll();
+    }
+  });
+  document.getElementById('forge-use-session')?.addEventListener('click',()=>{
+    hunterAppearance=normalizeHunter(forgeDraft);
+    forgeOpen=false;forgeNotice='';render();
+  });
+}
+
 function scenarioHtml() {
   return '<main class="scenario-shell"><div class="scenario-inner">'+
     '<button id="scenario-back" class="text-button back-button">← BACK TO MENU</button>'+
     '<span class="eyebrow">THREE STORIES · TWO WAYS TO PLAY</span>'+
     '<h1>CHOOSE YOUR <em>MISSION</em></h1>'+
     '<p>Each mission uses the same mathematical movement rules, but changes what the Monster is trying to achieve.</p>'+
+    forgeLaunchHtml() +
     guidedChoiceHtml() +
     '<div class="scenario-grid">'+Object.values(SCENARIOS).map(mission=>
       '<article class="scenario-card scenario-'+esc(mission.id)+'">'+
@@ -158,7 +283,7 @@ function toggleNodeMark(id) {
   render();
 }
 function guideArtwork(step) {
-  if(step.visual==='hunter') return '<img class="guide-character-art" src="./assets/characters/monster-hunter.svg" alt="A cloaked monster hunter with lantern, compass and evidence map"/>';
+  if(step.visual==='hunter') return renderHunterSvg(hunterAppearance,{className:'guide-character-art'});
   const heading='<svg class="guide-diagram" viewBox="0 0 360 300" role="img" aria-label="Illustrated bearings and deduction teaching example">';
   const end='</svg>';
   const compass='<circle cx="175" cy="147" r="109" fill="#213a40" stroke="#d5b987" stroke-width="3"/>'+
@@ -333,6 +458,7 @@ function difficultyHtml() {
     '<span class="eyebrow">SOLO HUNT · '+esc(SCENARIOS[pendingScenario].name.toUpperCase())+'</span>' +
     '<h1>FOUR PATHS INTO <em>THE DARK</em></h1>' +
     '<p>Each level changes the size of the map, the monster’s instincts and the strength of the clues you uncover.</p>' +
+    forgeLaunchHtml() +
     guidedChoiceHtml() +
     '<div class="difficulty-grid">' + cards + '</div>' +
     '<p class="difficulty-footer">The monster moves automatically after each Hunter turn. Its position is never shown.</p>' +
@@ -367,6 +493,7 @@ function homeHtml() {
       '<div class="home-crest" aria-hidden="true"><span>N</span><b>✦</b><span>S</span></div>' +
       '<h1>SHADOW<br><i>BEARINGS</i></h1>' +
       '<p class="home-subtitle">One hunter. One hidden monster. A trail of bearings through the Hollow Moor.</p>' +
+      forgeLaunchHtml() +
       guidedChoiceHtml() +
       '<div class="mode-grid">' +
         '<button id="start-two" class="mode-card">' +
@@ -813,7 +940,7 @@ function monsterIntroductionHtml(view) {
   return '<div class="encounter-backdrop" data-encounter="intro">'+
     '<section class="encounter-card monster-encounter hunter-briefing" role="dialog" aria-modal="true" aria-labelledby="monster-intro-title">'+
       '<div class="encounter-art hunter-briefing-art">'+
-        '<img class="briefing-hunter-illustration" src="./assets/characters/monster-hunter.svg" alt="A monster hunter with a lantern, map and compass"/>'+
+        renderHunterSvg(hunterAppearance,{className:'briefing-hunter-illustration'})+
         '<div class="briefing-quarry-portrait">'+
           monsterPortrait(view.difficulty)+
           '<span>'+esc(m.name)+'</span>'+
@@ -971,6 +1098,7 @@ function playHtml(view) {
     titleBar(true,view)+
     '<main class="play-content hud-content">'+
       '<div class="status-row hud-status"><div class="hud-status-main">'+
+        (isMonster?'':'<span class="hud-hunter-avatar">'+renderHunterSvg(hunterAppearance,{bust:true,className:'hud-hunter-art'})+'</span>')+
         '<span class="role-tag">'+(isMonster?'◆ THE MONSTER':view.mode==='solo'?
           '✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER')+'</span>'+
         '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1></div>'+
@@ -1184,8 +1312,14 @@ function render() {
     bindTutorial();
     return;
   }
+  if(view.phase==='home' && forgeOpen){
+    mount.innerHTML=forgeHtml();
+    bindForge();
+    return;
+  }
   if(view.phase==='home') {
     mount.innerHTML=homeHtml();
+    document.getElementById('forge-open')?.addEventListener('click',openForge);
     document.getElementById('guided-toggle')?.addEventListener('click',()=>{
       guidedSelection=!guidedSelection;
       render();

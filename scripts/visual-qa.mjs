@@ -74,11 +74,13 @@ try{
     assert.match(await page.locator('#monster-intro-title').textContent(),/You are a Monster Hunter/);
     assert.match(await page.locator('.briefing-monster-name').textContent(),/THE ECLIPSE HERALD/);
     assert.match(await page.locator('.briefing-deadline').textContent(),/21 ROUNDS/);
-    for(const selector of ['.briefing-hunter-illustration','.briefing-quarry-portrait img']){
-      assert.ok(await page.locator(selector).evaluate(async img=>{
-        await img.decode();return img.naturalWidth>200;
-      }),size.name+' Hunter or monster artwork failed to load: '+selector);
-    }
+    assert.ok(await page.locator('svg.briefing-hunter-illustration').evaluate(svg=>
+      svg.viewBox.baseVal.width===320 && svg.querySelectorAll('[data-hunter-slot]').length===3 &&
+      svg.getBoundingClientRect().width>60
+    ),size.name+' custom Hunter artwork missing or collapsed');
+    assert.ok(await page.locator('.briefing-quarry-portrait img').evaluate(async img=>{
+      await img.decode();return img.naturalWidth>200;
+    }),size.name+' monster artwork failed to load');
     const fullyReadable=await page.locator('.monster-encounter .encounter-copy')
       .evaluate(el=>el.scrollHeight<=el.clientHeight+6);
     assert.ok(fullyReadable,size.name+' monster introduction scrolls or clips its level heading');
@@ -140,11 +142,13 @@ try{
     const rounds={intro:13,apprentice:15,tracker:18,expert:21}[difficulty];
     assert.match(await page.locator('.briefing-deadline').textContent(),new RegExp(rounds+' ROUNDS'));
     assert.match(await page.locator('.briefing-text').allTextContents().then(x=>x.join(' ')),/evidence/);
-    for(const selector of ['.briefing-hunter-illustration','.briefing-quarry-portrait img']){
-      assert.ok(await page.locator(selector).evaluate(async img=>{
-        await img.decode();return img.naturalWidth>200;
-      }),difficulty+' Hunter or monster portrait unavailable: '+selector);
-    }
+    assert.ok(await page.locator('svg.briefing-hunter-illustration').evaluate(svg=>
+      svg.querySelectorAll('[data-hunter-slot]').length===3 &&
+      svg.getBoundingClientRect().height>40
+    ),difficulty+' custom Hunter portrait unavailable');
+    assert.ok(await page.locator('.briefing-quarry-portrait img').evaluate(async img=>{
+      await img.decode();return img.naturalWidth>200;
+    }),difficulty+' monster portrait unavailable');
     await page.screenshot({path:'visual/monster-intro-'+difficulty+'.png',fullPage:false});
     await page.locator('#intro-begin').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
@@ -194,6 +198,53 @@ try{
     await page.screenshot({path:'visual/map-'+difficulty+'.png',fullPage:false});
   }
   await page.close();
+
+  // PR11 Hunter Forge: each selected part and palette persists, and the same
+  // original figure appears on mission briefings, field training and HUD.
+  for(const viewport of [
+    {name:'desktop',width:1366,height:768},
+    {name:'mobile',width:390,height:844}
+  ]){
+    const forge=await browser.newPage({viewport:{width:viewport.width,height:viewport.height}});
+    const pageErrors=[];
+    forge.on('pageerror',error=>pageErrors.push(String(error)));
+    await forge.goto(url,{waitUntil:'domcontentloaded'});
+    await forge.locator('#forge-open').click();
+    assert.equal(await forge.locator('.forge-preview-portrait [data-hunter-slot]').count(),3);
+    await forge.screenshot({path:'visual/hunter-forge-'+viewport.name+'-default.png',fullPage:true});
+    for(const [part,value] of [
+      ['head','brim'],['torso','armour'],['legs','greaves'],
+      ['palette','midnight'],['complexion','deep']
+    ]) {
+      await forge.locator('[data-forge-part="'+part+'"][data-forge-value="'+value+'"]').click();
+      assert.equal(await forge.locator('.forge-preview-portrait').getAttribute('data-hunter-'+
+        (part==='head'||part==='torso'||part==='legs'?'part-'+part:part)),value);
+      assert.equal(await forge.locator('[data-forge-part="'+part+'"][data-forge-value="'+value+'"]')
+        .getAttribute('aria-pressed'),'true');
+    }
+    await forge.screenshot({path:'visual/hunter-forge-'+viewport.name+'-customised.png',fullPage:true});
+    await forge.locator('#forge-save').click();
+    assert.equal(await forge.locator('.forge-launch-art').getAttribute('data-hunter-part-head'),'brim');
+    const saved=await forge.evaluate(()=>JSON.parse(localStorage.getItem('shadow-bearings.hunter-forge.v1')));
+    assert.deepEqual(saved,{
+      head:'brim',torso:'armour',legs:'greaves',palette:'midnight',complexion:'deep'
+    });
+    await forge.reload({waitUntil:'domcontentloaded'});
+    assert.equal(await forge.locator('.forge-launch-art').getAttribute('data-hunter-palette'),'midnight');
+    await forge.locator('#start-solo-select').click();
+    assert.equal(await forge.locator('.forge-launch-art').getAttribute('data-hunter-part-legs'),'greaves');
+    await forge.locator('[data-difficulty="apprentice"]').click();
+    assert.equal(await forge.locator('svg.briefing-hunter-illustration')
+      .getAttribute('data-hunter-part-head'),'brim');
+    await forge.screenshot({path:'visual/hunter-forge-'+viewport.name+'-briefing.png',fullPage:false});
+    await forge.locator('#intro-begin').click();
+    assert.equal(await forge.locator('.hud-hunter-art').getAttribute('data-hunter-palette'),'midnight');
+    assert.equal(await forge.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0);
+    await measure(forge,'forge-'+viewport.name+'-hud');
+    await forge.screenshot({path:'visual/hunter-forge-'+viewport.name+'-hud.png',fullPage:false});
+    assert.deepEqual(pageErrors,[],viewport.name+' Hunter Forge browser errors');
+    await forge.close();
+  }
 
   // Guided Tutorial Help teaches the real game, THEN the existing bearings
   // exercises. The in-game Coach must never auto-draw a bearing on the map.

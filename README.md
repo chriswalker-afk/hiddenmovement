@@ -4,7 +4,7 @@
 
 One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine these with occasional public sightings in solo mode. Bearing values appear as text, not automatically drawn rays or sectors on the map.
 
-## Playable modes (PR1–PR10)
+## Playable modes (PR1–PR11)
 
 ### Solo Hunt — Hunter versus Monster AI
 
@@ -72,6 +72,18 @@ After these steps, the original **four interactive bearings exercises** remain a
 **Guided mode now includes a COACH tab**. It gives contextual, student-friendly instructions at the start of the hunt and after searches, invalid bearing attempts, announced special powers or the final rounds. It can show the bearing of **one connected road as a worked *text-only* example on request**, and offers shortcuts to Clues, the manual protractor and the full guide. The Coach and worked example operate on public Hunter information, not secret Monster state.
 
 **Standard play is unchanged:** it receives the same earned clues, sightings and bearing-entry feedback, but not the Coach or optional combined-clue plotting. Neither mode automatically draws bearing rays or sectors on the map: the optional Guided clue overlay is activated deliberately from Clues.
+
+## Hunter Forge — create your own Monster Hunter (PR11)
+
+**Hunter Forge** is an original modular gothic-fantasy character creator, accessible on the home screen, mission selection and difficulty selection. It uses a hand-drawn inked SVG figure assembled from **4 heads × 4 torsos × 4 leg styles × 6 coordinated colour palettes = 384 outfit combinations**, plus four independently selectable complexions.
+
+Choose from a shadow hood, witchfinder hat, iron visor or windswept hair; longcoat, ranger cloak, stitched gambeson or warden armour; and trail boots, greaves, marsh gaiters or riding boots. Six palettes include Moss & Leather, Ash & Crimson and Midnight & Steel. The visual style has dark fantasy and monster-hunting influences but consists entirely of original, deterministic vector drawing — no artwork or protected characters from existing game franchises.
+
+Use **Randomise**, **Reset to Default**, or **Save My Hunter**. Selections have live visual feedback. Cancel returns to the previous menu without overwriting the saved design. The appearance is saved in the browser's device-local storage under a separate `shadow-bearings.hunter-forge.v1` key, with strict validation and a session-only fallback when storage is disabled; it does not alter gameplay saves or give strategic advantages.
+
+The selected Hunter appears on the **level introduction** alongside that level's unique Monster, in the first How to Hunt tutorial step and in the **Hunter's HUD** as a compact, consistent bust. The pass-and-play handoff screen remains fully blank apart from the required instruction and reveal control, preserving role privacy.
+
+**PR12 (next):** add an equally recognisable **moving board token** in the same outfit, with responsive map placement and movement polish. PR11 deliberately retains the original map marker and movement rules.
 
 ## Dry riverbank locations (merged PR8)
 
@@ -197,6 +209,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
 - `src/tutorial.mjs` — four interactive bearings practice activities
 - `src/hunter-guide.mjs` — seven illustrated How to Hunt lessons, level briefings and public-information Guided Coach
+- `src/hunter-forge.mjs` — validated modular SVG hunter artwork, palettes, randomisation and device-local persistence
 - `src/engine.mjs` — game rules and strictly role-specific view projections
 - `src/app.mjs` — screens, movement controls, clues and illustrated SVG maps
 - `scripts/simulate.mjs` — reproducible public-information playtest baseline
@@ -204,7 +217,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR10:** classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR11:** PR12 moving board token integration; classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 
