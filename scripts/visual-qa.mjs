@@ -717,6 +717,126 @@ try{
     await replay.close();
   }
 
+  // PR20 — complete ACTION-DRIVEN first-turn tutorial, not a snapshot-only
+  // assertion. Check the actual arrows, protractor positioning, evidence,
+  // manual optional deduction, both legal moves and the SECRET Monster phase.
+  const guidedChecks=[];
+  for(const viewport of [
+    {name:'desktop',width:1280,height:800},
+    {name:'portrait',width:390,height:844},
+    {name:'landscape',width:844,height:390}
+  ]){
+    const guided=await browser.newPage({viewport:{
+      width:viewport.width,height:viewport.height
+    }});
+    const errors=[];
+    guided.on('pageerror',error=>errors.push(String(error)));
+    await guided.goto(url,{waitUntil:'domcontentloaded'});
+    await guided.locator('#guided-toggle').click();
+    await guided.locator('#start-solo-select').click();
+    await guided.locator('[data-difficulty="intro"]').click();
+    assert.match(await guided.locator('.encounter-copy').textContent(),/GUIDED MODE/);
+    await guided.locator('#intro-begin').click();
+    const step=async key=>{
+      assert.equal(await guided.locator('#guided-tour').getAttribute('data-guided-step'),key,
+        'Walkthrough did not reach '+key+' on '+viewport.name);
+      assert.ok(await guided.locator('#guided-tour-arrow').isVisible());
+      assert.equal(await guided.locator('#guided-tour-skip').count(),1);
+      assert.equal(await guided.locator('.guided-tour-target').count(),1,
+        'Exactly one active lesson control should be highlighted');
+    };
+    await step('enable-protractor');
+    assert.equal(await guided.locator('#protractor-group').count(),0);
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-enable.png',fullPage:false});
+    await guided.locator('#protractor-toggle').click();
+    await step('place-protractor');
+    assert.equal(await guided.locator('#protractor-group').count(),1);
+    assert.ok((await guided.locator('#protractor-group').getAttribute('transform'))!==
+      'translate(100 380)','Guided protractor must first need positioning');
+    if(viewport.name==='desktop'){
+      const handle=await guided.locator('.protractor-center-hit').boundingBox();
+      const hunter=await guided.locator('.hunter-board-piece').boundingBox();
+      assert.ok(handle&&hunter,'Both drag handle and Hunter must be visible');
+      await guided.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2);
+      await guided.mouse.down();
+      await guided.mouse.move(hunter.x+hunter.width/2,hunter.y+hunter.height/2,{steps:12});
+      await guided.mouse.up();
+    }else{
+      // The CENTER control is a genuinely supported non-drag alternative
+      // for touch, keyboard, reduced dexterity and small screens.
+      await guided.locator('#protractor-center').click();
+    }
+    await step('open-clue');
+    assert.equal(await guided.locator('.guided-tour-companion').count(),0);
+    await guided.locator('#hud-tab-clues').click();
+    await step('read-bearing');
+    assert.equal(await guided.locator('.clue-card.guided-tour-target').count(),1);
+    assert.equal(await guided.locator('.sighting-card').count(),1);
+    assert.equal(await guided.locator('.clue-ray,.clue-sector').count(),0,
+      'A tutorial may not automatically plot the hidden Monster direction');
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-clue.png',fullPage:false});
+    await guided.locator('#guided-tour-next').click();
+    await step('enable-deduction');
+    assert.equal(await guided.locator('#plot-toggle.guided-tour-target').count(),1);
+    await guided.locator('#plot-toggle').click();
+    await step('explain-deduction');
+    assert.ok(await guided.locator('.clue-ray,.clue-sector').count()>0);
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-deduction.png',fullPage:false});
+    await guided.locator('#guided-tour-next').click();
+    await step('first-move');
+    const map=MAPS.intro;
+    const first=map.adjacency[map.hunterStart][0];
+    const firstBearing=formatBearing(bearingBetween(
+      map.nodes[map.hunterStart],map.nodes[first])).slice(0,3);
+    await guided.locator('#bearing-input').fill(firstBearing);
+    await guided.locator('#move-form button[type="submit"]').click();
+    assert.equal(await guided.locator('.report-encounter .guided-search-note').count(),1);
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-search.png',fullPage:false});
+    await guided.locator('#report-continue').click();
+    await step('second-move');
+    const homeBearing=formatBearing(bearingBetween(
+      map.nodes[first],map.nodes[map.hunterStart])).slice(0,3);
+    await guided.locator('#bearing-input').fill(homeBearing);
+    await guided.locator('#move-form button[type="submit"]').click();
+    await guided.locator('#report-continue').click();
+    await step('end-turn');
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-end-turn.png',fullPage:false});
+    await guided.locator('#end-turn').click();
+    await step('monster-moved');
+    assert.equal(await guided.locator('.round-indicator').count(),0);
+    assert.equal(await guided.locator('.monster-location').count(),0,
+      'No Guided step may reveal the secret Monster after its turn');
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-monster-turn.png',fullPage:false});
+    await guided.locator('#hud-tab-clues').click();
+    assert.equal(await guided.locator('#guided-tour').getAttribute('data-guided-step'),'independent');
+    assert.match(await guided.locator('#guided-tour h3').textContent(),/on your own/i);
+    await guided.screenshot({path:'visual/guided-'+viewport.name+'-independent.png',fullPage:false});
+    await guided.locator('#guided-tour-next').click();
+    assert.equal(await guided.locator('#guided-tour').count(),0,
+      'First-turn walkthrough should end permanently after independence message');
+    assert.equal(await guided.locator('.hunter-board-piece').count(),1);
+    assert.equal(await guided.locator('.coach-panel').count(),0,
+      'After tutorial Clues can remain open; Coach is optional');
+    assert.deepEqual(errors,[],'Guided '+viewport.name+' threw a browser exception');
+    guidedChecks.push({viewport:viewport.name,steps:'complete',
+      twoValidMoves:true,monsterLocation:'hidden'});
+    await guided.close();
+  }
+  // Skipping removes only guided instruction; normal gameplay and Coach
+  // controls remain and the Hunter is never silently moved.
+  const skipGuide=await browser.newPage({viewport:{width:390,height:844}});
+  await skipGuide.goto(url,{waitUntil:'domcontentloaded'});
+  await skipGuide.locator('#guided-toggle').click();
+  await skipGuide.locator('#start-solo-select').click();
+  await skipGuide.locator('[data-difficulty="apprentice"]').click();
+  await skipGuide.locator('#intro-begin').click();
+  await skipGuide.locator('#guided-tour-skip').click();
+  assert.equal(await skipGuide.locator('#guided-tour').count(),0);
+  assert.equal(await skipGuide.locator('.hunter-board-piece').count(),1);
+  assert.equal(await skipGuide.locator('#hud-tab-coach').count(),1);
+  await skipGuide.close();
+  await writeFile('visual/guided-walkthrough.json',JSON.stringify(guidedChecks,null,2));
+
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
   await writeFile('visual/four-world-consistency.json',JSON.stringify(consistencyChecks,null,2));
   console.log('Visual QA succeeded for '+report.length+' layouts and '+
