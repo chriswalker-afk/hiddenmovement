@@ -4,6 +4,7 @@
  */
 import { chromium } from 'playwright';
 import { MAPS } from '../src/map.mjs';
+import {bearingBetween,formatBearing} from '../src/geometry.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const url=process.env.PREVIEW_URL||'http://127.0.0.1:8765/';
@@ -69,6 +70,13 @@ try{
     await page.goto(url,{waitUntil:'domcontentloaded'});
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="expert"]').click();
+    await page.locator('.monster-encounter').waitFor({state:'visible'});
+    assert.match(await page.locator('#monster-intro-title').textContent(),/The Eclipse Herald/);
+    assert.ok(await page.locator('.monster-encounter img').evaluate(async img=>{
+      await img.decode();return img.naturalWidth>200;
+    }),size.name+' monster artwork failed to load');
+    await page.screenshot({path:'visual/'+size.name+'-monster-intro.png',fullPage:false});
+    await page.locator('#intro-begin').click();
     await page.locator('.hud-screen').waitFor({state:'visible'});
     assert.equal(await page.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0,
       'Default screen must not auto-plot clue bearings');
@@ -93,6 +101,22 @@ try{
       await measure(page,'mobile-expert-detail-zoom');
       await page.screenshot({path:'visual/mobile-expert-detail-zoom.png',fullPage:false});
     }
+    if(['desktop','mobile'].includes(size.name)){
+      const map=MAPS.expert;
+      const target=map.adjacency[map.hunterStart][0];
+      const bearing=formatBearing(bearingBetween(map.nodes[map.hunterStart],map.nodes[target]))
+        .replace('°','');
+      await page.locator('#bearing-input').fill(bearing);
+      await page.locator('.bearing-entry button[type="submit"]').click();
+      await page.locator('[data-encounter="report"]').waitFor({state:'visible'});
+      assert.match(await page.locator('.report-story').textContent(),
+        /You search|You ask the locals|You confront the witnesses/);
+      assert.ok(await page.locator('.report-art img').evaluate(async img=>{
+        await img.decode();return img.naturalWidth>200;
+      }),size.name+' search report portrait failed to load');
+      await page.screenshot({path:'visual/'+size.name+'-search-report.png',fullPage:false});
+      await page.locator('#report-continue').click();
+    }
     assert.deepEqual(errors,[],size.name+' browser console exceptions');
     await page.close();
   }
@@ -102,6 +126,14 @@ try{
     await page.goto(url,{waitUntil:'domcontentloaded'});
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="'+difficulty+'"]').click();
+    const expectedMonster={intro:'The Lantern Wisp',apprentice:'The Briar Shade',
+      tracker:'The Mire Mimic',expert:'The Eclipse Herald'}[difficulty];
+    assert.equal(await page.locator('#monster-intro-title').textContent(),expectedMonster);
+    assert.ok(await page.locator('.monster-encounter img').evaluate(async img=>{
+      await img.decode();return img.naturalWidth>200;
+    }),difficulty+' monster portrait not available from packaged site');
+    await page.screenshot({path:'visual/monster-intro-'+difficulty+'.png',fullPage:false});
+    await page.locator('#intro-begin').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
     const decks=await page.locator('.river-bridges .river-bridge').count();
     if(['tracker','expert'].includes(difficulty))
