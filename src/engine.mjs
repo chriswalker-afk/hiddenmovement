@@ -13,7 +13,7 @@ import {
 } from './monster-powers.mjs';
 
 export const SETTINGS = Object.freeze({
-  maxRounds: 15,
+  maxRounds: 13,
   trailLifetime: 5,
   clueHalfWidth: 15,
   bearingTolerance: 6,
@@ -29,7 +29,7 @@ export const SETTINGS = Object.freeze({
 export const DIFFICULTIES = Object.freeze({
   intro: Object.freeze({
     id: 'intro', name: 'Intro', tagline: 'Find your bearings',
-    mapId: 'intro', nodes: 14, maxRounds: 15,
+    mapId: 'intro', nodes: 14, maxRounds: 13,
     trailLifetime: 5, clueHalfWidth: 0, distanceBandHalfWidth: 0,
     sightingInterval: 2, sightingHalfWidth: 25, openingPulse: true,
     clueAgeStyle: 'exact',
@@ -45,7 +45,7 @@ export const DIFFICULTIES = Object.freeze({
   }),
   tracker: Object.freeze({
     id: 'tracker', name: 'Tracker', tagline: 'Follow the faintest trace',
-    mapId: 'tracker', nodes: 26, maxRounds: 15,
+    mapId: 'tracker', nodes: 26, maxRounds: 18,
     trailLifetime: 3, clueHalfWidth: 30, distanceBandHalfWidth: null,
     sightingInterval: 4, sightingHalfWidth: 55, openingPulse: true,
     clueAgeStyle: 'approximate',
@@ -53,7 +53,7 @@ export const DIFFICULTIES = Object.freeze({
   }),
   expert: Object.freeze({
     id: 'expert', name: 'Expert', tagline: 'Face the eclipse',
-    mapId: 'expert', nodes: 36, maxRounds: 15,
+    mapId: 'expert', nodes: 36, maxRounds: 21,
     trailLifetime: 2, clueHalfWidth: 45, distanceBandHalfWidth: null,
     sightingInterval: 5, sightingHalfWidth: 75, openingPulse: true,
     clueAgeStyle: 'vague',
