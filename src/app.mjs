@@ -688,6 +688,7 @@ function mapSvg(view) {
       (analysis?.constrained && candidateSet.has(n.id)?'<circle r="25" class="candidate-halo"/>':'') +
       (suspected?'<circle r="28" class="rumour-halo"/><text x="20" y="-19" class="rumour-icon">?</text>':'')+
       (discredited?'<text x="20" y="-19" class="false-rumour-icon">×</text>':'')+
+      '<circle r="36" class="location-focus-ring"/>'+
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
        n.label?'<text y="4" text-anchor="middle" class="node-number">'+esc(n.label)+'</text>':'')+
@@ -699,9 +700,9 @@ function mapSvg(view) {
       (exit?'<text x="25" y="8" class="goal-label">GATE</text>':'')+
       (beacon?'<text x="23" y="8" class="goal-label">'+(dark?'OUT':'BEACON')+'</text>':'')+
       (mark?'<text y="34" text-anchor="middle" class="mark-symbol">'+(mark==='possible'?'?':'×')+'</text>':'');
-    if(possibleStart) return '<g role="button" tabindex="0" aria-label="Choose '+esc(n.name)+' as monster starting position" class="'+cls.join(' ')+'" data-spawn="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
-    if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
-    return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
+    if(possibleStart) return '<g role="button" tabindex="0" aria-label="Choose '+esc(n.name)+' as monster starting position" class="'+cls.join(' ')+'" data-map-node="'+n.id+'" data-spawn="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
+    if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-map-node="'+n.id+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
+    return '<g class="'+cls.join(' ')+'" data-map-node="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
   const replayTokens=view.replay && view.hunter && view.monster ?
     [['monster',view.monster,'M']].map(([role,id,initial])=>{
@@ -757,11 +758,21 @@ function mapSvg(view) {
 
 function mapFrame(view) {
   const map = currentMap();
-  const large = Object.keys(map.nodes).length > 18;
-  const index = large ? '<details class="location-index"><summary>LOCATION INDEX · TAP TO SEE NUMBERED PLACES</summary>' +
-    '<div class="location-index-grid">' + Object.values(map.nodes).map(n =>
-    '<span><b>' + esc(n.label) + '</b> ' + esc(n.name) + '</span>').join('') +
-    '</div></details>' : '';
+  // Every map has a public Location Finder. On 26/36-location maps,
+  // name lettering is necessarily small at 100% phone overview scale, so
+  // the finder highlights the *real* node without spending a turn or making
+  // a Hunter suspicion mark. It is equally available during replay.
+  const index = '<details class="location-index">'+
+    '<summary>LOCATION FINDER · FIND A PLACE BY NAME</summary>'+
+    '<div class="location-index-grid" role="group" aria-label="Public map locations">'+
+      Object.values(map.nodes).map(n=>
+        '<button type="button" class="location-index-choice" data-map-locate="'+esc(n.id)+
+        '" aria-pressed="false" aria-label="Highlight '+esc(n.name)+' on the map">'+
+        '<b>'+esc(n.label||n.id)+'</b> '+esc(n.name)+'</button>'
+      ).join('')+
+    '</div>'+
+    '<p class="location-index-hint">Highlight only. This will not move your Hunter or change your notes.</p>'+
+  '</details>';
   return '<div class="map-section">' +
     '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + '' + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
@@ -1409,6 +1420,36 @@ function bindProtractor() {
 
 function bindMapZoom() {
   bindProtractor();
+  // Public map navigation only: selected location is not persisted, does
+  // not write notes, and is discarded at every screen/turn re-render.
+  // This is important for opaque multiplayer handoffs.
+  document.querySelectorAll('[data-map-locate]').forEach(choice=>{
+    choice.addEventListener('click',()=>{
+      const id=choice.dataset.mapLocate;
+      const site=currentMap().nodes[id];
+      if(!site)return;
+      document.querySelectorAll('.world-svg .node.location-spotlight').forEach(node=>
+        node.classList.remove('location-spotlight'));
+      const node=document.querySelector('.world-svg .node[data-map-node="'+id+'"]');
+      node?.classList.add('location-spotlight');
+      document.querySelectorAll('[data-map-locate]').forEach(button=>
+        button.setAttribute('aria-pressed',button.dataset.mapLocate===id?'true':'false'));
+      const details=choice.closest('.location-index');
+      const summary=details?.querySelector('summary');
+      if(summary)summary.textContent='FOUND · '+site.name.toUpperCase()+' · TAP TO CHANGE';
+      // At high zoom, centre the *real* map node in the scrollable viewport.
+      // At 100% the full strategic overview remains untouched.
+      const frame=document.querySelector('.map-frame');
+      const svg=frame?.querySelector('.world-svg');
+      if(frame&&svg){
+        frame.scrollLeft=Math.max(0,Math.min(frame.scrollWidth-frame.clientWidth,
+          svg.clientWidth*site.x/1000-frame.clientWidth/2));
+        frame.scrollTop=Math.max(0,Math.min(frame.scrollHeight-frame.clientHeight,
+          svg.clientHeight*site.y/720-frame.clientHeight/2));
+      }
+      if(details)details.open=false;
+    });
+  });
   document.getElementById('map-zoom-in')?.addEventListener('click',()=>{
     mapZoom=Math.min(3,Math.round((mapZoom+0.25)*100)/100);
     render();

@@ -202,7 +202,9 @@ A save is not tied to a user account, is not synced between devices, and is lost
 
 ## New original scenery and responsive maps
 
-All four worlds—Blackfen Marsh, Duskmere Village, Rookgate District and Ravenmarch County—have original, location-specific scenery beneath the gameplay graph. Each is visually distinct and all river/bridge alignments are tested against the existing legal roads. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
+All four worlds—Blackfen Marsh, Duskmere Village, Rookgate District and Ravenmarch County—have original, location-specific scenery beneath the gameplay graph. Each is visually distinct and all river/bridge alignments are tested against the existing legal roads. Public objectives stay highlighted on the maps. The maps have **+/− zoom controls** (100–300%), scrollable larger views on small screens, full place labels and reduced-motion support.
+
+**PR19 consistency pass:** Every map now offers an optional **Location Finder**—open it to choose the full name of any public place. The corresponding real map node receives a high-contrast gold highlight and a zoomed viewport pans to the location. The Finder does **not** move the Hunter, advance turns, mark suspects or reveal secret Monster positions. All four decorative SVG worlds are clipped within the map frame, separately from the playable graph. See the [four-world visual review and classroom checklist](docs/FOUR_WORLD_VISUAL_QA.md).
 
 ## Preview and publishing
 
@@ -276,7 +278,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR18:** Run a complete four-world visual consistency and classroom playtesting pass. Check each icon is recognisable without first reading the name, that the personal Hunter is obvious, that mobile labels never collide, and that geography supports the six-bridge Blackwater and the other named waterways. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR19:** Conduct a student-led **real-device/projector visual review** of all four illustrated maps, using the [consistency checklist](docs/FOUR_WORLD_VISUAL_QA.md). PR19 completes the automated comparison and location-finder polish, not the classroom trial. Continue student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 

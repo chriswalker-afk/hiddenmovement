@@ -1699,3 +1699,79 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 .world-svg.theme-eclipse .road-top{stroke:#c4cfb9}
 .world-svg.theme-eclipse .rookgate-landmark,
 .world-svg.theme-eclipse .ravenmarch-landmark{pointer-events:none}
+
+
+/* PR19 - the four-world Location Finder. A selectable PUBLIC landmark name is
+   clearly indicated on any map, including the 36-place phone overview. This
+   is a visual locator, deliberately not an eligible move or a suspicion mark.
+   Paint the finder halo inside the interactive node group, never as an
+   opaque overlay over roads or the personalised Hunter board piece. */
+.world-svg .location-focus-ring{
+  fill:#f7d898;
+  fill-opacity:0;
+  stroke:#ffdf99;
+  stroke-width:4;
+  stroke-opacity:0;
+  pointer-events:none
+}
+.world-svg .node.location-spotlight .location-focus-ring{
+  fill-opacity:.12;
+  stroke-opacity:1;
+  stroke-dasharray:6 4;
+  filter:drop-shadow(0 0 5px #f8d99b)
+}
+.world-svg .node.location-spotlight .node-ring{
+  stroke:#ffedbe;
+  stroke-width:5;
+  filter:drop-shadow(0 0 6px #f5c879)
+}
+.world-svg .node.location-spotlight .node-label{
+  fill:#fff5d6;
+  stroke:#0a2025;
+  stroke-width:5px;
+  paint-order:stroke;
+}
+.world-svg .node[role=button]:focus-visible .location-focus-ring{
+  fill-opacity:.09;
+  stroke-opacity:1;
+  stroke-dasharray:4 5
+}
+.location-index-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px 6px
+}
+.location-index-grid .location-index-choice{
+  display:block;width:100%;min-width:0;min-height:30px;
+  color:#e0e9df;text-align:left;font:600 .73rem/1.35 'DM Sans',system-ui,sans-serif;
+  padding:6px 7px;border:1px solid transparent;background:#213d43;
+  border-radius:3px;cursor:pointer
+}
+.location-index-grid .location-index-choice b{
+  color:#f1d49e;font-size:.68rem;margin-right:5px;
+}
+.location-index-grid .location-index-choice:hover,
+.location-index-grid .location-index-choice:focus-visible,
+.location-index-grid .location-index-choice[aria-pressed=true]{
+  border-color:#e7c480;background:#355356;color:#fff7e1;
+  outline-offset:1px
+}
+.location-index-hint{margin:8px 0 0;font-size:.67rem;color:#b7cec0}
+.location-index summary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-screen .location-index[open] .location-index-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  padding-top:3px
+}
+@media(max-width:700px){
+  .location-index-grid,
+  .hud-screen .location-index[open] .location-index-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))
+  }
+  .location-index-grid .location-index-choice{font-size:.7rem}
+}
+@media(max-width:400px){
+  .location-index-grid,
+  .hud-screen .location-index[open] .location-index-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)
+  }
+  .location-index-grid .location-index-choice{font-size:.68rem}
+}

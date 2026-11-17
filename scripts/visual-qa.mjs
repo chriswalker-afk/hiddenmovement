@@ -62,6 +62,54 @@ async function measure(page,label){
     label+' save must share the same row as status, not consume extra height');
   assert.ok(state.parts['.map-frame'].height>=90,label+' map is too small to use');
 }
+
+// The same public finder must work in every region and viewport. It only
+// highlights a place; it cannot move the Hunter, spend turns or leak a
+// secret Monster location.
+const consistencyChecks=[];
+async function verifyLocationFinder(page,difficulty,shot){
+  const map=MAPS[difficulty];
+  const names=Object.values(map.nodes);
+  const site=names[names.length-1];
+  const hunterBefore=await page.locator('.hunter-board-piece')
+    .getAttribute('data-hunter-board-node');
+  const roundBefore=await page.locator('.round-indicator').textContent();
+  const marksBefore=await page.locator('.node.marked-possible, .node.marked-ruled').count();
+  const index=page.locator('details.location-index');
+  assert.equal(await index.count(),1,difficulty+' needs an always-available finder');
+  assert.equal(await page.locator('.node[data-map-node]').count(),names.length);
+  await index.locator('summary').click();
+  assert.equal(await index.locator('[data-map-locate]').count(),names.length,
+    difficulty+' every place must be findable by name');
+  assert.equal(await index.locator('.location-index-choice').last().getAttribute('aria-label'),
+    'Highlight '+site.name+' on the map');
+  await index.locator('[data-map-locate="'+site.id+'"]').click();
+  assert.equal(await index.getAttribute('open'),null,
+    'Finding a place should close the panel and reveal the map');
+  assert.ok((await index.locator('summary').textContent()).includes(site.name.toUpperCase()));
+  const found=page.locator('.world-svg .node.location-spotlight');
+  assert.equal(await found.count(),1,'Only one node should glow');
+  assert.equal(await found.getAttribute('data-map-node'),site.id,
+    'Marker must correspond to public landmark name');
+  assert.equal(await found.locator('.location-focus-ring').count(),1);
+  assert.equal(await found.locator('.location-focus-ring')
+    .evaluate(el=>getComputedStyle(el).strokeOpacity),'1');
+  assert.equal(await index.locator('[data-map-locate="'+site.id+'"]')
+    .getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('.hunter-board-piece')
+    .getAttribute('data-hunter-board-node'),hunterBefore,
+    'The finder must not move the Hunter');
+  assert.equal(await page.locator('.round-indicator').textContent(),roundBefore,
+    'The finder must not spend a turn');
+  assert.equal(await page.locator('.node.marked-possible, .node.marked-ruled').count(),marksBefore,
+    'The finder must not alter deduction marks');
+  assert.equal(await page.locator('.monster-location').count(),0,
+    'The public finder must never reveal a hidden Monster');
+  await page.screenshot({path:'visual/'+shot+'-finder.png',fullPage:false});
+  consistencyChecks.push({difficulty,viewport:shot,located:site.id,
+    count:names.length,unchangedHunter:hunterBefore,
+    currentZoom:(await page.locator('.map-zoom-controls output').textContent()).trim()});
+}
 try{
   for(const size of sizes){
     const page=await browser.newPage({viewport:{width:size.width,height:size.height},deviceScaleFactor:1});
@@ -323,6 +371,7 @@ try{
       'Bearings must never be drawn automatically on the map');
     await measure(page,'map-'+difficulty);
     await page.screenshot({path:'visual/map-'+difficulty+'.png',fullPage:false});
+    await verifyLocationFinder(page,difficulty,'map-'+difficulty);
   }
   await page.close();
 
@@ -351,6 +400,7 @@ try{
   await blackfen.locator('#map-zoom-in').click();
   await measure(blackfen,'blackfen-mobile-zoom');
   await blackfen.screenshot({path:'visual/blackfen-mobile-zoom.png',fullPage:false});
+    await verifyLocationFinder(blackfen,'intro','blackfen-mobile');
   // The canvas decorations are aria-hidden and never intercept map notes.
   assert.equal(await blackfen.locator('.node[data-node-note="M"]').count(),1);
   assert.equal(await blackfen.locator('.node[data-node-note="H"]').count(),1);
@@ -389,6 +439,7 @@ try{
     await village.locator('#map-zoom-in').click();
     await measure(village,'duskmere-'+viewport.name+'-detail');
     await village.screenshot({path:'visual/duskmere-'+viewport.name+'-zoom.png',fullPage:false});
+    await verifyLocationFinder(village,'apprentice','duskmere-'+viewport.name);
     assert.deepEqual(errors,[],viewport.name+' Duskmere browser errors');
     await village.close();
   }
@@ -429,6 +480,7 @@ try{
     await city.locator('#map-zoom-in').click();
     await measure(city,'rookgate-'+viewport.name+'-detail');
     await city.screenshot({path:'visual/rookgate-'+viewport.name+'-zoom.png',fullPage:false});
+    await verifyLocationFinder(city,'tracker','rookgate-'+viewport.name);
     assert.deepEqual(errors,[],viewport.name+' Rookgate rendering errors');
     await city.close();
   }
@@ -474,6 +526,7 @@ try{
     await county.locator('#map-zoom-in').click();
     await measure(county,'ravenmarch-'+viewport.name+'-detail');
     await county.screenshot({path:'visual/ravenmarch-'+viewport.name+'-zoom.png',fullPage:false});
+    await verifyLocationFinder(county,'expert','ravenmarch-'+viewport.name);
     assert.deepEqual(errors,[],viewport.name+' Ravenmarch rendering errors');
     await county.close();
   }
@@ -665,9 +718,12 @@ try{
   }
 
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
-  console.log('Visual QA succeeded for '+report.length+' layouts');
+  await writeFile('visual/four-world-consistency.json',JSON.stringify(consistencyChecks,null,2));
+  console.log('Visual QA succeeded for '+report.length+' layouts and '+
+    consistencyChecks.length+' finder passes');
 }catch(err){
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
+  await writeFile('visual/four-world-consistency.json',JSON.stringify(consistencyChecks,null,2));
   console.error(err);
   process.exitCode=1;
 }finally{
