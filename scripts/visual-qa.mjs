@@ -800,6 +800,15 @@ try{
     await guided.locator('#move-form button[type="submit"]').click();
     await guided.locator('#report-continue').click();
     await step('end-turn');
+    assert.equal(await guided.locator('#move-form,#bearing-input').count(),0,
+      'Exhausted Guided Hunter must not see an inert bearing form');
+    assert.equal(await guided.locator('#protractor-toggle,#protractor-group,.protractor-keys').count(),0,
+      'Exhausted Guided Hunter must not see any protractor control');
+    assert.equal(await guided.locator('#end-turn.monster-turn-cta.guided-tour-target').count(),1,
+      'Guided Coach must highlight the new primary Monster-phase button');
+    assert.match(await guided.locator('#end-turn').textContent(),/BEGIN MONSTER.S HIDDEN MOVEMENT/);
+    assert.match(await guided.locator('.turn-complete-explainer').textContent(),/has NOT moved yet/);
+    assert.match(await guided.locator('.turn-marker strong').textContent(),/1\s*\/\s*13/);
     await guided.screenshot({path:'visual/guided-'+viewport.name+'-end-turn.png',fullPage:false});
     await guided.locator('#end-turn').click();
     await step('monster-moved');
