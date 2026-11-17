@@ -157,7 +157,91 @@ function toggleNodeMark(id) {
   else nodeMarks.delete(id);
   render();
 }
+function guideArtwork(step) {
+  if(step.visual==='hunter') return '<img class="guide-character-art" src="./assets/characters/monster-hunter.svg" alt="A cloaked monster hunter with lantern, compass and evidence map"/>';
+  const heading='<svg class="guide-diagram" viewBox="0 0 360 300" role="img" aria-label="Illustrated bearings and deduction teaching example">';
+  const end='</svg>';
+  const compass='<circle cx="175" cy="147" r="109" fill="#213a40" stroke="#d5b987" stroke-width="3"/>'+
+    '<path d="M175 36V259M64 147H286" stroke="#b0c7b2" stroke-opacity=".5" stroke-width="2"/>'+
+    '<text x="175" y="29" text-anchor="middle">N · 000°</text>'+
+    '<text x="306" y="152" text-anchor="middle">E</text>'+
+    '<text x="175" y="285" text-anchor="middle">S</text>'+
+    '<text x="50" y="152" text-anchor="middle">W</text>'+
+    '<line x1="175" y1="147" x2="251" y2="71" stroke="#e7c37d" stroke-width="6" stroke-linecap="round"/>'+
+    '<circle cx="175" cy="147" r="8" fill="#f4d99e"/><circle cx="251" cy="71" r="7" fill="#f4d99e"/>'+
+    '<text x="248" y="55" text-anchor="middle" class="guide-angle">045°</text>';
+  const trail='<path d="M61 205L163 164L257 87L315 176" stroke="#91a9a2" stroke-width="13" fill="none" stroke-linecap="round"/>'+
+    '<path d="M61 205L163 164L257 87L315 176" stroke="#d1b784" stroke-width="4" stroke-dasharray="5 10" fill="none"/>'+
+    '<g fill="#284b51" stroke="#d7c79c" stroke-width="4"><circle cx="61" cy="205" r="19"/><circle cx="163" cy="164" r="19"/><circle cx="257" cy="87" r="19"/><circle cx="315" cy="176" r="19"/></g>'+
+    '<circle cx="163" cy="164" r="29" fill="none" stroke="#e9d29e" stroke-width="3" stroke-dasharray="5 4"/>'+
+    '<text x="163" y="129" text-anchor="middle">TRAIL FOUND</text>'+
+    '<text x="163" y="170" text-anchor="middle" class="guide-map-mark">✧</text>'+
+    '<text x="61" y="242" text-anchor="middle">HUNTER</text>'+
+    '<text x="257" y="52" text-anchor="middle">CLUE</text>';
+  const timeline='<g fill="#263e44" stroke="#abc4b6" stroke-width="3">'+
+    '<rect x="20" y="112" width="95" height="65" rx="6"/>'+
+    '<rect x="131" y="112" width="95" height="65" rx="6"/>'+
+    '<rect x="242" y="112" width="95" height="65" rx="6"/></g>'+
+    '<path d="M116 146H130M227 146H241" stroke="#e7cc98" stroke-width="4"/>'+
+    '<g fill="#e7d3a6" text-anchor="middle"><text x="67" y="100">ROUND 2</text>'+
+    '<text x="178" y="100">ROUND 3</text><text x="290" y="100">ROUND 4</text>'+
+    '<text x="67" y="151" class="guide-symbol">✧</text>'+
+    '<text x="178" y="151" class="guide-symbol">?</text>'+
+    '<text x="290" y="151" class="guide-symbol">?</text>'+
+    '<text x="179" y="218">The Monster can move between clues</text></g>';
+  const powers='<g fill="none" stroke="#b5d0c3" stroke-width="4">'+
+    '<circle cx="91" cy="125" r="48"/><circle cx="268" cy="125" r="48"/>'+
+    '<path d="M139 125H217M203 111L217 125L203 139" stroke="#f4cf92" stroke-width="5"/></g>'+
+    '<text x="91" y="135" text-anchor="middle" class="guide-symbol">✧</text>'+
+    '<text x="268" y="135" text-anchor="middle" class="guide-symbol">?</text>'+
+    '<g text-anchor="middle"><text x="91" y="206">TELEPORT</text>'+
+    '<text x="268" y="206">UNCONFIRMED</text><text x="180" y="253">An announced move is not a live sighting</text></g>';
+  const checklist='<g text-anchor="start">'+[0,1,2,3,4,5].map(i=>{
+    const x=i%2===0?24:190,y=57+Math.floor(i/2)*89;
+    return '<circle cx="'+(x+15)+'" cy="'+(y+7)+'" r="16" fill="#e0c28d"/>'+
+      '<text x="'+(x+15)+'" y="'+(y+13)+'" text-anchor="middle" class="guide-count">'+(i+1)+'</text>'+
+      '<text x="'+(x+37)+'" y="'+(y+12)+'">'+
+        ['READ','PLAN','MEASURE','SEARCH','DEDUCE','END TURN'][i]+'</text>';
+  }).join('')+'</g>';
+  let picture=step.visual==='compass'?compass:
+    step.visual==='trail'?trail:
+    step.visual==='timeline'?timeline:
+    step.visual==='powers'?powers:checklist;
+  return heading+picture+end;
+}
+
+function guideHtml() {
+  const step=GUIDE_STEPS[guideStep];
+  return '<main class="tutorial-screen tutorial-screen-guide">'+
+    '<section class="tutorial-card guide-card" role="dialog" aria-modal="true" aria-labelledby="guide-title">'+
+      '<div class="tutorial-header">'+
+        '<span class="eyebrow">HOW TO HUNT · STEP '+(guideStep+1)+' OF '+GUIDE_STEPS.length+'</span>'+
+        '<button id="tutorial-close" type="button" class="tutorial-close" aria-label="Close tutorial">✕ CLOSE</button>'+
+      '</div>'+
+      '<div class="tutorial-steps" aria-label="Tutorial progress">'+
+        GUIDE_STEPS.map((_,i)=>'<span class="'+(i<=guideStep?'completed-step':'')+'"></span>').join('')+
+      '</div>'+
+      '<div class="guide-layout">'+
+        '<div class="guide-art">'+guideArtwork(step)+'</div>'+
+        '<div class="guide-copy">'+
+          '<span class="encounter-kicker">'+esc(step.heading)+'</span>'+
+          '<h1 id="guide-title">'+esc(step.title)+'</h1>'+
+          '<p class="guide-main-text">'+esc(step.detail)+'</p>'+
+          '<div class="guide-example"><strong>EXAMPLE / REMEMBER</strong><p>'+esc(step.example)+'</p></div>'+
+          '<div class="guide-actions">'+
+            (guideStep>0?'<button id="guide-back" type="button" class="secondary-button">← PREVIOUS</button>':'')+
+            (guideStep===GUIDE_STEPS.length-1
+              ?'<button id="guide-practice" type="button" class="primary-button">PRACTISE BEARINGS →</button>'
+              :'<button id="guide-next" type="button" class="primary-button">NEXT: '+esc(GUIDE_STEPS[guideStep+1].heading)+' →</button>')+
+          '</div>'+
+          (guideStep!==GUIDE_STEPS.length-1?'<button id="guide-skip" class="guide-skip" type="button">SKIP TO BEARINGS PRACTICE</button>':'')+
+        '</div>'+
+      '</div>'+
+    '</section></main>';
+}
+
 function tutorialHtml() {
+  if(tutorialStage==='guide')return guideHtml();
   const lesson=LESSONS[lessonStep];
   const radians=lesson.bearing*Math.PI/180;
   const x=130+75*Math.sin(radians),y=130-75*Math.cos(radians);
@@ -187,7 +271,24 @@ function tutorialHtml() {
     '</div></div></section></main>';
 }
 function bindTutorial() {
-  document.getElementById('tutorial-close').addEventListener('click',()=>{tutorialOpen=false;render();});
+  document.getElementById('tutorial-close').addEventListener('click',()=>{
+    tutorialOpen=false;render();
+  });
+  if(tutorialStage==='guide'){
+    document.getElementById('guide-next')?.addEventListener('click',()=>{
+      guideStep=Math.min(GUIDE_STEPS.length-1,guideStep+1);render();
+    });
+    document.getElementById('guide-back')?.addEventListener('click',()=>{
+      guideStep=Math.max(0,guideStep-1);render();
+    });
+    const practise=()=>{
+      tutorialStage='practice';lessonStep=0;lessonOutcome=null;render();
+    };
+    document.getElementById('guide-skip')?.addEventListener('click',practise);
+    document.getElementById('guide-practice')?.addEventListener('click',practise);
+    document.getElementById('guide-next')?.focus?.();
+    return;
+  }
   document.getElementById('lesson-form').addEventListener('submit',e=>{
     e.preventDefault();
     lessonOutcome=checkLesson(lessonStep,document.getElementById('lesson-answer').value);
