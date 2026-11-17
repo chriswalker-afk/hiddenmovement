@@ -245,7 +245,7 @@ try{
   await blackfen.goto(url,{waitUntil:'domcontentloaded'});
   await blackfen.locator('#start-solo-select').click();
   await blackfen.locator('[data-difficulty="intro"]').click();
-  assert.match(await blackfen.locator('.encounter-copy').textContent(),/Blackfen Marsh/);
+  assert.match(await blackfen.locator('.encounter-copy').textContent(),/BLACKFEN MARSH/i);
   await blackfen.locator('#intro-begin').click();
   await blackfen.locator('.hud-screen').waitFor({state:'visible'});
   assert.equal(await blackfen.locator('.blackfen-landmark').count(),14);
