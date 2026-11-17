@@ -130,7 +130,8 @@ test('fresh trace gives time-consistent bearing clue with north wrap', () => {
   assert.equal(clue.observedRound,2);
   assert.equal(clue.kind,'direct');
   const trueBearing=bearingBetween(MAP.nodes.K,MAP.nodes.J);
-  assert.ok(angularDifference(clue.sectorCenter,trueBearing)<0.001);
+  assert.ok(withinSector(trueBearing,clue.sectorCenter,clue.halfWidth));
+  assert.notEqual(clue.sectorCenter,trueBearing,'Approximate clue must not reveal the exact bearing');
   assert.ok(withinSector(trueBearing,clue.center,clue.halfWidth));
   const projection=viewForCurrentScreen(g);
   assert.equal(Object.hasOwn(projection,'monster'),false);

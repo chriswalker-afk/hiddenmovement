@@ -23,13 +23,13 @@
 - AI decisions remain hidden from Hunter projections, with deterministic seeds for test diagnostics.
 - Balance simulation across seeds (capture rate, average turns, number of clues used).
 
-## PR3 — deduction and learning tools
+## PR3 — deduction and learning tools (implemented; PR #3)
 
-- Extend the existing clue notebook and bearing overlays with player annotations, candidate-region tools and multi-clue intersections.
+- Extend the clue notebook with optional selected-clue overlays, personal map marks and time-aware intersections of candidate regions.
 - Bearing/reverse-bearing onboarding and short practice tutorial.
-- Optional route distance-band clues and further clue types (timed public sightings already added in PR2).
-- Classroom feedback mode with optional bearing accuracy statistics.
-- Accessibility and keyboard/touch pass.
+- Optional shortest-route distance-band clues in introductory solo levels; timed public sightings already added in PR2.
+- Bearing-angle accuracy, corrections and successful movements in Hunter view and end-game report.
+- Accessible keyboard/touch map annotation controls, labelled form inputs and low-motion styling; real-device classroom QA remains ongoing.
 
 ## PR4 — polish and variety
 
@@ -47,7 +47,7 @@
 
 ## PR1 implementation outcome (17 November 2026)
 
-**Implemented in pull request #1** on branch \`design/initial-game-spec\`:
+**Implemented in pull request #1** on branch `design/initial-game-spec`:
 - Static browser game with original illustrated 14-node map, bearings input, hunter and monster turns, secret spawning, clues, notebook and endgame route reveal.
 - Role-specific view projection and fully blank role handoff (except instruction and necessary reveal button), including re-sealing when the app is backgrounded.
 - Deterministic test scenarios for geometry, turn order, secrets, trails, reverse bearings, capture and a completed 13-round game.
@@ -58,7 +58,7 @@
 
 ## PR2 implementation outcome (17 November 2026)
 
-**Implemented in pull request #2** on branch \`feature/pr2-solo-ai-difficulty\`:
+**Implemented in pull request #2** on branch `feature/pr2-solo-ai-difficulty`:
 - Solo Hunter mode with an automatically moving, hidden AI Monster. No Monster interface or handoff is shown in solo games.
 - Four selectable difficulty presets: **Intro (14 nodes)**, **Apprentice (18)**, **Tracker (26)**, **Expert (36)**. They vary map size, clue precision (exact to ±45°), trail lifetime (5 to 2 rounds), public-sighting frequency, round limit and AI evasiveness.
 - Three new deterministic map networks, each validated for connectivity, safe starting points, unique outgoing bearings and non-crossing roads.
@@ -66,6 +66,21 @@
 - Public, time-stamped watcher sightings and consistent trace clues, with approximate trail-age descriptions on harder levels.
 - Dynamic map rendering, different region themes and a numbered location index for larger maps.
 - Automated tests for all four difficulties, AI legality, snapshot clue correctness, role-privacy regression, seeded repeatability and browser UI flows.
-- \`npm run simulate\` reproducible baseline Hunter-vs-AI trials using **public information only**; capture statistics are diagnostic, not calibrated classroom rates.
+- `npm run simulate` reproducible baseline Hunter-vs-AI trials using **public information only**; capture statistics are diagnostic, not calibrated classroom rates.
 
 **Out of scope:** PR3 provides deeper deduction teaching tools; PR4 provides richer art and hosted deployment. The design remains in playtesting and tuning rather than claiming final difficulty balance.
+
+
+## PR3 implementation outcome (17 November 2026)
+
+**Implemented in pull request #3** on branch feature/pr3-deduction-learning-tools:
+- Four interactive compass exercises covering clockwise bearings, reverse bearings, phrasing and 000° sector wrap; can be opened from home or Hunter view and skipped at any time.
+- **Time-aware public deduction engine**: convert each selected clue to possible Monster locations at its observation round, propagate along exactly one road per elapsed completed round, then intersect. Optional map rays/sectors and candidate rings/list. No private Monster state used.
+- Click/keyboard-accessible **Hunter location annotations** (suspected / ruled out / clear), keyboard/mobile alternate selector, and private working notes visible only on Hunter screens.
+- Route-distance clue bands on the two easiest solo difficulties, computed from shortest graph paths as of the clue observation round.
+- Student bearing feedback with valid route count, invalid attempts and mean angular error; no movement cost for incorrect bearings.
+- **Clue uncertainty correction**: wide angular ranges now snap to *fixed compass sectors* that contain the true direction without revealing it by placing the exact direction at the midpoint. Includes wrapped sectors and reverse directions.
+- Extended automated tests for time-indexed clue intersections, exact graph-step propagation, sector truthfulness, distance clues, maths statistics, tutorial checks and browser UI privacy.
+- New Teacher's Field Guide with worked bearings examples, 20-minute lesson structure and AO1/AO2/AO3 suggestions.
+
+**Still not covered:** final classroom balance, device-matrix accessibility QA, hosted deployment, server-authoritative online multiplayer, saved progress or richer art/scenarios (PR4 and future work).
