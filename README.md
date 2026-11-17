@@ -33,6 +33,27 @@ The original 14-location Hollow Moor mode remains available. The Monster picks a
 
 **Handoff privacy:** all board, clue and position information is replaced by an entirely blank role-transition view containing only the requested handoff text and a reveal button. Switching away from the page re-seals an active two-player role view. In Solo Hunt, the Monster never has a visible role view.
 
+## Monsters, powers and investigation reports (PR9)
+
+Every Solo Hunt difficulty introduces a different illustrated monster before the first move. Four original portraits are bundled in the site at `assets/monsters/` and reused on the level cards, introductions, search pop-ins and final result.
+
+| Level | Monster | Signature ability | Counterplay |
+|---|---|---|---|
+| Intro — Hollow Moor | **The Lantern Wisp** | None | A straightforward hunt with ordinary bearings and tracks |
+| Apprentice — Thornwood Vale | **The Briar Shade** | Briar Step teleport, 4-turn cooldown | Leaps 2–3 connected roads, but publicly exposes its previous location |
+| Tracker — Sunken Lowlands | **The Mire Mimic** | False Sighting, 4-turn cooldown | Plants an **unconfirmed** reported location that is debunked when the Hunter visits |
+| Expert — Eclipse Marches | **The Eclipse Herald** | Eclipse Shift teleport (5-turn cooldown) and Phantom Echo decoy (4-turn cooldown) | Combines the two fair rules, never both on one Monster turn |
+
+The powers currently belong to Solo Hunt levels; Pass & Play uses the Intro board and its powerless Lantern Wisp. Existing scenario-specific Veil and Signal Lantern rules are unchanged.
+
+**Why teleport clues remain mathematically useful:** a jump discloses where the Monster was immediately before it vanished and how many connected roads it could jump, not its secret destination. The deduction solver uses the public move event to propagate older clues across the 2–3-road teleport instead of incorrectly treating that turn as a one-road move.
+
+**Why decoys are fair:** the reported position is labelled an **unconfirmed local sighting** and is shown with a question mark, not as a confirmed exact bearing. The Hunter must visit the node to expose the false report. The candidate solver never treats a rumour as certain evidence.
+
+**After every valid Hunter move**, a large illustrated report appears: an empty search names the place and creature; a real trace includes the actual historical bearing clue from locals; a decoy triggers a false-sighting reveal; and a capture gets a victory report. Invalid bearing attempts do not consume a move or generate a pop-in.
+
+Saved games retain power cooldowns, unresolved decoys and which reports have been acknowledged. These elements never appear on an opaque shared-device handoff screen, and the Monster's hidden destination remains private.
+
 ## Dry riverbank locations (merged PR8)
 
 **Tracker / The Sunken Lowlands** and **Expert / The Eclipse Marches** now place their rivers through channels **between** rows of dry land nodes, rather than underneath named locations. The rows adjacent to each watercourse have been moved slightly onto the banks without removing any places or changing a single road connection. All 26 Tracker and 36 Expert locations remain playable with their original IDs, clues and scenario objectives. Routes crossing a watercourse remain connected roads.
