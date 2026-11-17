@@ -303,7 +303,7 @@ function recordSighting(game,halfWidth,source='watcher') {
   if(toward===null)return null;
   const center = quantizeBearing(toward,halfWidth);
   const clue={
-    id:source+'-'+(game.round-1)+'-'+game.clues.length,
+    id:source==='watcher'?'sighting-'+(game.round-1):'lantern-'+(game.round-1)+'-'+game.clues.length,
     type:'sighting',
     source,
     place:game.hunter,
