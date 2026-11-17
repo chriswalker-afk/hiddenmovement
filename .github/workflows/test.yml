@@ -38,6 +38,7 @@ jobs:
           node --check src/monsters.mjs
           node --check src/monster-powers.mjs
           node --check src/hunter-guide.mjs
+          node --check src/hunter-forge.mjs
           node --check src/persistence.mjs
           node --check src/protractor.mjs
           node --check scripts/package-site.mjs
