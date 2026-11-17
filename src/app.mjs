@@ -5,6 +5,7 @@ import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { MONSTERS, monsterFor } from './monsters.mjs';
+import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
@@ -24,6 +25,9 @@ let fieldNotes = '';
 let tutorialOpen = false;
 let lessonStep = 0;
 let lessonOutcome = null;
+let tutorialStage = 'guide';
+let guideStep = 0;
+let coachAnswerVisible = false;
 let showHowTo = false;
 let difficultyPicker = false;
 let scenarioPicker = false;
@@ -52,7 +56,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     selectedClueIds=null;
     monsterIntroOpen=mode==='solo';
     searchReportOpen=false;
-    hudTab='clues';
+    hudTab=guidedSelection?'coach':'clues';
+    coachAnswerVisible=false;
     protractorVisible=false;
     protractorBearing=0;
     protractorPosition=null;
@@ -61,6 +66,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     tutorialOpen=false;
     lessonStep=0;
     lessonOutcome=null;
+    tutorialStage='guide';
+    guideStep=0;
     difficultyPicker=false;
     scenarioPicker=false;
     pendingScenario='classic';
@@ -91,7 +98,8 @@ function resumeHunt() {
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
   plotClue=restored.ui.plotClue && game.guided;
   guidedSelection=game.guided;
-  hudTab='clues';
+  hudTab=game.guided?'coach':'clues';
+  coachAnswerVisible=false;
   protractorVisible=false;
   protractorPosition=null;
   protractorBearing=0;
@@ -126,6 +134,8 @@ function scenarioHtml() {
 function openTutorial() {
   lessonStep=0;
   lessonOutcome=null;
+  tutorialStage='guide';
+  guideStep=0;
   tutorialOpen=true;
   render();
 }
@@ -194,11 +204,11 @@ function bindTutorial() {
 
 
 function guidedChoiceHtml() {
-  return '<div class="guidance-choice" aria-label="Optional guided map visualisation">' +
+  return '<div class="guidance-choice" aria-label="Optional step-by-step gameplay coaching">' +
     '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
     '<small>'+(guidedSelection
-      ?'Same textual clues and sightings, plus an optional clue-plotting and deduction-map button.'
-      :'All bearing clues, watcher sightings and gameplay hints remain. No bearings are drawn automatically.')+
+      ?'Step-by-step Coach tab, worked bearing examples on request and optional clue plotting. All original clues stay.'
+      :'All original clues and sightings remain. Measure the bearings yourself; no clue rays are drawn automatically.')+
     '</small></div>' +
     '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
       (guidedSelection?'SWITCH TO STANDARD':'ENABLE TUTORIAL HELP')+'</button></div>';
