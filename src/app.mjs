@@ -140,8 +140,15 @@ function mapSvg(view) {
   const clues= view.phase==='hunter' && plotClue ? view.clues.slice(0,1) : [];
   const plotted=clues.map(clue => {
     const p=currentMap().nodes[clue.place];
-    return '<path class="clue-sector" d="'+sectorShape(p,clue.sectorCenter,clue.halfWidth)+'"/>' +
-      '<circle cx="'+p.x+'" cy="'+p.y+'" r="24" class="clue-origin"/>';
+    let direction;
+    if (clue.halfWidth === 0) {
+      const radians=clue.sectorCenter*Math.PI/180;
+      direction='<line class="clue-ray" x1="'+p.x+'" y1="'+p.y+
+        '" x2="'+(p.x+1300*Math.sin(radians))+'" y2="'+(p.y-1300*Math.cos(radians))+'"/>';
+    } else {
+      direction='<path class="clue-sector" d="'+sectorShape(p,clue.sectorCenter,clue.halfWidth)+'"/>';
+    }
+    return direction+'<circle cx="'+p.x+'" cy="'+p.y+'" r="24" class="clue-origin"/>';
   }).join('');
   const hunterTrail=(view.phase==='hunter'||isOver)?view.hunterTrail:[];
   const hunterPath=hunterTrail.length>1 ?
