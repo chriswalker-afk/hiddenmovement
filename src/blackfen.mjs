@@ -150,10 +150,10 @@ function landmarkArt(kind){
         lamp(-42,25)+
         path('M-35 36H35',oak,'#8d7861',1);
     case 'bridge':
-      // Stream passes beneath this bridge node at (620,445).
-      // The deck is oriented on the legal E-H-H-I road corridor, never a
-      // free-floating disconnected bridge.
-      return '<g transform="rotate(-30)">'+
+      // Blackfen Run passes the H node: the deck points toward the legal
+      // H-K crossing and lies across (not along) the stream. The road graph
+      // remains unchanged, so this is one readable bridge landmark.
+      return '<g transform="rotate(42)">'+
         ellipse(0,4,48,25,'#24474d',.75)+
         path('M-45 2Q0 -18 45 2L45 20Q25 0 0 6Q-25 0-45 20Z',
           '#7c8f85',ink,3)+
