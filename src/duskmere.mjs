@@ -341,7 +341,8 @@ export function renderDuskmereScenery(){
       landmark(site.kind)+'</g>'
   ).join('');
   return '<g class="illustrated-scenery theme-scene-woodland" '+
-      'data-world="duskmere" aria-hidden="true">'+
+      'data-world="duskmere" aria-hidden="true" clip-path="url(#duskmere-scene-clip)">'+
+      '<defs><clipPath id="duskmere-scene-clip"><rect width="1000" height="720"/></clipPath></defs>'+
       villageLandscape()+
       '<g class="duskmere-landmarks">'+landmarks+'</g>'+
       '<rect x="10" y="10" width="980" height="700" rx="7" fill="none" '+
