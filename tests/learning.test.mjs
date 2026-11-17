@@ -39,6 +39,8 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
     hidden:false,
     getElementById:el,
     querySelectorAll:selector=>{
+      if(selector==='[data-hud-tab]') return [...html().matchAll(/data-hud-tab="([^"]+)"/g)].map(match=>{
+        const node=el('hud-tab-'+match[1]);node.dataset.hudTab=match[1];return node;});
       if(selector==='[data-difficulty]') return ['intro','apprentice','tracker','expert'].map(id=>{
         const x=el('difficulty-'+id);x.dataset.difficulty=id;return x;});
       return [...byData(selector,'[data-node-note]','node-note'),
@@ -78,8 +80,11 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   click('start-solo-select');
   click('difficulty-intro');
   assert.match(html(),/WATCHER SIGHTING/);
+  click('hud-tab-stats');
   assert.match(html(),/MATHS FEEDBACK/);
+  click('hud-tab-notes');
   assert.match(html(),/YOUR OWN NOTES/);
+  click('hud-tab-clues');
   assert.match(html(),/COMBINE CLUES ON THE MAP/);
   assert.doesNotMatch(html(),/Your hidden trail/);
 
@@ -96,10 +101,10 @@ test('interactive browser experience: tutorial, evidence, map markings, maths an
   assert.match(html(),/marked-possible/);
   click(marker.id);
   assert.match(html(),/marked-ruled/);
+  click('hud-tab-notes');
   click('clear-marks');
   assert.doesNotMatch(html(),/marked-ruled/);
 
-  click('hud-tab-notes');
   el('field-notes').value='Try the northern crossing';
   const onInput=callbacks.get('field-notes:input');
   assert.equal(typeof onInput,'function');
