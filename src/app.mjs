@@ -182,11 +182,11 @@ function bindTutorial() {
 
 
 function guidedChoiceHtml() {
-  return '<div class="guidance-choice" aria-label="Choose the amount of bearings assistance">' +
+  return '<div class="guidance-choice" aria-label="Optional guided map visualisation">' +
     '<div><strong>'+ (guidedSelection?'GUIDED / TUTORIAL MODE':'STANDARD PLAY') +'</strong>' +
     '<small>'+(guidedSelection
-      ?'Periodic watcher clues, distance help, plotted deductions and bearing feedback'
-      :'No free sightings or automatic answers. Measure with the optional protractor.')+
+      ?'Same textual clues and sightings, plus an optional clue-plotting and deduction-map button.'
+      :'All bearing clues, watcher sightings and gameplay hints remain. No bearings are drawn automatically.')+
     '</small></div>' +
     '<button id="guided-toggle" type="button" aria-pressed="'+guidedSelection+'">'+
       (guidedSelection?'SWITCH TO STANDARD':'ENABLE TUTORIAL HELP')+'</button></div>';
@@ -343,7 +343,7 @@ function mapSvg(view) {
   const monsterPath=monsterTrail.length>1 ?
     '<polyline class="monster-trail" points="'+monsterTrail.map(t=>currentMap().nodes[t.node].x+','+currentMap().nodes[t.node].y).join(' ')+'"/>' : '';
   const eligible=new Set(view.eligibleSpawns||[]);
-  const monsterNeighbours = view.phase==='monster' && view.guided ? new Set(currentMap().adjacency[view.monster]) : new Set();
+  const monsterNeighbours = view.phase==='monster' ? new Set(currentMap().adjacency[view.monster]) : new Set();
   const dots=Object.values(currentMap().nodes).map(n=>{
     const isHunter=view.hunter===n.id;
     const isMonsterHere=(view.phase==='monster'||isOver)&&view.monster===n.id;
@@ -458,7 +458,7 @@ function movementForm(view) {
     '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>'+
       '<span class="steps-badge">'+left+' '+(left===1?'MOVE':'MOVES')+' LEFT</span></div>'+
     '<div class="hud-from"><span>FROM</span><h3>'+esc(nameOf(location))+'</h3></div>'+
-    (view.guided ? '<p class="muted compact guided-route-help">Roads lead to: '+esc(adjacent)+'</p>' : '')+
+    '<p class="muted compact guided-route-help">Roads lead to: '+esc(adjacent)+'</p>'+
     '<form id="move-form" class="bearing-form">'+
       '<label for="bearing-input">Enter a three-figure bearing</label>'+
       '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="000" pattern="[0-9]{3}°?" '+
@@ -628,7 +628,7 @@ function hudTabsHtml(view) {
   const tabs=isMonster
     ? [['trail','TRAIL'],['mission','MISSION']]
     : [['clues','CLUES ('+view.clues.length+')'],['notes','NOTES'],['mission','MISSION'],
-       ...(view.guided?[['stats','FEEDBACK']]:[])];
+       ['stats','FEEDBACK']];
   const chosen=tabs.some(([id])=>id===hudTab)?hudTab:tabs[0][0];
   const tabBar=tabs.map(([id,label])=>'<button type="button" role="tab" id="hud-tab-'+id+
     '" data-hud-tab="'+id+'" aria-controls="hud-tab-panel" aria-selected="'+(chosen===id)+
