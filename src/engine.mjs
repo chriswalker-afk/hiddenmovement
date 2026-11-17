@@ -1,9 +1,10 @@
-import { MAP, MAPS, getMonsterSpawns } from './map.mjs';
+import { MAPS } from './map.mjs';
 import {
   angularDifference, bearingBetween, formatBearing, graphDistance, parseBearing,
   reverseBearing, sectorBounds
 } from './geometry.mjs';
-import { chooseMonsterMove, chooseMonsterSpawn } from './ai.mjs';
+import { chooseMonsterMove, chooseMonsterSpawn, shouldAiUseVeil } from './ai.mjs';
+import { SCENARIOS, computeObjectives, eligibleMonsterStarts } from './scenarios.mjs';
 import { quantizeBearing } from './deduction.mjs';
 
 export const SETTINGS = Object.freeze({
@@ -61,13 +62,23 @@ export function createGame(config = {}) {
   const difficulty = mode === 'solo' && Object.hasOwn(DIFFICULTIES, config.difficulty)
     ? config.difficulty : 'intro';
   const preset = mode === 'solo' ? DIFFICULTIES[difficulty] : {};
+  const scenario = Object.hasOwn(SCENARIOS, config.scenario) ? config.scenario : 'classic';
   const settings = { ...SETTINGS, ...preset, ...config };
   const mapId = mode === 'solo' ? preset.mapId : 'intro';
+  const objectives = computeObjectives(MAPS[mapId], scenario);
   const seed = (Math.trunc(Number(config.seed ?? 18251)) >>> 0) || 1;
   return {
     phase: 'home',
     mode,
     difficulty,
+    scenario,
+    objectives,
+    objectivePowers: SCENARIOS[scenario].powers,
+    beaconVisits: [],
+    publicEvents: [],
+    veilCharges: SCENARIOS[scenario].powers ? 1 : 0,
+    lanternCharges: SCENARIOS[scenario].powers ? 1 : 0,
+    finishReason: null,
     mapId,
     map: MAPS[mapId],
     seed,
@@ -106,7 +117,7 @@ function requirePhase(game, phase) {
 export function beginGame(game) {
   if (game.phase !== 'home' && game.phase !== 'over')
     return fail(game, 'Finish this game before starting another.');
-  Object.assign(game, createGame({ ...game.config, mode: game.mode, difficulty: game.difficulty, seed: game.seed }));
+  Object.assign(game, createGame({ ...game.config, mode: game.mode, difficulty: game.difficulty, scenario: game.scenario, seed: game.seed }));
   if (game.mode === 'solo') {
     const spawn = chooseMonsterSpawn(game);
     game.monster = spawn;
@@ -141,9 +152,9 @@ export function sealTurn(game) {
 
 export function selectMonsterStart(game, nodeId) {
   if (requirePhase(game, 'monster-setup')) return { ok:false, message:game.feedback };
-  const spawns = getMonsterSpawns(game.map);
+  const spawns = eligibleMonsterStarts(game.map,game.scenario,game.objectives);
   if (!spawns.includes(nodeId))
-    return fail(game, 'Choose an eligible purple starting location at least three routes from the Watchtower.');
+    return fail(game, 'Choose an eligible purple starting location away from the Hunter and mission objectives.');
   game.monster = nodeId;
   game.monsterTrail.push({ id: 'visit-0', node: nodeId, round: 0 });
   game.phase = 'pass-hunter';
@@ -157,7 +168,11 @@ export function selectMonsterStart(game, nodeId) {
 export function viewForCurrentScreen(game) {
   const base = {
     phase: game.phase, round: game.round, feedback: game.feedback,
-    mapId: game.mapId, mode: game.mode, difficulty: game.difficulty
+    mapId: game.mapId, mode: game.mode, difficulty: game.difficulty,
+    scenario: game.scenario,
+    objectives: {exitNode:game.objectives.exitNode,beacons:[...game.objectives.beacons]},
+    beaconVisits:[...game.beaconVisits],
+    publicEvents:game.publicEvents.map(e=>({...e}))
   };
   if (game.phase === 'home') return { ...base, config: game.config };
   if (game.phase.startsWith('pass-')) return { phase: game.phase };
@@ -166,14 +181,16 @@ export function viewForCurrentScreen(game) {
     clues: game.clues.map(c => publicClue(game,c)),
     hunterTrail: [...game.hunterTrail],
     stats: publicStats(game),
+    powers:{ lanternCharges:game.lanternCharges },
     maxRounds: game.config.maxRounds
   };
   if (game.phase === 'monster-setup') return {
-    ...base, hunter: game.hunter, eligibleSpawns: getMonsterSpawns(game.map)
+    ...base, hunter: game.hunter, eligibleSpawns: eligibleMonsterStarts(game.map,game.scenario,game.objectives)
   };
   if (game.phase === 'monster') return {
     ...base, hunter: game.hunter, monster: game.monster,
     trail: game.monsterTrail.map(t => ({ ...t })),
+    powers:{veilCharges:game.veilCharges},
     maxRounds: game.config.maxRounds
   };
   if (game.phase === 'over') return {
@@ -182,6 +199,7 @@ export function viewForCurrentScreen(game) {
     trail: game.monsterTrail.map(t => ({ ...t })),
     clues: game.clues.map(c => publicClue(game,c)),
     stats: publicStats(game),
+    finishReason:game.finishReason,
     maxRounds: game.config.maxRounds
   };
   return base;
@@ -238,7 +256,7 @@ function matchedNeighbour(origin, text, game) {
  */
 function collectClue(game, location) {
   const fresh = game.monsterTrail
-    .filter(t => t.node === location && game.round - t.round <= game.config.trailLifetime
+    .filter(t => t.node === location && !t.concealed && game.round - t.round <= game.config.trailLifetime
       && !game.collectedVisitIds.includes(t.id))
     .sort((a,b) => b.round - a.round);
   if (!fresh.length) return null;
