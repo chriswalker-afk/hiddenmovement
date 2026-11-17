@@ -980,6 +980,7 @@ function bindCommon() {
     event.preventDefault();
     if (confirm('Leave this game and return to the menu? Progress will be lost.')) {
       Object.assign(game, createGame());
+      monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       render();
     }
@@ -993,6 +994,7 @@ function saveAndExit() {
     return;
   }
   Object.assign(game,createGame());
+  monsterIntroOpen=false;searchReportOpen=false;
   nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
   difficultyPicker=false;scenarioPicker=false;
   resetProtractor();
@@ -1006,6 +1008,7 @@ function render() {
   else if(view.phase!=='home')persistNow();
   // Critical privacy boundary: handoff markup is generated without map, role, logs or secret data.
   if(view.phase.startsWith('pass-')) {
+    monsterIntroOpen=false;searchReportOpen=false;
     resetProtractor();
     mount.innerHTML=handoffHtml(view.phase);
     document.getElementById('reveal').addEventListener('click',()=>{
@@ -1093,19 +1096,22 @@ function render() {
     return;
   }
   if(view.phase==='over') {
-    mount.innerHTML=overHtml(view);
+    mount.innerHTML=overHtml(view)+encounterOverlay(view);
+    bindEncounters();
     bindCommon();
     bindMapZoom();
     document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty,game.scenario));
     document.getElementById('main-menu').addEventListener('click',()=>{
       Object.assign(game,createGame());
+      monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       difficultyPicker = false;
       render();
     });
     return;
   }
-  mount.innerHTML=playHtml(view);
+  mount.innerHTML=playHtml(view)+encounterOverlay(view);
+  bindEncounters();
   bindCommon();
   document.querySelectorAll('[data-hud-tab]').forEach(button=>{
     button.addEventListener('click',()=>{
@@ -1118,13 +1124,19 @@ function render() {
     event.preventDefault();
     const value=document.getElementById('bearing-input').value;
     const before=view.phase==='hunter'?game.hunter:game.monster;
-    if(view.phase==='hunter') hunterMove(game,value);
-    else monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
+    const result=view.phase==='hunter'
+      ?hunterMove(game,value)
+      :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
-    if(before!==after)resetProtractor(view.phase==='hunter' && game.mode==='solo');
+    if(before!==after) {
+      resetProtractor(view.phase==='hunter' && game.mode==='solo');
+      if(view.phase==='hunter' && result.ok && game.hunterOutcome)
+        searchReportOpen=true;
+    }
     render();
   });
   document.getElementById('end-turn')?.addEventListener('click',()=>{
+    searchReportOpen=false;
     endHunterTurn(game);
     resetProtractor(game.mode==='solo');
     render();
@@ -1167,7 +1179,8 @@ function render() {
       persistNow();
     });
   }
-  if(view.phase==='hunter' && view.stepsLeft===0) document.getElementById('end-turn')?.focus();
+  if(view.phase==='hunter' && view.stepsLeft===0 && !searchReportOpen)
+    document.getElementById('end-turn')?.focus();
 }
 
 /** Re-seal when hidden so app-switch / returning to a tab cannot reveal a private view. */
@@ -1176,7 +1189,7 @@ document.addEventListener('visibilitychange',()=>{
     const phase=game.phase;
     sealTurn(game);
     if(phase!==game.phase) {
-      tutorialOpen=false;
+      tutorialOpen=false;monsterIntroOpen=false;searchReportOpen=false;
       resetProtractor();
       render();
     } else if(game.phase!=='home'&&game.phase!=='over')persistNow();
