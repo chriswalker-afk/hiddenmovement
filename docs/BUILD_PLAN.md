@@ -129,3 +129,18 @@
 - Browser viewport QA captures all four briefings, tutorial and Guided Coach with mobile/desktop layout checks. **Final gate:** tests, syntax checks, site packaging and browser visual QA must pass before merging.
 
 **Still to tune with students:** relative usefulness of Guide versus Coach and how often each monster power ought to activate.
+
+## PR11 — Hunter Forge custom character system (17 November 2026)
+
+**Implementation:**
+- Add an original illustrated hunter-creation screen called **Hunter Forge** with accessible part choices, live layered SVG rendering, randomise/reset/save/cancel controls, and a clear device-local saving explanation.
+- Four interchangeable **heads**, **torsos**, and **legs**, six coordinated colour schemes, and four optional complexions. Art favours angular hand-inked shapes, weathered leather and armour, sombre colours, and distinctive silhouette readability; it is not copied from any established franchise.
+- Share a strictly validated `hunterAppearance` model across editor, compact menu preview, Solo level briefing, the How-to-Hunt guide and Hunter HUD. The board token still uses its original visible marker until PR12.
+- Persist the appearance separately from the existing hunt save format, safe on old saves and storage failure. Saved choices are cosmetic and never enter the secret Monster state or influence rules.
+- Regression suite for option counts, malicious/corrupt storage data, deterministic randomisation, SVG variants and source integration. Browser QA covers character editing, saved reload, briefing and HUD rendering at desktop and mobile resolutions.
+- Update the standard test and syntax-check workflows. Keep the allowlisted build compatible with the new src module.
+- Preserve opaque Pass & Play handoff, normal clue timing and bearings, and the PR10 tutorial/monster abilities.
+
+**PR12 next:** create a legible avatar-matched moveable character token for each map, retaining tappable node interactions, bearings, clue overlays and device zoom. Add animation only if motion cannot obscure investigation markers, and test on phone/projector.
+
+**Shipping gate:** green CI tests, site preview and responsive browser QA. PR11 is a reviewable feature branch; it should be merged only after these gates pass.
