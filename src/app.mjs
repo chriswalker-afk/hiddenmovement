@@ -137,6 +137,12 @@ function openForge(){
   forgeOpen=true;
   render();
 }
+function renderForgeWithScroll(){
+  const before=document.querySelector('.forge-choices-scroll')?.scrollTop||0;
+  render();
+  const next=document.querySelector('.forge-choices-scroll');
+  if(next)next.scrollTop=before;
+}
 function forgeHtml(){
   const groups=[
     ['head','HEAD / HEADWEAR','A silhouette to recognise at a glance'],
@@ -185,7 +191,7 @@ function forgeHtml(){
         '<span>All choices are cosmetic — no gameplay advantage.</span></div>'+
         '<div class="forge-choices-scroll">'+choose+'</div>'+
         '<div class="forge-bottom"><p class="forge-saving-note" role="status">'+
-          (forgeNotice||'Your hunter is saved on this device for future hunts.')+'</p>'+
+          (forgeNotice||'Save to keep this outfit for future hunts on this device.')+'</p>'+
           '<button id="forge-save" type="button" class="primary-button">SAVE MY HUNTER →</button>'+
           (forgeNotice?'<button id="forge-use-session" class="forge-session-button" type="button">USE THIS HUNTER FOR THIS SESSION →</button>':'')+
         '</div>'+
@@ -204,14 +210,14 @@ function bindForge(){
       if(!FORGE_CHOICES[part].some(option=>option.id===value))return;
       forgeDraft=normalizeHunter({...forgeDraft,[part]:value});
       forgeNotice='';
-      render();
+      renderForgeWithScroll();
     });
   });
   document.getElementById('forge-randomise').addEventListener('click',()=>{
-    forgeDraft=randomHunter();forgeNotice='';render();
+    forgeDraft=randomHunter();forgeNotice='';renderForgeWithScroll();
   });
   document.getElementById('forge-reset').addEventListener('click',()=>{
-    forgeDraft=normalizeHunter(DEFAULT_HUNTER);forgeNotice='';render();
+    forgeDraft=normalizeHunter(DEFAULT_HUNTER);forgeNotice='';renderForgeWithScroll();
   });
   document.getElementById('forge-save').addEventListener('click',()=>{
     if(saveHunter(storage(),forgeDraft)){
@@ -219,7 +225,7 @@ function bindForge(){
       forgeOpen=false;forgeNotice='';render();
     }else{
       forgeNotice='Browser storage is blocked or full. You can still use this outfit for this session, but it will not survive a reload.';
-      render();
+      renderForgeWithScroll();
     }
   });
   document.getElementById('forge-use-session')?.addEventListener('click',()=>{
