@@ -37,6 +37,7 @@ test('browser UI: solo selection, hidden AI turns and sealed two-player handoffs
   assert.match(html(),/SELECT DIFFICULTY/);
   assert.match(html(),/PASS &amp; PLAY/);
   click('start-solo-select');
+  click('guided-toggle'); // Legacy watcher clues are now explicitly Guided.
   assert.match(html(),/FOUR PATHS INTO/);
   for(const difficulty of difficulties)
     assert.match(html(),new RegExp('data-difficulty="'+difficulty+'"'));
