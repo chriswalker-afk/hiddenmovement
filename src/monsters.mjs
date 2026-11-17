@@ -28,8 +28,8 @@ export const MONSTERS=Object.freeze({
   }),
   expert:Object.freeze({
     id:'eclipse-herald',name:'The Eclipse Herald',title:'The Twin Deception',
-    home:'The Eclipse Marches',art:'./assets/monsters/eclipse-herald.svg',
-    flavour:'When the moon darkens, even witnesses disagree. One shadow moves; another only pretends to.',
+    home:'Ravenmarch County',art:'./assets/monsters/eclipse-herald.svg',
+    flavour:'From Raven Keep to the Blackwater crossing, shadows race across the county. The Herald can vanish between roads or leave behind a false witness.',
     powerTitle:'Eclipse Shift & Phantom Echo',
     powerText:'Can leap 2–3 roads, revealing its origin (5-turn cooldown), or plant a false sighting (4-turn cooldown).',
     teleport:Object.freeze({firstRound:4,cooldown:5,minHops:2,maxHops:3}),
