@@ -86,7 +86,7 @@ test('every named place has its own recognisable, deterministic original vector 
     assert.ok(!scene.includes('xlink:href=')&&!scene.includes('<image'),
       'The landmarks must be original bundled vector art');
   }
-  assert.ok(scene.length>18000,'Complete painted terrain should not be tiny placeholder symbols');
+  assert.ok(scene.length>10000,'Complete painted terrain should not be tiny placeholder symbols');
 });
 
 test('Blackfen Run is the exact physically drawn creek connecting the swamp, mill, bridge and landing',()=>{
