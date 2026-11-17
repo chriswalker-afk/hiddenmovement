@@ -2,8 +2,12 @@ import { MAP, MAPS, MONSTER_SPAWNS } from './map.mjs';
 import { bearingBetween, formatBearing } from './geometry.mjs';
 import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
+import { SCENARIOS, scenarioInstruction } from './scenarios.mjs';
+import { renderScenery, renderTitleArt } from './scenery.mjs';
+import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
 import {
   SETTINGS, DIFFICULTIES, beginGame, createGame, endHunterTurn, hunterMove,
+  useLantern,
   monsterMove, revealTurn, sealTurn, selectMonsterStart, viewForCurrentScreen
 } from './engine.mjs';
 
@@ -19,30 +23,76 @@ let lessonStep = 0;
 let lessonOutcome = null;
 let showHowTo = false;
 let difficultyPicker = false;
+let scenarioPicker = false;
+let pendingScenario = 'classic';
+const storage = () => globalThis.localStorage || null;
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const nameOf = id => currentMap().nodes[id]?.name || 'Unknown';
 const roundCaption = round => round === 0 ? 'at the beginning of the hunt' : 'at the end of round ' + round;
 
-function start(mode = 'multi', difficulty = 'intro') {
-  const seed = ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0) || 1;
-  Object.assign(game, createGame({ mode, difficulty, seed }));
-  const result = beginGame(game);
-  if (result.ok) {
-    plotClue = false;
-    selectedClueIds = null;
+function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
+  const seed=((Date.now() ^ Math.floor(Math.random()*0xffffffff))>>>0)||1;
+  Object.assign(game,createGame({mode,difficulty,scenario,seed}));
+  const result=beginGame(game);
+  if(result.ok) {
+    plotClue=false;
+    selectedClueIds=null;
     nodeMarks.clear();
-    fieldNotes = '';
-    tutorialOpen = false;
-    lessonStep = 0;
-    lessonOutcome = null;
-    difficultyPicker = false;
-    selectedSpawn = MONSTER_SPAWNS[0];
+    fieldNotes='';
+    tutorialOpen=false;
+    lessonStep=0;
+    lessonOutcome=null;
+    difficultyPicker=false;
+    scenarioPicker=false;
+    pendingScenario='classic';
   }
   render();
 }
 
+function persistNow() {
+  const state={
+    fieldNotes,marks:[...nodeMarks.entries()],plotClue,
+    selectedClueIds:selectedClueIds===null?null:[...selectedClueIds]
+  };
+  return persistSaved(storage(),game,state);
+}
+
+function resumeHunt() {
+  const restored=readSaved(storage());
+  if(!restored)return;
+  Object.assign(game,restored.game);
+  fieldNotes=restored.ui.fieldNotes;
+  nodeMarks.clear();
+  for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
+  plotClue=restored.ui.plotClue;
+  selectedClueIds=restored.ui.selectedClueIds===null?null:new Set(restored.ui.selectedClueIds);
+  difficultyPicker=false;
+  scenarioPicker=false;
+  tutorialOpen=false;
+  render();
+}
+
+function scenarioHtml() {
+  return '<main class="scenario-shell"><div class="scenario-inner">'+
+    '<button id="scenario-back" class="text-button back-button">← BACK TO MENU</button>'+
+    '<span class="eyebrow">THREE STORIES · TWO WAYS TO PLAY</span>'+
+    '<h1>CHOOSE YOUR <em>MISSION</em></h1>'+
+    '<p>Each mission uses the same mathematical movement rules, but changes what the Monster is trying to achieve.</p>'+
+    '<div class="scenario-grid">'+Object.values(SCENARIOS).map(mission=>
+      '<article class="scenario-card scenario-'+esc(mission.id)+'">'+
+      '<div class="scenario-card-symbol" aria-hidden="true">'+esc(mission.icon)+'</div>'+
+      '<span class="eyebrow">'+esc(mission.tagline.toUpperCase())+'</span>'+
+      '<h2>'+esc(mission.name)+'</h2>'+
+      '<p>'+esc(mission.description)+'</p>'+
+      '<div class="scenario-actions">'+
+      '<button data-mission-solo="'+esc(mission.id)+'">SOLO HUNT</button>'+
+      '<button data-mission-multi="'+esc(mission.id)+'">PASS &amp; PLAY</button>'+
+      '</div></article>').join('')+'</div>'+
+    '<p class="mission-note">The Veil and Signal Lantern are available in the two special missions. Both are limited to one use each.</p>'+
+    '</div></main>';
+}
 
 function openTutorial() {
   lessonStep=0;
@@ -122,7 +172,7 @@ function difficultyHtml() {
   ).join('');
   return '<main class="difficulty-shell"><div class="difficulty-inner">' +
     '<button id="back-home" class="text-button back-button">← BACK TO MENU</button>' +
-    '<span class="eyebrow">SOLO HUNT · CHOOSE YOUR CHALLENGE</span>' +
+    '<span class="eyebrow">SOLO HUNT · '+esc(SCENARIOS[pendingScenario].name.toUpperCase())+'</span>' +
     '<h1>FOUR PATHS INTO <em>THE DARK</em></h1>' +
     '<p>Each level changes the size of the map, the monster’s instincts and the strength of the clues you uncover.</p>' +
     '<div class="difficulty-grid">' + cards + '</div>' +
@@ -141,10 +191,19 @@ function titleBar(mode, view) {
 }
 
 function homeHtml() {
-  if (difficultyPicker) return difficultyHtml();
+  if(difficultyPicker)return difficultyHtml();
+  if(scenarioPicker)return scenarioHtml();
+  const saved=savedSummary(storage());
+  const resume=saved?'<div class="resume-game"><span class="eyebrow">A HUNT IS SAVED ON THIS DEVICE</span>'+
+    '<strong>'+esc(SCENARIOS[saved.scenario].name)+'</strong>'+
+    '<p>'+esc(saved.mode==='solo'?'Solo':'Pass & Play')+' · Round '+saved.round+
+    (saved.mode==='solo'?' · '+esc(saved.difficulty):'')+'</p>'+
+    '<button id="resume-hunt" class="primary-button">RESUME SAFELY →</button>'+
+    '<button id="delete-save" class="text-button">DISCARD SAVE</button></div>':'';
   return '<div class="home-shell">' +
     '<div class="home-glow" aria-hidden="true"></div>' +
     '<div class="home-content">' +
+      renderTitleArt() +
       '<div class="home-topline"><span class="small-star">✧</span> A GAME OF DIRECTIONS AND DECEPTION <span class="small-star">✧</span></div>' +
       '<div class="home-crest" aria-hidden="true"><span>N</span><b>✦</b><span>S</span></div>' +
       '<h1>SHADOW<br><i>BEARINGS</i></h1>' +
@@ -159,10 +218,12 @@ function homeHtml() {
           '<span>One player • Monster AI</span><small>Four escalating difficulties</small>' +
           '<span class="mode-link">SELECT DIFFICULTY →</span></button>' +
       '</div>' +
+      '<button class="text-button" id="scenario-select">EXPLORE STORY MISSIONS ↗</button>' +
+      resume +
       '<button class="text-button" id="how-toggle" aria-expanded="' + showHowTo + '">HOW TO PLAY <span aria-hidden="true">⌄</span></button>' +
       '<button class="text-button" id="open-tutorial">INTERACTIVE BEARINGS TRAINING ↗</button>' +
       (showHowTo ? howToHtml() : '') +
-      '<p class="home-footer">CHAPTER I · THE HOLLOW MOOR <span>◈</span> FIRST PLAYABLE PROTOTYPE</p>' +
+      '<p class="home-footer">SHADOW BEARINGS <span>◈</span> FOUR MAPS · THREE MISSIONS</p>' +
     '</div></div>';
 }
 
