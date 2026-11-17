@@ -135,8 +135,8 @@ export function clueMathExplanation(clue, round,publicEvents=[]) {
     return 'The Monster was here just before its jump in round '+
       (clue.observedRound+1)+'. A public teleport moves 2–3 connected roads, not one.';
   if (clue.type === 'beacon') return 'The Monster was publicly seen at this beacon at the end of round '+
-    clue.observedRound+'. It could have moved along exactly '+elapsed+
-    ' road'+(elapsed===1?'':'s')+' since then.';
+    clue.observedRound+'. '+elapsed+' Monster turn'+(elapsed===1?'':'s')+
+    ' have passed since, including any publicly announced multi-road teleport.';
   const angle = clue.kind === 'reverse' ? 'Reverse the clue bearing by 180° first. ' : '';
   const when = clue.observedRound === 0 ? 'at the beginning of the hunt' :
     'at the end of round ' + clue.observedRound;
