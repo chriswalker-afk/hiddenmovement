@@ -105,7 +105,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   click('end-turn');
   assert.match(html(),/Pass this device to the monster and look away/);
   click('reveal');
-  assert.match(html(),/USE THE VEIL/);
+  assert.match(html(),/USE VEIL/);
   click('save-exit');
   click('resume-hunt');
   assert.match(html(),/Pass this device to the monster and look away/);
