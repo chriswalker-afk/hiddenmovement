@@ -27,6 +27,21 @@ export const WATERWAYS = Object.freeze({
       ]
     })
   ]),
+  // Duskmere's southern millstream flows along the village's actual lower
+  // road band and crosses only the existing A12-A16, A13-A17 and A14-A18
+  // routes. Its central crossing is the illustrated A13 Stone Bridge.
+  woodland: Object.freeze([
+    Object.freeze({
+      id:'duskmere-millstream',width:24,
+      segments:[
+        [[-60,553],[20,552],[106,563],[180,560]],
+        [[180,560],[258,560],[354,565],[435,566]],
+        [[435,566],[527,569],[603,571],[682,568]],
+        [[682,568],[758,566],[828,566],[902,567]],
+        [[902,567],[966,572],[1015,579],[1060,573]]
+      ]
+    })
+  ]),
   marsh: Object.freeze([
     Object.freeze({
       id: 'northern-river', width: 72,
