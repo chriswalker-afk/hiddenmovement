@@ -157,3 +157,19 @@
 - Add unit regressions for chronological positions, round-zero starts, captures, idle turns, secret-state isolation, teleport/Veil/Signal Lantern, incomplete histories and UI wiring; browser QA verifies desktop/mobile/landscape replay controls and layouts.
 
 **Remaining after PR12:** finish Hunter Forge by replacing the generic live map marker with the matching modular Hunter board character; add a cohesive miniature token, smooth route movement and responsive art QA. Planned as **PR13 — Hunter Forge board piece**.
+
+
+## PR13 — Hunter Forge's moving board piece (17 November 2026)
+
+**Scope:** Complete the visual link between saved Hunter Forge appearance and playable board, without changing movement legality, bearings, clues, monster AI, turns or victory conditions.
+
+- Reuse original modular drawing helpers for all heads, torsos, legs, complexions and six palettes; do not flatten or replace the designed outfit with an unrelated icon.
+- Render one shield-backed compact figure alongside the highlighted Hunter location; leave the numbered location centre interactive and keep the artwork inside the map edges at 100–300% zoom.
+- Animate a valid Hunter move from its actual old node to its destination with a brief SVG translation after the search report closes. Illegal moves never animate. Respect reduced-motion accessibility preferences.
+- Support the same saved appearance in every difficulty, both local Pass & Play roles, Solo play and the endgame replay. In replay replace the generic H marker but retain the M marker.
+- Preserve opaque handoffs, tap/keyboard node marks, the protractor, map zoom, clues and save/resume.
+- Test rejected malformed costume/coordinates, all modular variants, animation and responsive browser screenshots.
+
+**Quality gate:** tests, AI simulation, preview build and desktop/mobile/landscape visual checks before merging.
+
+**Follow-up:** collect student feedback on miniature size and movement timing.

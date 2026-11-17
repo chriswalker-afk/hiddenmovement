@@ -4,7 +4,7 @@
 
 One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine these with occasional public sightings in solo mode. Bearing values appear as text, not automatically drawn rays or sectors on the map.
 
-## Playable modes (PR1–PR12)
+## Playable modes (PR1–PR13)
 
 ### Solo Hunt — Hunter versus Monster AI
 
@@ -73,6 +73,14 @@ After these steps, the original **four interactive bearings exercises** remain a
 
 **Standard play is unchanged:** it receives the same earned clues, sightings and bearing-entry feedback, but not the Coach or optional combined-clue plotting. Neither mode automatically draws bearing rays or sectors on the map: the optional Guided clue overlay is activated deliberately from Clues.
 
+## Hunter Forge on the board — matching travelling Hunter (PR13)
+
+Your saved Hunter Forge design is now **the actual visible Hunter piece on the map**. The mini figure uses the very same SVG head, torso, legs, complexion and palette drawings that appear in the character creator, level briefing and HUD. It is a compact shield-backed, dark-fantasy figurine positioned beside the **highlighted, numbered location marker**, rather than covering that marker. The Hunter stays identifiable on all four map sizes, all Solo difficulties, Pass & Play Hunter/Monster turns, the endgame results and the **The Hunt, Replayed** timeline.
+
+A successful entered bearing advances the figure along the actual road from the previous node to the new one in a short 380 ms movement. The animation is displayed after the Hunter search-result report closes, rather than wasting the movement behind that modal. Invalid bearings do not animate or move the figure. The figure is not draggable: the movement rules still require **three-figure bearings** and connected roads. The miniature does not intercept taps, clicks, key presses, map annotations, protractor gestures or zoom controls. It remains within the map boundary near northern, eastern and southern edges.
+
+**Accessibility:** when the device asks for reduced motion, the miniature jumps instantly to the correct location. The underlying numbered location and label remain visible and usable. The chosen outfit remains stored locally, just as in PR11; no new gameplay save data is required, and secret Monster movement cannot be revealed through the avatar. Endgame replay uses the same miniature as its Hunter marker and a distinct Monster marker.
+
 ## The Hunt, Replayed — optional post-game chase reveal (PR12)
 
 After every completed Solo Hunt or Pass & Play game, **The Hunt, Replayed** automatically begins once any final investigation report is dismissed. Both characters' positions become visible on the original illustrated map, starting with their previously hidden initial locations and advancing **in the exact recorded order**. Hunter travel, turns where the Hunter chose to remain in place, optional Signal Lantern use and the Monster's secret movements each have their own replay step. Signature teleports are labelled and drawn as distinct dashed jumps, and the Veil is explained without rewriting the historical movement. Both routes build up as the replay advances; the screen never shows the future portion of either path early.
@@ -93,7 +101,7 @@ Use **Randomise**, **Reset to Default**, or **Save My Hunter**. Selections have 
 
 The selected Hunter appears on the **level introduction** alongside that level's unique Monster, in the first How to Hunt tutorial step and in the **Hunter's HUD** as a compact, consistent bust. The pass-and-play handoff screen remains fully blank apart from the required instruction and reveal control, preserving role privacy.
 
-**Hunter Forge follow-up (planned PR13):** add an equally recognisable **moving board token** in the same outfit, with responsive map placement and movement polish. PR11 deliberately retained the original map marker and movement rules.
+**Hunter Forge board integration (PR13):** the same customised outfit is now visible as the moving Hunter figurine on each map, while the numbered location marker and bearing-entry movement rules remain unchanged.
 
 ## Dry riverbank locations (merged PR8)
 
@@ -203,7 +211,7 @@ npm run simulate
 npm run build:site
 ```
 
-`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, equal textual hint availability in Standard and Guided play, no automatic clue plotting, manual protractor maths, responsive HUD markup, all four illustrated and round-accurate monster briefings, seven-step guide content, contextual public-information Coach, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs the suite on pull requests.
+`npm test` covers modular mini Hunter artwork, avatar map placement and animation, bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, equal textual hint availability in Standard and Guided play, no automatic clue plotting, manual protractor maths, responsive HUD markup, all four illustrated and round-accurate monster briefings, seven-step guide content, contextual public-information Coach, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs the suite on pull requests.
 
 `npm run simulate` runs **60 fixed-seed games per difficulty** with a baseline Hunter bot. That bot uses only its public view, not the Monster's hidden position. Override the sample size with `SIM_GAMES=200 npm run simulate`. The results report capture rates, average rounds, trace discoveries and sightings. They are debugging benchmarks, **not evidence of classroom balance**; student playtesting is still needed.
 
@@ -219,7 +227,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
 - `src/tutorial.mjs` — four interactive bearings practice activities
 - `src/hunter-guide.mjs` — seven illustrated How to Hunt lessons, level briefings and public-information Guided Coach
-- `src/hunter-forge.mjs` — validated modular SVG hunter artwork, palettes, randomisation and device-local persistence
+- `src/hunter-forge.mjs` — validated modular SVG Hunter artwork, mini board figure, palettes, randomisation and device-local persistence
 - `src/hunt-replay.mjs` — privacy-safe post-game event reconstruction, progressive paths and replay map projections
 - `src/engine.mjs` — game rules and strictly role-specific view projections
 - `src/app.mjs` — screens, movement controls, clues and illustrated SVG maps
@@ -228,7 +236,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR12:** Finish Hunter Forge's matching moving board token in a subsequent PR (planned PR13); classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
+**Post-PR13:** Student review of Hunter Forge miniature readability and movement timing; classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 

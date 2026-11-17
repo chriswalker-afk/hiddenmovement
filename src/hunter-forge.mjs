@@ -229,3 +229,76 @@ export function renderHunterSvg(raw,options={}){
     '<path d="M4 4H316V446H4Z" fill="none" stroke="'+p.metal+'" stroke-width="5" opacity=".35"/>'+
     '</svg>';
 }
+
+
+/**
+ * Miniature Hunter Forge board piece. This is the SAME modular figure, not a
+ * second independent costume set: head, torso, legs, complexion and palette
+ * use the exact drawing helpers as the character creator and the briefings.
+ *
+ * Positions are map coordinates, not screen pixels. The portrait intentionally
+ * sits to the right of its node so the centre remains a usable touch target.
+ * Optional SVG movement uses the actual previous/current connected locations.
+ * No foreign HTML, user-defined paths or unvalidated coordinates enter SVG.
+ */
+export function renderHunterBoardPiece(raw,options={}){
+  const v=normalizeHunter(raw);
+  const palette=chosen(FORGE_PALETTES,v.palette);
+  const tone=chosen(FORGE_COMPLEXIONS,v.complexion);
+  const p={...palette,skin:tone.skin};
+  const x=Number(options.x),y=Number(options.y);
+  if(!Number.isFinite(x)||!Number.isFinite(y)||
+      x<0||x>1000||y<0||y>720)return '';
+  const fromX=Number(options.fromX),fromY=Number(options.fromY);
+  const motion=options.animate===true&&Number.isFinite(fromX)&&
+    Number.isFinite(fromY)&&fromX>=0&&fromX<=1000&&fromY>=0&&fromY<=720&&
+    (fromX!==x||fromY!==y);
+  const duration=Number(options.durationMs);
+  const ms=Number.isFinite(duration)?Math.min(900,Math.max(160,Math.round(duration))):380;
+  const attrs=' data-hunter-part-head="'+v.head+
+    '" data-hunter-part-torso="'+v.torso+
+    '" data-hunter-part-legs="'+v.legs+
+    '" data-hunter-palette="'+v.palette+
+    '" data-hunter-complexion="'+v.complexion+'"';
+  const replay=options.replay===true?' data-replay-actor="hunter"':'';
+  // Keep the figurine inside the map's boundary, including the outermost
+  // expert nodes. Prefer the node's right side, or left near the east edge.
+  const anchored=(px,py)=>{
+    // Below the centre on normal rows: the name is always above the marker.
+    // Bottom rows move the miniature sideways, so its feet stay on the map.
+    const bottom=py>625;
+    return [
+      px+(bottom?(px>850?-78:78):(px>905?-26:26)),
+      py+(bottom?-8:68)
+    ];
+  };
+  const fromPoint=anchored(fromX,fromY);
+  const toPoint=anchored(x,y);
+  const from=fromPoint[0]+' '+fromPoint[1];
+  const to=toPoint[0]+' '+toPoint[1];
+  const animation=motion?
+    '<animateTransform attributeName="transform" attributeType="XML" type="translate" '+
+    'from="'+from+'" to="'+to+'" dur="'+ms+'ms" begin="0s" fill="freeze"/>' : '';
+  return '<g class="hunter-board-piece" pointer-events="none"'+attrs+replay+
+    ' data-hunter-board-node="'+(typeof options.node==='string'&&
+      /^[A-Z0-9_-]{1,20}$/.test(options.node)?options.node:'')+
+    '" data-animated="'+motion+'" transform="translate('+to+')">'+
+    '<title>Your Hunter: '+chosen(FORGE_HEADS,v.head).label+', '+
+      chosen(FORGE_TORSOS,v.torso).label+', '+
+      chosen(FORGE_LEGS,v.legs).label+', '+palette.label+'</title>'+
+    animation+
+    '<ellipse cx="0" cy="6" rx="24" ry="8" fill="#08141b" opacity=".72"/>'+
+    '<path d="M0 -71 L27 -59 L29 -5 Q27 9 0 13 Q-27 9 -29 -5 L-27 -59Z" '+
+      'fill="#10252d" stroke="'+p.metal+'" stroke-width="3.2"/>'+
+    '<path d="M0 -65 L23 -55 L24 -6 Q22 5 0 9 Q-22 5 -24 -6 L-23 -55Z" '+
+      'fill="'+p.dark+'" stroke="#0b1922" stroke-width="1.5"/>'+
+    '<svg x="-25" y="-66" width="50" height="70" viewBox="33 68 255 365" '+
+      'overflow="hidden" aria-hidden="true">'+
+      legsArt(v.legs,p)+torsoArt(v.torso,p)+headArt(v.head,p,tone)+
+    '</svg>'+
+    '<path d="M-25 -44 L-28 -55 L-18 -60 M25 -44 L28 -55 L18 -60" '+
+      'fill="none" stroke="'+p.accent+'" stroke-width="2" opacity=".75"/>'+
+    '<circle cx="0" cy="6" r="5.5" fill="'+p.accent+
+      '" stroke="#18272e" stroke-width="2"/>'+
+    '</g>';
+}

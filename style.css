@@ -1626,3 +1626,23 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 .replay-buttons,
 .replay-secondary-actions,
 .replay-complete{flex-shrink:0}
+
+
+/* PR13: the Hunter Forge figurine follows its location marker on the live map.
+   Keep it outside the interactive location group: it must never steal pointer
+   or keyboard input from map markings, routes or the protractor. */
+.hunter-board-piece{pointer-events:none;isolation:isolate}
+.hunter-board-piece>svg{overflow:hidden;pointer-events:none}
+.hunter-board-piece>path{stroke-linejoin:round}
+.hunter-board-piece>ellipse{opacity:.75}
+.node.hunter-location .node-ring{
+  fill:#1c6773;stroke:#c9e7cc;stroke-width:3.2;
+}
+.node.hunter-location .node-core{fill:#d7c08b;stroke:#234c50}
+.node.hunter-location .node-number{
+  fill:#fff6db;font-weight:800;paint-order:stroke;
+  stroke:#103d45;stroke-width:1.5px;
+}
+@media(prefers-reduced-motion:reduce){
+  .hunter-board-piece animateTransform{display:none}
+}

@@ -9,7 +9,7 @@ import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
 import { buildHuntReplay, replayMapView, replayFrameCaption } from './hunt-replay.mjs';
 import { FORGE_CHOICES, FORGE_PALETTES, FORGE_COMPLEXIONS,
   DEFAULT_HUNTER, normalizeHunter, randomHunter, loadHunter, saveHunter,
-  renderHunterSvg } from './hunter-forge.mjs';
+  renderHunterSvg, renderHunterBoardPiece } from './hunter-forge.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
@@ -41,6 +41,8 @@ let forgeDraft = normalizeHunter(null);
 let forgeNotice = '';
 let pendingScenario = 'classic';
 let mapZoom = 1;
+// A real successful Hunter movement can animate once after its search report closes.
+let pendingHunterMotion = null;
 let hudTab = 'clues';
 let guidedSelection = false;
 let protractorVisible = false;
@@ -64,6 +66,7 @@ const nameOf = id => currentMap().nodes[id]?.name || 'Unknown';
 const roundCaption = round => round === 0 ? 'at the beginning of the hunt' : 'at the end of round ' + round;
 
 function resetReplay(){
+  pendingHunterMotion=null;
   if(replayTimeout!==null)clearTimeout(replayTimeout);
   replayTimeout=null;
   replayState=null;
@@ -113,6 +116,7 @@ function resumeHunt() {
   const restored=readSaved(storage());
   if(!restored)return;
   Object.assign(game,restored.game);
+  pendingHunterMotion=null;
   monsterIntroOpen=game.mode==='solo' && !restored.ui.introSeen;
   searchReportOpen=!!game.hunterOutcome && !restored.ui.reportSeen &&
     ['hunter','over'].includes(game.phase);
@@ -674,7 +678,6 @@ function mapSvg(view) {
       (discredited?'<text x="20" y="-19" class="false-rumour-icon">×</text>':'')+
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
-       isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':
        n.label?'<text y="4" text-anchor="middle" class="node-number">'+esc(n.label)+'</text>':'')+
       // Always print the full place name on the map. Numbers remain *inside*
       // the marker as a reference to the expandable index, never as a
@@ -689,15 +692,28 @@ function mapSvg(view) {
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
   const replayTokens=view.replay && view.hunter && view.monster ?
-    [['hunter',view.hunter,'H'],['monster',view.monster,'M']].map(([role,id,initial])=>{
+    [['monster',view.monster,'M']].map(([role,id,initial])=>{
       const p=currentMap().nodes[id];
       if(!p)return '';
-      const dx=view.hunter===view.monster?(role==='hunter'?-22:22):0;
+      const dx=view.hunter===view.monster?-26:0;
       return '<g class="replay-actor replay-actor-'+role+'" data-replay-actor="'+role+
         '" transform="translate('+(p.x+dx)+' '+(p.y+19)+')" pointer-events="none">'+
         '<title>'+esc(role==='hunter'?'Hunter at '+nameOf(id):monsterFor(view.difficulty).name+' at '+nameOf(id))+'</title>'+
         '<circle r="16"/><text text-anchor="middle" y="5">'+initial+'</text></g>';
     }).join('') : '';
+  // The Hunter is a visible, modular figure on EVERY public map, including
+  // Monster setup, active play, replay and final results. The same saved outfit
+  // is used in the Forge and the mission briefing; no secret state is read.
+  const currentHunter=view.hunter && currentMap().nodes[view.hunter];
+  const origin=pendingHunterMotion && currentMap().nodes[pendingHunterMotion.from];
+  const moving=!!(origin && currentHunter && !view.replay &&
+    view.phase==='hunter' && pendingHunterMotion.to===view.hunter &&
+    globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches!==true);
+  const hunterPiece=currentHunter?renderHunterBoardPiece(hunterAppearance,{
+    node:view.hunter,x:currentHunter.x,y:currentHunter.y,
+    replay:view.replay===true,
+    fromX:origin?.x,fromY:origin?.y,animate:moving
+  }):'';
   const mapHeightStyle=(['hunter','monster'].includes(view.phase)||view.replay)
     ?'height:'+Math.round(mapZoom*100)+'%;':'height:auto;';
   return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;'+mapHeightStyle+'max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
@@ -720,6 +736,7 @@ function mapSvg(view) {
     '<g>'+plotted+'</g>' +
     hunterPath+monsterPath+
     '<g class="nodes">'+dots+'</g>' +
+    hunterPiece+
     replayTokens+
     protractor+
     '<g transform="translate(945 73)" class="north-mark"><circle r="27" fill="#0b1b27" fill-opacity=".72" stroke="#8aafaa" stroke-opacity=".55"/><path d="M0-21L6 2 0-2-6 2Z" fill="#d0b47b"/><path d="M0 21L6 2 0 6-6 2Z" fill="#7c969a"/><text y="-34" text-anchor="middle">N</text></g>' +
@@ -1553,6 +1570,9 @@ function render() {
     return;
   }
   mount.innerHTML=playHtml(view)+encounterOverlay(view);
+  // If a search report covers the moving figure, play the route animation
+  // when that report is dismissed instead of wasting it behind the overlay.
+  if(!searchReportOpen)pendingHunterMotion=null;
   bindEncounters();
   bindCommon();
   document.querySelectorAll('[data-hud-tab]').forEach(button=>{
@@ -1584,6 +1604,7 @@ function render() {
       :monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     const after=view.phase==='hunter'?game.hunter:game.monster;
     if(before!==after) {
+      if(view.phase==='hunter')pendingHunterMotion={from:before,to:after};
       coachAnswerVisible=false;
       resetProtractor(view.phase==='hunter' && game.mode==='solo');
       if(view.phase==='hunter' && result.ok && game.hunterOutcome)
