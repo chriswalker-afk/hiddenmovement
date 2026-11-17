@@ -51,6 +51,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/The Last Gate/i);
   click('data-difficulty-apprentice');
   assert.match(html(),/theme-woodland/);
+  click('hud-tab-mission');
   assert.match(html(),/STORY MISSION/);
   assert.match(html(),/SIGNAL LANTERN/);
   assert.match(html(),/GATE/);
@@ -63,6 +64,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.match(html(),/SIGNAL LANTERN/);
   assert.match(html(),/1 MOVE LEFT/);
   assert.equal(values.has(STORAGE_KEY),true,'Active solo hunt auto-saved');
+  click('hud-tab-notes');
   const notes=el('field-notes');
   notes.value='I should block the bridge';
   callbacks.get('field-notes:input')({target:{value:notes.value}});
@@ -71,6 +73,7 @@ test('PR4 browser flow: mission cards, safe save/resume, power usage, zoom and o
   assert.doesNotMatch(html(),/I should block the bridge/);
   assert.doesNotMatch(html(),/world-svg/);
   click('resume-hunt');
+  click('hud-tab-notes');
   assert.match(html(),/I should block the bridge/);
   assert.match(html(),/The Last Gate/i);
   assert.doesNotMatch(html(),/Your hidden trail/);
