@@ -4,7 +4,7 @@
 
 One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine these with occasional public sightings in solo mode. Bearing values appear as text, not automatically drawn rays or sectors on the map.
 
-## Playable modes (PR1–PR9)
+## Playable modes (PR1–PR10)
 
 ### Solo Hunt — Hunter versus Monster AI
 
@@ -54,6 +54,25 @@ The powers currently belong to Solo Hunt levels; Pass & Play uses the Intro boar
 
 Saved games retain power cooldowns, unresolved decoys and which reports have been acknowledged. These elements never appear on an opaque shared-device handoff screen, and the Monster's hidden destination remains private.
 
+## Illustrated mission briefings and Tutorial Help (PR10)
+
+**Every Solo level begins with an illustrated mission briefing**, showing the Monster Hunter and that level's own monster portrait. It explains that you are the Hunter, that visiting places recently occupied by the Monster can reveal dated evidence, that the creature keeps moving secretly, and how its particular power changes the search. The victory message uses the real difficulty's limit: **Intro 13 rounds, Apprentice 15, Tracker 18, Expert 21**. The message also warns of early-win objectives in The Last Gate and Lanternfall missions. No hidden Monster position is revealed.
+
+Choose **HOW TO PLAY** from the level briefing, **HOW TO HUNT & BEARINGS TRAINING** during a Hunter turn, or the training option on the main menu. This now opens **seven illustrated How to Hunt steps**, in sequence:
+1. Your role and victory condition.
+2. Moving along connected roads using three-figure clockwise bearings.
+3. Finding a recent trail and reading collected evidence.
+4. Interpreting “bearing of A from B”, reverse bearings and ranges.
+5. Accounting for the Monster's movements *after* an older sighting.
+6. Distinguishing disclosed teleport origins from unconfirmed false sightings.
+7. A repeatable turn-by-turn checklist.
+
+After these steps, the original **four interactive bearings exercises** remain available, with immediate answer feedback. Players can also skip directly to the exercises and close the tutorial without losing the current hunt.
+
+**Guided mode now includes a COACH tab**. It gives contextual, student-friendly instructions at the start of the hunt and after searches, invalid bearing attempts, announced special powers or the final rounds. It can show the bearing of **one connected road as a worked *text-only* example on request**, and offers shortcuts to Clues, the manual protractor and the full guide. The Coach and worked example operate on public Hunter information, not secret Monster state.
+
+**Standard play is unchanged:** it receives the same earned clues, sightings and bearing-entry feedback, but not the Coach or optional combined-clue plotting. Neither mode automatically draws bearing rays or sectors on the map: the optional Guided clue overlay is activated deliberately from Clues.
+
 ## Dry riverbank locations (merged PR8)
 
 **Tracker / The Sunken Lowlands** and **Expert / The Eclipse Marches** now place their rivers through channels **between** rows of dry land nodes, rather than underneath named locations. The rows adjacent to each watercourse have been moved slightly onto the banks without removing any places or changing a single road connection. All 26 Tracker and 36 Expert locations remain playable with their original IDs, clues and scenario objectives. Routes crossing a watercourse remain connected roads.
@@ -68,15 +87,15 @@ The active game is designed around a **single viewport**, rather than a vertical
 
 **Standard (default):** all the original *textual* gameplay hints remain, including watcher reports, earned track clues, route-distance bands on easier difficulties, bearing accuracy feedback and the Signal Lantern. However, clue bearings are **never automatically drawn as rays or sectors on the map**. Players must interpret the text and may use the optional, manually operated protractor.
 
-**Guided / Tutorial mode:** select **Enable Tutorial Help** on the title screen, mission selection or difficulty selection before starting. It provides **the same textual clues and hints** as Standard, but offers an optional **Combine Clues on the Map** control. This overlay remains off until a player deliberately opens it; it can then draw the selected clues for demonstration and be hidden again. The optional manual protractor is available in both modes.
+**Guided / Tutorial mode:** select **Enable Tutorial Help** on the title screen, mission selection or difficulty selection before starting. It preserves **the same textual clues and hints** as Standard and adds a contextual **Coach tab**, optional text-only worked road bearing and **Combine Clues on the Map** control. The combined-clue overlay remains off until the player chooses it; the manual protractor is available in both modes.
 
-The existing four-question interactive Bearings Field Training is available separately from the menu and from either role’s navigation panel. Guided mode is a setting for the game itself, not a replacement for the training sequence.
+The seven-step illustrated How to Hunt guide leads into the existing four-question interactive Bearings Field Training. It is available from the menu, pre-level briefing and during a movement turn. Guided mode is a setting for the game itself, not a requirement to access the guide.
 
 Saved games remember whether optional visual assistance was enabled. Older solo saves continue with the same textual clues and their previous visual-assistance setting.
 
 ## Learning and deduction tools (PR3)
 
-**Interactive field training.** Select **Interactive Bearings Training** on the home screen or **Bearings Field Training** during the movement turn. Four exercises cover clockwise-from-north bearings, opposite bearings, careful "bearing of A from B" wording, and ranges wrapping across 000°. Every exercise checks a three-figure answer and explains the method.
+**Illustrated How to Hunt and interactive field training.** Open Tutorial Help from the menu, briefing or a Hunter turn. Seven illustrated game-play steps come first, followed by four practice exercises covering clockwise-from-north bearings, opposite bearings, "bearing of A from B" wording and ranges wrapping through 000°. Each exercise checks a three-figure answer and explains the method.
 
 **Combine clues in Guided mode.** In the Hunter's Clues tab, choose **Combine clues on the map**. Tick or untick observations to see their rays/sectors, highlight possible Monster locations, and list remaining candidate places. The analysis uses only *public observations*: for each time-stamped clue it finds possible locations at the recorded round, advances those possibilities through ordinary one-road moves or publicly announced two-to-three-road teleports, then intersects the sets. It does NOT overlap old clues as if the Monster remained stationary. The overlay may be turned off to restore unaided problem solving.
 
@@ -121,9 +140,10 @@ The Hollow Moor, Thornwood Vale, Sunken Lowlands and Eclipse Marches have differ
 
 ## Preview and publishing
 
-The repository is a fully static browser game; there is no backend. Two GitHub Actions workflows are included:
+The repository is a fully static browser game; there is no backend. GitHub Actions runs test, visual QA, preview packaging and Pages publishing workflows:
 
 - **Build reviewable Shadow Bearings preview:** runs tests and packages a downloadable preview ZIP on PRs. The archive contains the allowlisted website files and no test code or browser save data. Unzip and serve it with a local HTTP server to play.
+- **Shadow Bearings viewport visual QA:** uses Chromium to verify opening artwork, tutorial, Coach, clue visibility, mobile/desktop layout and game navigation, with screenshots available as a workflow artifact.
 - **Publish Shadow Bearings to GitHub Pages:** on pushes to main (or manually), runs tests and publishes the website at the Pages URL. In repository **Settings → Pages**, select **GitHub Actions** as the publishing source if GitHub Pages has not been enabled. The publishing run must succeed before a live URL can be claimed.
 
 See [Deployment Guide](docs/DEPLOYMENT.md) for the exact review, launch and rollback workflow.
@@ -132,7 +152,7 @@ See [Deployment Guide](docs/DEPLOYMENT.md) for the exact review, launch and roll
 
 - Use exactly **three digits** such as `035`, `180` or `270`, clockwise from north. `360` is treated as north, `000`.
 - Enter an exit bearing to move along a **connected road**; tolerance is ±6°.
-- The Hunter moves **up to two roads per turn**, stopping early if desired. A human or computer Monster moves **one road after the Hunter finishes**.
+- The Hunter moves **up to two roads per turn**, stopping early if desired. A human or computer Monster normally moves **one road after the Hunter finishes**, except for announced Solo-monster teleports.
 - Reaching the Monster's current location wins immediately. The Monster wins if the Hunter finishes the final round without capture.
 - Recent visit traces trigger a bearing clue, sometimes worded in reverse (the bearing of the trace location *from* the Monster). Observation rounds are explicitly labelled.
 - In Guided mode, the clue notebook can draw exact rays or sectors, combine evidence from different rounds, and optionally identify candidate locations. On larger maps, use the **Location Index** to match numbered locations to names.
@@ -161,7 +181,7 @@ npm run simulate
 npm run build:site
 ```
 
-`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, equal textual hint availability in Standard and Guided play, no automatic clue plotting, manual protractor maths, responsive HUD markup, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
+`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, equal textual hint availability in Standard and Guided play, no automatic clue plotting, manual protractor maths, responsive HUD markup, all four illustrated and round-accurate monster briefings, seven-step guide content, contextual public-information Coach, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs the suite on pull requests.
 
 `npm run simulate` runs **60 fixed-seed games per difficulty** with a baseline Hunter bot. That bot uses only its public view, not the Monster's hidden position. Override the sample size with `SIM_GAMES=200 npm run simulate`. The results report capture rates, average rounds, trace discoveries and sightings. They are debugging benchmarks, **not evidence of classroom balance**; student playtesting is still needed.
 
@@ -176,6 +196,7 @@ The application remains dependency-free at runtime. Sources:
 - `src/protractor.mjs` — manually rotatable SVG 360° bearings measuring tool
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
 - `src/tutorial.mjs` — four interactive bearings practice activities
+- `src/hunter-guide.mjs` — seven illustrated How to Hunt lessons, level briefings and public-information Guided Coach
 - `src/engine.mjs` — game rules and strictly role-specific view projections
 - `src/app.mjs` — screens, movement controls, clues and illustrated SVG maps
 - `scripts/simulate.mjs` — reproducible public-information playtest baseline
@@ -183,7 +204,7 @@ The application remains dependency-free at runtime. Sources:
 
 ## Future work
 
-**Post-PR4:** classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes once PR4 reaches main and Pages is enabled.
+**Post-PR10:** classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes main-branch changes when Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 
