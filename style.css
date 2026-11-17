@@ -842,3 +842,16 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .world-svg .node-label-tracker{font-size:14px!important}
   .world-svg .node-label-expert{font-size:12.5px!important}
 }
+
+
+/* Existing routes crossing the river now read as deliberate narrow bridges,
+   not roads floating across the water. Pure scenery: no extra game edges. */
+.river-bridges{pointer-events:none}
+.river-bridge line{fill:none;stroke-linecap:butt}
+.river-bridge .bridge-shadow{stroke:#102d38;stroke-width:27;stroke-opacity:.9}
+.river-bridge .bridge-deck{stroke:#b1b3a1;stroke-width:19;stroke-opacity:.95}
+.river-bridge .bridge-rail{stroke:#d9cba8;stroke-width:2.3}
+.river-bridge .bridge-walkway{stroke:#687c74;stroke-width:7;stroke-opacity:.85}
+.world-svg.theme-eclipse .river-bridge .bridge-deck{stroke:#a5a0a9}
+.world-svg.theme-eclipse .river-bridge .bridge-rail{stroke:#c9b6c1}
+.world-svg.theme-eclipse .river-bridge .bridge-walkway{stroke:#746f86}

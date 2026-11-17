@@ -33,6 +33,12 @@ The original 14-location Hollow Moor mode remains available. The Monster picks a
 
 **Handoff privacy:** all board, clue and position information is replaced by an entirely blank role-transition view containing only the requested handoff text and a reveal button. Switching away from the page re-seals an active two-player role view. In Solo Hunt, the Monster never has a visible role view.
 
+## Dry riverbank locations (PR8 candidate)
+
+**Tracker / The Sunken Lowlands** and **Expert / The Eclipse Marches** now place their rivers through channels **between** rows of dry land nodes, rather than underneath named locations. The rows adjacent to each watercourse have been moved slightly onto the banks without removing any places or changing a single road connection. All 26 Tracker and 36 Expert locations remain playable with their original IDs, clues and scenario objectives. Routes crossing a watercourse remain connected roads.
+
+The painted rivers are defined in `src/waterways.mjs`. Automated geometry tests measure the actual Bezier centreline, including the painted bank width and node radius, and require clear land space around every location. Screenshot QA checks all four maps at desktop and mobile sizes.
+
 ## Single-screen HUD, optional protractor and teaching support (PR6)
 
 The active game is designed around a **single viewport**, rather than a vertically scrolling page. On desktop and projector screens, the map fills the left side; current location, remaining moves and bearing entry remain on the right. A compact status strip always shows the round and public mission objective. On portrait tablets/phones, the map is above a compact two-column control and information dock. You can browse long clue histories **within** the Clues tab, without scrolling the entire game. Tabs expose Clues, Notes, Mission details and mathematical Feedback in every mode; none of these can reveal the Monster's private location.

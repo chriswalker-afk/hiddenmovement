@@ -103,6 +103,12 @@ try{
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="'+difficulty+'"]').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
+    const decks=await page.locator('.river-bridges .river-bridge').count();
+    if(['tracker','expert'].includes(difficulty))
+      assert.ok(decks>=4 && decks<=18,
+        difficulty+' must mark crossings as bridges instead of floating roads');
+    else assert.equal(decks,0,
+      'Other maps should not acquire accidental river bridge markers');
     const expectedNames=Object.values(MAPS[difficulty].nodes).map(n=>n.name);
     const displayedNames=await page.locator('.nodes>.node .node-label').allTextContents();
     assert.deepEqual(displayedNames,expectedNames,
