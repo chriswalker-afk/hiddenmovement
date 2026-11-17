@@ -7,7 +7,7 @@ import { chooseMonsterMove } from '../src/ai.mjs';
 
 const DIFF_IDS = ['intro','apprentice','tracker','expert'];
 const make = (id,seed=2026) => {
-  const game = createGame({mode:'solo',difficulty:id,seed,guided:true});
+  const game = createGame({mode:'solo',difficulty:id,seed});
   assert.equal(beginGame(game).ok,true);
   return game;
 };
