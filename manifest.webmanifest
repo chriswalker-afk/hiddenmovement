@@ -1,0 +1,17 @@
+{
+  "name": "Shadow Bearings",
+  "short_name": "Shadow Bearings",
+  "description": "An original hidden-movement game for learning bearings.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c1720",
+  "theme_color": "#132c34",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
