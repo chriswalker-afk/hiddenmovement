@@ -581,7 +581,16 @@ function mapSvg(view) {
     return '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-base"/>' +
       '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" class="road-top"/>';
   }).join('');
-  const bridgeDecks=riverRoadCrossings(currentMap()).map(bridge=>{
+  const bridgeDecks=riverRoadCrossings(currentMap())
+    .filter(bridge=>{
+      if(currentMap().theme!=='moor')return true;
+      const at=currentMap().nodes;
+      const near=(node,radius)=>Math.hypot(bridge.x-node.x,bridge.y-node.y)<radius;
+      // H is an illustrated, road-aligned stone bridge and I a raised
+      // waterside landing. Avoid three overlapping generic bridge decals
+      // directly on top of those two large bespoke landmarks.
+      return !near(at.H,65)&&!near(at.I,46);
+    }).map(bridge=>{
     const half=bridge.span/2;
     const lo=(-half).toFixed(1),hi=half.toFixed(1);
     // A muted stone/wood footbridge spans the actual painted water,
