@@ -1614,3 +1614,15 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .replay-panel #replay-skip{min-height:30px;font-size:.58rem}
 }
 .replay-panel #replay-skip{position:sticky;bottom:0;z-index:2}
+
+/* Do not shrink multi-line replay narration into the position cards on
+   short viewports. Scroll the information panel instead of overlapping text. */
+.replay-panel > .eyebrow,
+.replay-progress-caption,
+.replay-story,
+.replay-locations,
+.replay-scrub-label,
+#replay-progress,
+.replay-buttons,
+.replay-secondary-actions,
+.replay-complete{flex-shrink:0}
