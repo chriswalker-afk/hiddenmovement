@@ -269,3 +269,96 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 }
 
 .clue-ray{stroke:#edc875;stroke-width:4;stroke-opacity:.9;stroke-dasharray:8 8;filter:drop-shadow(0 0 3px #1c2626)}
+
+
+/* PR3: classroom-friendly deduction workspace */
+.notebook-panel{max-height:none;overflow:visible}
+.clue-list{max-height:360px}
+.clue-check{display:inline-flex;align-items:center;gap:8px;margin-top:12px;
+  font-size:.68rem;letter-spacing:.06em;font-weight:700;color:#e2d1a5;cursor:pointer}
+.clue-check input{width:18px;height:18px;accent-color:#d7b878}
+.clue-explanation{margin-top:10px;border-top:1px solid var(--edge);padding-top:9px}
+.clue-explanation summary,.analysis-summary summary{cursor:pointer;font-size:.72rem;color:#ebd099;font-weight:700}
+.clue-explanation p,.analysis-summary details p{font-size:.76rem;line-height:1.7;color:#d9e5db;margin:8px 0}
+.analysis-summary{padding:13px;border:1px solid #739e91;
+  background:#203b40;margin:0 0 14px}
+.analysis-summary>strong{font:500 1.05rem 'Cinzel',Georgia,serif;
+  display:block;margin-bottom:5px;color:#e5d19a}
+.analysis-summary>span{font-size:.76rem;color:#d1ded8;display:block;margin-bottom:12px}
+.analysis-summary details{margin-bottom:10px}
+.analysis-summary .compact{margin:5px 0 0}
+.distance-hint{color:#d6e9c8!important;background:#223e35;
+  padding:9px 11px;font-size:.75rem!important;border-left:2px solid #8fb9a1}
+.node-hit-area{stroke:transparent;fill:transparent;stroke-width:14px}
+.node[role=button]{cursor:pointer}
+.node[role=button]:focus-visible .node-ring{stroke:#fff8c7;stroke-width:5}
+.node.candidate-location .candidate-halo{fill:#b3e9ca;fill-opacity:.17;
+  stroke:#a4ebc8;stroke-width:3;stroke-dasharray:4 5}
+.node.marked-possible .node-ring{stroke:#f6d18b;stroke-width:4}
+.node.marked-ruled .node-ring{stroke:#f39888;stroke-width:4}
+.mark-symbol{font:bold 22px 'DM Sans',sans-serif;fill:#e7c77f;paint-order:stroke;
+  stroke:#10252c;stroke-width:4px;pointer-events:none}
+.node.marked-ruled .mark-symbol{fill:#ff9b8d}
+.key-watch{background:#e9c777}
+.key-ruled{background:#ed9386}
+.annotations-panel h3,.maths-progress-panel h3{margin:10px 0}
+.annotation-controls{display:grid;gap:8px}
+.annotation-controls label,.notes-label{font-size:.73rem;color:#e6e3cb;font-weight:700}
+.annotation-controls select,.annotations-panel textarea{
+  width:100%;background:#0c222b;border:1px solid #6b8581;color:var(--ink);
+  padding:11px;line-height:1.45;border-radius:2px}
+.annotation-controls .plot-toggle{margin:4px 0 0}
+.annotation-controls .secondary-button{margin:0}
+.mark-legend{font-size:.72rem;line-height:1.7;color:#becfc5;margin:12px 0 18px}
+.annotations-panel textarea{display:block;min-height:84px;margin-top:8px;resize:vertical;
+  font-size:.85rem}
+.field-guide-link{width:100%;padding:12px 8px;margin-top:10px;border:0;
+  border-bottom:1px solid #64847f;background:transparent;color:#f0d39a;
+  font-weight:700;font-size:.68rem;letter-spacing:.08em;text-align:left}
+.field-guide-link:hover{text-decoration:underline}
+.maths-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:12px 0}
+.maths-metrics>div{background:#102730;border:1px solid var(--edge);
+  display:grid;gap:7px;text-align:center;align-content:center;min-height:76px;padding:8px 5px}
+.maths-metrics strong{font:600 1.1rem 'Cinzel',Georgia,serif;color:#e6ce9a}
+.maths-metrics span{font-size:.65rem;color:#a6c2b6;line-height:1.35}
+.maths-progress-panel p{margin-bottom:0}
+.end-stats{flex-wrap:wrap;line-height:1.8}
+.tutorial-screen{min-height:100vh;display:grid;place-items:center;padding:30px 16px;
+  background:radial-gradient(ellipse at top,#244640 0%,#0f1e28 55%,#09151e 100%)}
+.tutorial-card{max-width:850px;width:100%;border:1px solid #779188;
+  background:linear-gradient(140deg,#1c343e,#132630);padding:32px 35px;
+  box-shadow:0 28px 70px #030d13bd}
+.tutorial-header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tutorial-close{border:1px solid #80988e;background:transparent;color:#f7e8c9;
+  padding:9px 13px;font-size:.67rem;font-weight:700;letter-spacing:.07em}
+.tutorial-steps{display:flex;gap:8px;margin:19px 0 26px}
+.tutorial-steps span{height:4px;flex:1;background:#44616a}
+.tutorial-steps .completed-step{background:#e8c78b}
+.tutorial-card h1{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:500;margin-bottom:9px}
+.tutorial-detail{color:#d5e2d7;line-height:1.7;margin-bottom:26px}
+.tutorial-lesson{display:grid;grid-template-columns:235px 1fr;align-items:center;gap:33px}
+.lesson-compass{width:100%;max-width:235px;height:auto}
+.lesson-compass text{fill:#e6d39d;font:bold 16px 'DM Sans',sans-serif}
+.lesson-compass .lesson-compass-hint{font-size:8px;letter-spacing:.8px;fill:#a2bfb5}
+.tutorial-task{min-width:0}
+.tutorial-task .eyebrow{margin-bottom:8px}
+.tutorial-task h2{font-size:1.1rem;font-weight:500;line-height:1.5;margin-bottom:20px}
+.tutorial-task label{font-size:.77rem;font-weight:700;color:#e9e6d0;display:block;margin-bottom:8px}
+.tutorial-answer{display:flex;gap:9px}
+.tutorial-answer input{min-width:0;flex:1;background:#0a2029;border:1px solid #7f9c96;
+  color:white;padding:11px 13px;font:500 1.15rem 'Cinzel',serif;letter-spacing:.1em}
+.tutorial-answer .primary-button{width:auto;margin:0;min-height:48px}
+.lesson-feedback{min-height:55px;line-height:1.55;font-size:.84rem;color:#e0c995;margin:15px 0}
+.correct-feedback{color:#a6e4bf}
+.tutorial-next{max-width:245px;margin-top:5px}
+@media(max-width:650px){
+  .tutorial-card{padding:22px 17px}
+  .tutorial-lesson{grid-template-columns:1fr;gap:6px}
+  .lesson-compass{max-width:180px;justify-self:center}
+  .tutorial-task h2{margin-bottom:13px}
+  .tutorial-close{padding:7px}
+  .tutorial-detail{margin-bottom:15px}
+}
+@media(prefers-reduced-motion:reduce){
+  .node,.tutorial-steps span{animation:none!important}
+}
