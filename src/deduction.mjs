@@ -94,7 +94,9 @@ export function analyseClues(map, clues, currentRound, options = {}) {
 export function clueMathExplanation(clue, round) {
   const elapsed = Math.max(0,round-1-clue.observedRound);
   const angle = clue.kind === 'reverse' ? 'Reverse the clue bearing by 180° first. ' : '';
-  return angle + 'The clue was observed at the end of round ' + clue.observedRound +
+  const when = clue.observedRound === 0 ? 'at the beginning of the hunt' :
+    'at the end of round ' + clue.observedRound;
+  return angle + 'The clue was observed ' + when +
     '. The monster has had ' + elapsed + ' move' + (elapsed===1?'':'s') +
     ' since then, so its possible locations must be advanced along that many roads.';
 }
