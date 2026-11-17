@@ -583,7 +583,7 @@ function setupHtml(view) {
       '<select id="spawn-select">'+spawnOptions+'</select>' +
       '<button id="confirm-spawn" class="primary-button">CONFIRM SECRET START →</button>' +
       '<p class="warning-note">Once confirmed, the screen will be completely hidden before it passes to the Hunter.</p>' +
-      '</section></aside></div></main></div>';
+      '</section>'+savePanel()+'</aside></div></main></div>';
 }
 
 function overHtml(view) {
@@ -618,8 +618,23 @@ function bindCommon() {
   });
 }
 
+function saveAndExit() {
+  if(!persistNow()) {
+    game.feedback='Saving is unavailable in this browser. Keep the game open to avoid losing progress.';
+    render();
+    return;
+  }
+  Object.assign(game,createGame());
+  nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
+  difficultyPicker=false;scenarioPicker=false;
+  render();
+}
+
 function render() {
   const view=viewForCurrentScreen(game);
+  // Keep saved games on the home screen; clear completed games.
+  if(view.phase==='over')clearSaved(storage());
+  else if(view.phase!=='home')persistNow();
   // Critical privacy boundary: handoff markup is generated without map, role, logs or secret data.
   if(view.phase.startsWith('pass-')) {
     mount.innerHTML=handoffHtml(view.phase);
@@ -636,18 +651,40 @@ function render() {
   }
   if(view.phase==='home') {
     mount.innerHTML=homeHtml();
-    if (difficultyPicker) {
+    if(scenarioPicker) {
+      document.getElementById('scenario-back').addEventListener('click',()=>{
+        scenarioPicker=false;render();
+      });
+      document.querySelectorAll('[data-mission-multi]').forEach(el=>{
+        el.addEventListener('click',()=>start('multi','intro',el.dataset.missionMulti));
+      });
+      document.querySelectorAll('[data-mission-solo]').forEach(el=>{
+        el.addEventListener('click',()=>{
+          pendingScenario=el.dataset.missionSolo;
+          scenarioPicker=false;difficultyPicker=true;render();
+        });
+      });
+    } else if (difficultyPicker) {
       document.getElementById('back-home').addEventListener('click',()=>{
         difficultyPicker = false;
+        pendingScenario='classic';
         render();
       });
       document.querySelectorAll('[data-difficulty]').forEach(button=>{
-        button.addEventListener('click',()=> start('solo', button.dataset.difficulty));
+        button.addEventListener('click',()=> start('solo', button.dataset.difficulty,pendingScenario));
       });
     } else {
+      document.getElementById('resume-hunt')?.addEventListener('click',resumeHunt);
+      document.getElementById('delete-save')?.addEventListener('click',()=>{
+        clearSaved(storage());render();
+      });
+      document.getElementById('scenario-select').addEventListener('click',()=>{
+        scenarioPicker=true;render();
+      });
       document.getElementById('open-tutorial').addEventListener('click',openTutorial);
       document.getElementById('start-two').addEventListener('click',()=>start('multi'));
       document.getElementById('start-solo-select').addEventListener('click',()=>{
+        pendingScenario='classic';
         difficultyPicker = true;
         render();
       });
@@ -677,6 +714,7 @@ function render() {
       selectMonsterStart(game,selectedSpawn);
       render();
     });
+    document.getElementById('save-exit')?.addEventListener('click',saveAndExit);
     return;
   }
   if(view.phase==='over') {
@@ -697,13 +735,18 @@ function render() {
     event.preventDefault();
     const value=document.getElementById('bearing-input').value;
     if(view.phase==='hunter') hunterMove(game,value);
-    else monsterMove(game,value);
+    else monsterMove(game,value,{veil:document.getElementById('veil-move')?.checked===true});
     render();
   });
   document.getElementById('end-turn')?.addEventListener('click',()=>{
     endHunterTurn(game);
     render();
   });
+  document.getElementById('use-lantern')?.addEventListener('click',()=>{
+    useLantern(game);
+    render();
+  });
+  document.getElementById('save-exit')?.addEventListener('click',saveAndExit);
   document.getElementById('plot-toggle')?.addEventListener('click',()=>{
     plotClue=!plotClue;
     render();
@@ -734,6 +777,7 @@ function render() {
     });
     document.getElementById('field-notes')?.addEventListener('input',event=>{
       fieldNotes=event.target.value;
+      persistNow();
     });
   }
   if(view.phase==='hunter' && view.stepsLeft===0) document.getElementById('end-turn')?.focus();
@@ -744,8 +788,20 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden){
     const phase=game.phase;
     sealTurn(game);
-    if(phase!==game.phase) render();
+    if(phase!==game.phase) {
+      tutorialOpen=false;
+      render();
+    } else if(game.phase!=='home'&&game.phase!=='over')persistNow();
   }
 });
 
 render();
+
+
+/** An abrupt page close still saves a sealed multi-player view. */
+globalThis.addEventListener?.('pagehide',()=>{
+  if(game.phase!=='home'&&game.phase!=='over') {
+    sealTurn(game);
+    persistNow();
+  }
+});
