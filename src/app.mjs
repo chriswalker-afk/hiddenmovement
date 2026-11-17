@@ -209,7 +209,7 @@ function forgeHtml(){
         '</div>'+
       '</section>'+
     '</div>'+
-    '<p class="forge-future-note">Your design appears in introductions, training and the game HUD. A matching moving board token arrives in PR12.</p>'+
+    '<p class="forge-future-note">Your design appears in introductions, training and the game HUD. The matching moving board piece is planned for a future Hunter Forge update.</p>'+
   '</div></main>';
 }
 function bindForge(){
