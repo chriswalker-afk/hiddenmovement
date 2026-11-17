@@ -803,7 +803,7 @@ try{
     await guided.screenshot({path:'visual/guided-'+viewport.name+'-end-turn.png',fullPage:false});
     await guided.locator('#end-turn').click();
     await step('monster-moved');
-    assert.equal(await guided.locator('.round-indicator').count(),0);
+    assert.match(await guided.locator('.turn-marker strong').textContent(),/2\s*\/\s*13/,\n      'The Monster turn should advance the round without revealing its position');
     assert.equal(await guided.locator('.monster-location').count(),0,
       'No Guided step may reveal the secret Monster after its turn');
     await guided.screenshot({path:'visual/guided-'+viewport.name+'-monster-turn.png',fullPage:false});
