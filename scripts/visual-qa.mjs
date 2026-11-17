@@ -278,6 +278,101 @@ try{
   await help.screenshot({path:'visual/guided-coach-with-protractor.png',fullPage:false});
   await help.close();
 
+  // PR12: the actual, ended game automatically reveals chronological Hunter
+  // and Monster moves, with immediately accessible Skip/Results and rewatch.
+  for(const viewport of [
+    {name:'desktop',width:1366,height:768},
+    {name:'mobile',width:390,height:844},
+    {name:'landscape',width:844,height:390}
+  ]){
+    const replay=await browser.newPage({viewport:{
+      width:viewport.width,height:viewport.height},deviceScaleFactor:1});
+    const pageErrors=[];
+    replay.on('pageerror',err=>pageErrors.push(String(err)));
+    await replay.goto(url,{waitUntil:'domcontentloaded'});
+    await replay.locator('#start-solo-select').click();
+    await replay.locator('[data-difficulty="intro"]').click();
+    await replay.locator('#intro-begin').click();
+    for(let i=0;i<16 && await replay.locator('.replay-screen').count()===0;i++){
+      const end=replay.locator('#end-turn');
+      assert.ok(await end.count(),viewport.name+' hunt did not finish');
+      await end.click();
+    }
+    await replay.locator('.replay-screen').waitFor({state:'visible'});
+    assert.equal(await replay.locator('[data-replay-actor="hunter"]').count(),1);
+    assert.equal(await replay.locator('[data-replay-actor="monster"]').count(),1);
+    assert.match(await replay.locator('.replay-heading h1').textContent(),/HUNT, REPLAYED/);
+    assert.equal(await replay.locator('#replay-progress').count(),1);
+    const total=Number(await replay.locator('#replay-progress').getAttribute('max'));
+    assert.ok(total>=1,viewport.name+' replay has no recorded movements');
+    const pause=await replay.locator('#replay-play-pause').textContent();
+    if(pause.includes('PAUSE'))await replay.locator('#replay-play-pause').click();
+    const frame=Number(await replay.locator('#replay-progress').inputValue());
+    assert.ok(frame<total,viewport.name+' playback advanced too far before review');
+    const geometry=await replay.evaluate(()=>{
+      const rect=s=>{
+        const el=document.querySelector(s);
+        if(!el)return null;
+        const b=el.getBoundingClientRect();
+        return {top:b.top,bottom:b.bottom,left:b.left,right:b.right,
+          height:b.height,width:b.width};
+      };
+      return {height:innerHeight,width:innerWidth,
+        scrollHeight:document.scrollingElement.scrollHeight,
+        map:rect('.replay-map .map-frame'),
+        panel:rect('.replay-panel'),skip:rect('#replay-skip'),
+        previous:rect('#replay-prev'),next:rect('#replay-next'),
+        story:rect('.replay-story'),locations:rect('.replay-locations')};
+    });
+    assert.ok(geometry.scrollHeight<=geometry.height+3,
+      viewport.name+' endgame replay scrolled the full page');
+    for(const key of ['map','panel','skip','previous','next']){
+      const b=geometry[key];
+      assert.ok(b&&b.height>18&&b.width>18,
+        viewport.name+' replay control missing '+key);
+      assert.ok(b.top>=-3&&b.bottom<=geometry.height+4,
+        viewport.name+' replay control clipped '+key+': '+JSON.stringify(b));
+    }
+    assert.ok(geometry.map.height>=75,viewport.name+' replay map too small');
+    assert.ok(geometry.story && geometry.locations &&
+      geometry.story.bottom<=geometry.locations.top+2,
+      viewport.name+' replay narrative overlaps the actor location cards: '+
+        JSON.stringify({story:geometry.story,locations:geometry.locations}));
+    await replay.screenshot({
+      path:'visual/replay-'+viewport.name+'-initial.png',fullPage:false});
+    await replay.locator('#replay-next').click();
+    assert.equal(Number(await replay.locator('#replay-progress').inputValue()),frame+1,
+      viewport.name+' next must advance exactly one recorded movement');
+    assert.equal(await replay.locator('[data-replay-actor]').count(),2);
+    await replay.screenshot({
+      path:'visual/replay-'+viewport.name+'-step.png',fullPage:false});
+    await replay.locator('#replay-progress').evaluate((input,max)=>{
+      input.value=String(max);
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    },total);
+    assert.equal(Number(await replay.locator('#replay-progress').inputValue()),total);
+    assert.ok((await replay.locator('.replay-complete').textContent()).includes('final move'));
+    await replay.screenshot({
+      path:'visual/replay-'+viewport.name+'-last.png',fullPage:false});
+    await replay.locator('#replay-skip').click();
+    assert.ok(await replay.locator('#play-again').isVisible(),
+      viewport.name+' skip did not reach original results');
+    assert.ok(await replay.locator('#main-menu').isVisible());
+    assert.ok(await replay.locator('#replay-watch-again').isVisible());
+    await replay.screenshot({
+      path:'visual/replay-'+viewport.name+'-results.png',fullPage:false});
+    await replay.locator('#replay-watch-again').click();
+    assert.equal(await replay.locator('.replay-screen').count(),1,
+      viewport.name+' rewatch did not restart');
+    assert.equal(await replay.locator('[data-replay-actor]').count(),2);
+    await replay.locator('#replay-skip').click();
+    await replay.locator('#main-menu').click();
+    assert.ok(await replay.locator('#start-solo-select').isVisible(),
+      viewport.name+' menu unavailable after replay');
+    assert.deepEqual(pageErrors,[],viewport.name+' replay console exceptions');
+    await replay.close();
+  }
+
   await writeFile('visual/layout-report.json',JSON.stringify(report,null,2));
   console.log('Visual QA succeeded for '+report.length+' layouts');
 }catch(err){

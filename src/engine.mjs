@@ -218,6 +218,9 @@ export function viewForCurrentScreen(game) {
     hunterOutcome:game.hunterOutcome ? {...game.hunterOutcome} : null,
     stats: publicStats(game),
     finishReason:game.finishReason,
+    // Only an ended game may expose the complete chronological secret log.
+    // Live Hunter/Monster and sealed handoff projections MUST omit it.
+    replayHistory:game.history.map(e=>({...e})),
     maxRounds: game.config.maxRounds
   };
   return base;
@@ -359,6 +362,7 @@ export function useLantern(game) {
   game.lanternCharges--;
   game.stepsLeft--;
   game.publicEvents.push({type:'lantern',round:game.round});
+  game.history.push({role:'hunter',round:game.round,node:game.hunter,action:'lantern'});
   return say(game,'Your Signal Lantern found a fresh approximate bearing. One movement action was used.');
 }
 
@@ -387,7 +391,7 @@ function applyMonsterStep(game,destination,veil=false,teleport=false) {
     ...(veil?{concealed:true}:{}),...(teleport?{teleported:true}:{})
   });
   game.history.push({role:'monster',round:movedRound,node:destination,
-    ...(teleport?{movement:'teleport'}:{})});
+    ...(teleport?{movement:'teleport'}:veil?{movement:'veil'}:{})});
   if(veil) {
     game.veilCharges--;
     game.publicEvents.push({type:'veil',round:movedRound});
@@ -533,6 +537,8 @@ export function hunterMove(game,inputBearing) {
  */
 export function endHunterTurn(game) {
   if(requirePhase(game,'hunter'))return {ok:false,message:game.feedback};
+  // Record even a no-move turn so the replay never silently skips a round.
+  game.history.push({role:'hunter',round:game.round,node:game.hunter,action:'end-turn'});
   game.hunterOutcome=null;
   if(game.round>=game.config.maxRounds) {
     game.phase='over';game.winner='monster';
