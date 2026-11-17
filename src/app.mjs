@@ -25,6 +25,7 @@ let showHowTo = false;
 let difficultyPicker = false;
 let scenarioPicker = false;
 let pendingScenario = 'classic';
+let mapZoom = 1;
 const storage = () => globalThis.localStorage || null;
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
@@ -47,6 +48,7 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
     difficultyPicker=false;
     scenarioPicker=false;
     pendingScenario='classic';
+    mapZoom=1;
   }
   render();
 }
@@ -343,7 +345,7 @@ function mapSvg(view) {
     if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
-  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
+  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
     '<defs>' +
       '<linearGradient id="moor-bg" x2="1" y2="1"><stop stop-color="#1a353b"/><stop offset=".52" stop-color="#243e3d"/><stop offset="1" stop-color="#172b38"/></linearGradient>' +
       '<pattern id="moor-grain" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1" fill="#b7c8b7" opacity=".075"/><circle cx="25" cy="26" r="1" fill="#b7c8b7" opacity=".08"/></pattern>' +
@@ -373,7 +375,12 @@ function mapFrame(view) {
     '</div></details>' : '';
   return '<div class="map-section">' +
     '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>Map of ' + esc(map.title) + '</h2></div>' +
-    '<span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span></div>' +
+    '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
+      '<div class="map-zoom-controls" aria-label="Map zoom controls">'+
+        '<button type="button" id="map-zoom-out" aria-label="Zoom out" '+(mapZoom<=1?'disabled':'')+'>−</button>'+
+        '<output aria-label="Map zoom">'+Math.round(mapZoom*100)+'%</output>'+
+        '<button type="button" id="map-zoom-in" aria-label="Zoom in" '+(mapZoom>=2?'disabled':'')+'>+</button>'+
+      '</div></div></div>' +
     '<div class="map-frame">'+mapSvg(view)+'</div>' +
     '<div class="map-key">' +
       '<span><i class="key-spot key-hunter"></i> Hunter</span>' +
@@ -607,6 +614,17 @@ function overHtml(view) {
     '</main></div>';
 }
 
+function bindMapZoom() {
+  document.getElementById('map-zoom-in')?.addEventListener('click',()=>{
+    mapZoom=Math.min(2,Math.round((mapZoom+0.25)*100)/100);
+    render();
+  });
+  document.getElementById('map-zoom-out')?.addEventListener('click',()=>{
+    mapZoom=Math.max(1,Math.round((mapZoom-0.25)*100)/100);
+    render();
+  });
+}
+
 function bindCommon() {
   document.getElementById('brand-link')?.addEventListener('click',event=>{
     event.preventDefault();
@@ -698,6 +716,7 @@ function render() {
   if(view.phase==='monster-setup') {
     mount.innerHTML=setupHtml(view);
     bindCommon();
+    bindMapZoom();
     const select=document.getElementById('spawn-select');
     select.addEventListener('change',()=>{
       selectedSpawn=select.value;
@@ -720,6 +739,7 @@ function render() {
   if(view.phase==='over') {
     mount.innerHTML=overHtml(view);
     bindCommon();
+    bindMapZoom();
     document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty,game.scenario));
     document.getElementById('main-menu').addEventListener('click',()=>{
       Object.assign(game,createGame());
@@ -731,6 +751,7 @@ function render() {
   }
   mount.innerHTML=playHtml(view);
   bindCommon();
+  bindMapZoom();
   document.getElementById('move-form').addEventListener('submit',event=>{
     event.preventDefault();
     const value=document.getElementById('bearing-input').value;
