@@ -4,6 +4,7 @@ import { analyseClues, clueMathExplanation } from './deduction.mjs';
 import { LESSONS, checkLesson } from './tutorial.mjs';
 import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenarios.mjs';
 import { renderScenery, renderTitleArt } from './scenery.mjs';
+import { MONSTERS, monsterFor } from './monsters.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
@@ -33,6 +34,8 @@ let guidedSelection = false;
 let protractorVisible = false;
 let protractorBearing = 0;
 let protractorPosition = null;
+let monsterIntroOpen = false;
+let searchReportOpen = false;
 const storage = () => globalThis.localStorage || null;
 const currentMap = () => MAPS[game.mapId] || MAP;
 const esc = value => String(value).replace(/[&<>"']/g, char =>
@@ -47,6 +50,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
   if(result.ok) {
     plotClue=false;
     selectedClueIds=null;
+    monsterIntroOpen=mode==='solo';
+    searchReportOpen=false;
     hudTab='clues';
     protractorVisible=false;
     protractorBearing=0;
@@ -68,7 +73,8 @@ function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
 function persistNow() {
   const state={
     fieldNotes,marks:[...nodeMarks.entries()],plotClue,
-    selectedClueIds:selectedClueIds===null?null:[...selectedClueIds]
+    selectedClueIds:selectedClueIds===null?null:[...selectedClueIds],
+    introSeen:!monsterIntroOpen,reportSeen:!searchReportOpen
   };
   return persistSaved(storage(),game,state);
 }
@@ -77,6 +83,9 @@ function resumeHunt() {
   const restored=readSaved(storage());
   if(!restored)return;
   Object.assign(game,restored.game);
+  monsterIntroOpen=game.mode==='solo' && !restored.ui.introSeen;
+  searchReportOpen=!!game.hunterOutcome && !restored.ui.reportSeen &&
+    ['hunter','over'].includes(game.phase);
   fieldNotes=restored.ui.fieldNotes;
   nodeMarks.clear();
   for(const [id,mark] of restored.ui.marks)nodeMarks.set(id,mark);
@@ -199,6 +208,10 @@ function difficultyHtml() {
     '<span class="difficulty-level">LEVEL 0' + (i + 1) + ' <span>· ' + esc(preset.nodes) + ' LOCATIONS</span></span>' +
     '<strong>' + esc(preset.name) + '</strong>' +
     '<span class="difficulty-tagline">' + esc(preset.tagline) + '</span>' +
+    '<img class="difficulty-monster-art" src="'+monsterFor(preset.id).art+
+      '" alt="Portrait of '+esc(monsterFor(preset.id).name)+'" loading="lazy"/>' +
+    '<span class="difficulty-monster-name">'+esc(monsterFor(preset.id).name)+'</span>' +
+    '<span class="difficulty-monster-power">'+esc(monsterFor(preset.id).powerTitle)+'</span>' +
     '<span class="difficulty-description">' + esc(preset.summary) + '</span>' +
     '<span class="mode-link">HUNT HERE →</span></button>'
   ).join('');
