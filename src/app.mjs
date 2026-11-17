@@ -678,7 +678,6 @@ function mapSvg(view) {
       (discredited?'<text x="20" y="-19" class="false-rumour-icon">×</text>':'')+
       '<circle r="19" class="node-hit-area"/><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
-       isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':
        n.label?'<text y="4" text-anchor="middle" class="node-number">'+esc(n.label)+'</text>':'')+
       // Always print the full place name on the map. Numbers remain *inside*
       // the marker as a reference to the expandable index, never as a
