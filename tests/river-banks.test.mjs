@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MAPS, validateMap } from '../src/map.mjs';
-import { WATERWAYS, riverCenterlineDistance, waterwayPath } from '../src/waterways.mjs';
+import { WATERWAYS, riverCenterlineDistance, waterwayPath, riverRoadCrossings } from '../src/waterways.mjs';
 import { renderScenery } from '../src/scenery.mjs';
 import { angularDifference, bearingBetween } from '../src/geometry.mjs';
 
@@ -79,5 +79,30 @@ test('riverside node shifts do not delete roads, introduce crossings or duplicat
           assert.ok(angularDifference(routes[i],routes[j])>=12,
             difficulty+' has an ambiguous bearing from '+n.name);
     }
+  }
+});
+
+
+test('every drawn water crossing is a bridge on an existing road, never an extra game route',()=>{
+  for(const [difficulty,theme] of [['tracker','marsh'],['expert','eclipse']]){
+    const map=MAPS[difficulty];
+    const before=map.edges.length;
+    const bridges=riverRoadCrossings(map);
+    assert.ok(bridges.length>=4 && bridges.length<=18,
+      difficulty+' should mark a small number of intentional crossings');
+    const seen=new Set();
+    for(const bridge of bridges){
+      assert.ok(map.edges.some(([a,b])=>a===bridge.from&&b===bridge.to),
+        difficulty+' bridge is not supported by a real connected road');
+      assert.ok(WATERWAYS[theme].some(ch=>ch.id===bridge.channel));
+      assert.ok(Number.isFinite(bridge.x)&&Number.isFinite(bridge.y)&&
+        Number.isFinite(bridge.angle));
+      assert.ok(bridge.span>30&&bridge.span<=135);
+      assert.ok(bridge.x>=40&&bridge.x<=960&&bridge.y>=80&&bridge.y<=670);
+      const key=bridge.from+'-'+bridge.to+'/'+bridge.channel;
+      assert.ok(!seen.has(key),difficulty+' repeated a bridge on '+key);
+      seen.add(key);
+    }
+    assert.equal(map.edges.length,before,'bridge decals must not change graph topology');
   }
 });
