@@ -755,8 +755,8 @@ try{
       'translate(100 380)','Guided protractor must first need positioning');
     if(viewport.name==='desktop'){
       const handle=await guided.locator('.protractor-center-hit').boundingBox();
-      const hunter=await guided.locator('.hunter-board-piece').boundingBox();
-      assert.ok(handle&&hunter,'Both drag handle and Hunter must be visible');
+      const hunter=await guided.locator('.node.hunter-location .node-ring').boundingBox();
+      assert.ok(handle&&hunter,'Drag handle and Hunter location marker must be visible');
       await guided.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2);
       await guided.mouse.down();
       await guided.mouse.move(hunter.x+hunter.width/2,hunter.y+hunter.height/2,{steps:12});
