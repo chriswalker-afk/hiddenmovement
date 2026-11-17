@@ -1180,7 +1180,7 @@ function tourHtml(view) {
 }
 function bindGuidedTour(view){
   const panel=document.getElementById('guided-tour');
-  if(!panel||view.phase!=='hunter')return;
+  if(!panel||!['hunter','monster'].includes(view.phase))return;
   const step=tourStep(view,currentMap(),tourStage);
   if(!step)return;
   document.getElementById('guided-tour-skip')?.addEventListener('click',()=>{
