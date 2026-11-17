@@ -6,6 +6,7 @@ import { SCENARIOS, scenarioInstruction, eligibleMonsterStarts } from './scenari
 import { renderScenery, renderTitleArt } from './scenery.mjs';
 import { MONSTERS, monsterFor } from './monsters.mjs';
 import { GUIDE_STEPS, hunterBriefing, guidedCoach } from './hunter-guide.mjs';
+import { buildHuntReplay, replayMapView, replayFrameCaption } from './hunt-replay.mjs';
 import { FORGE_CHOICES, FORGE_PALETTES, FORGE_COMPLEXIONS,
   DEFAULT_HUNTER, normalizeHunter, randomHunter, loadHunter, saveHunter,
   renderHunterSvg } from './hunter-forge.mjs';
@@ -47,6 +48,10 @@ let protractorBearing = 0;
 let protractorPosition = null;
 let monsterIntroOpen = false;
 let searchReportOpen = false;
+// Replay exists only on the ended-game screen; it is never restored into a
+// live role-specific or pass-and-play handoff view.
+let replayState = null;
+let replayTimeout = null;
 const storage = () => {
   try{return globalThis.localStorage || null;}
   catch{return null;}
@@ -58,11 +63,18 @@ const esc = value => String(value).replace(/[&<>"']/g, char =>
 const nameOf = id => currentMap().nodes[id]?.name || 'Unknown';
 const roundCaption = round => round === 0 ? 'at the beginning of the hunt' : 'at the end of round ' + round;
 
+function resetReplay(){
+  if(replayTimeout!==null)clearTimeout(replayTimeout);
+  replayTimeout=null;
+  replayState=null;
+}
+
 function start(mode = 'multi',difficulty = 'intro',scenario = 'classic') {
   const seed=((Date.now() ^ Math.floor(Math.random()*0xffffffff))>>>0)||1;
   Object.assign(game,createGame({mode,difficulty,scenario,guided:guidedSelection,seed}));
   const result=beginGame(game);
   if(result.ok) {
+    resetReplay();
     plotClue=false;
     selectedClueIds=null;
     monsterIntroOpen=mode==='solo';
@@ -609,8 +621,18 @@ function mapSvg(view) {
   const hunterPath=hunterTrail.length>1 ?
     '<polyline class="hunter-trail" points="'+hunterTrail.map(id=>currentMap().nodes[id].x+','+currentMap().nodes[id].y).join(' ')+'"/>' : '';
   const monsterTrail=(view.phase==='monster'||isOver)?view.trail:[];
-  const monsterPath=monsterTrail.length>1 ?
-    '<polyline class="monster-trail" points="'+monsterTrail.map(t=>currentMap().nodes[t.node].x+','+currentMap().nodes[t.node].y).join(' ')+'"/>' : '';
+  const monsterPath=(view.replay && Array.isArray(view.replaySegments))
+    ?view.replaySegments.map(edge=>{
+      const a=currentMap().nodes[edge.from],b=currentMap().nodes[edge.to];
+      if(!a||!b)return '';
+      const kind=edge.movement==='teleport'?'replay-teleport-line':
+        edge.movement==='veil'?'replay-veil-line':'replay-ordinary-line';
+      return '<line class="monster-trail '+kind+'" x1="'+a.x+'" y1="'+a.y+
+        '" x2="'+b.x+'" y2="'+b.y+'"/>';
+    }).join('')
+    :monsterTrail.length>1 ?
+      '<polyline class="monster-trail" points="'+monsterTrail.map(t=>
+        currentMap().nodes[t.node].x+','+currentMap().nodes[t.node].y).join(' ')+'"/>' : '';
   const eligible=new Set(view.eligibleSpawns||[]);
   const monsterNeighbours = view.phase==='monster' ? new Set(currentMap().adjacency[view.monster]) : new Set();
   const mapNodeCount=Object.keys(currentMap().nodes).length;
@@ -666,6 +688,16 @@ function mapSvg(view) {
     if(view.phase==='hunter') return '<g role="button" tabindex="0" aria-label="Mark '+esc(n.name)+' on your map, current mark '+esc(mark||'none')+'" class="'+cls.join(' ')+'" data-node-note="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
+  const replayTokens=view.replay && view.hunter && view.monster ?
+    [['hunter',view.hunter,'H'],['monster',view.monster,'M']].map(([role,id,initial])=>{
+      const p=currentMap().nodes[id];
+      if(!p)return '';
+      const dx=view.hunter===view.monster?(role==='hunter'?-22:22):0;
+      return '<g class="replay-actor replay-actor-'+role+'" data-replay-actor="'+role+
+        '" transform="translate('+(p.x+dx)+' '+(p.y+19)+')" pointer-events="none">'+
+        '<title>'+esc(role==='hunter'?'Hunter at '+nameOf(id):monsterFor(view.difficulty).name+' at '+nameOf(id))+'</title>'+
+        '<circle r="16"/><text text-anchor="middle" y="5">'+initial+'</text></g>';
+    }).join('') : '';
   const mapHeightStyle=['hunter','monster'].includes(view.phase)
     ?'height:'+Math.round(mapZoom*100)+'%;':'height:auto;';
   return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" style="width:'+Math.round(mapZoom*100)+'%;'+mapHeightStyle+'max-height:none" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
@@ -688,6 +720,7 @@ function mapSvg(view) {
     '<g>'+plotted+'</g>' +
     hunterPath+monsterPath+
     '<g class="nodes">'+dots+'</g>' +
+    replayTokens+
     protractor+
     '<g transform="translate(945 73)" class="north-mark"><circle r="27" fill="#0b1b27" fill-opacity=".72" stroke="#8aafaa" stroke-opacity=".55"/><path d="M0-21L6 2 0-2-6 2Z" fill="#d0b47b"/><path d="M0 21L6 2 0 6-6 2Z" fill="#7c969a"/><text y="-34" text-anchor="middle">N</text></g>' +
     // Keep decorative borders and grain isolated so generic SVG rect styles
@@ -1136,6 +1169,104 @@ function setupHtml(view) {
       '</section>'+savePanel()+'</aside></div></main></div>';
 }
 
+function initialiseReplay(view){
+  if(replayState)return;
+  const frames=buildHuntReplay({...view,monsterName:monsterFor(view.difficulty).name},currentMap());
+  const reduceMotion=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
+  replayState={frames,index:0,playing:frames.length>1 && !reduceMotion,
+    speed:1250,skipped:frames.length===0};
+}
+function scheduleReplay(){
+  if(replayTimeout!==null)clearTimeout(replayTimeout);
+  replayTimeout=null;
+  if(game.phase!=='over'||searchReportOpen||!replayState||
+      replayState.skipped||!replayState.playing)return;
+  if(replayState.index>=replayState.frames.length-1){
+    replayState.playing=false;return;
+  }
+  replayTimeout=setTimeout(()=>{
+    replayTimeout=null;
+    if(game.phase!=='over'||searchReportOpen||!replayState||
+        replayState.skipped||!replayState.playing)return;
+    replayState.index=Math.min(replayState.frames.length-1,replayState.index+1);
+    if(replayState.index===replayState.frames.length-1)replayState.playing=false;
+    render();
+  },replayState.speed);
+}
+function replayScreenHtml(view){
+  const frames=replayState.frames;
+  const frame=frames[replayState.index];
+  const final=replayState.index>=frames.length-1;
+  const monster=monsterFor(view.difficulty).name;
+  const outcome=view.winner==='hunter'?'THE HUNTER PREVAILS':'THE MONSTER ESCAPES';
+  const role=frame.role==='start'?'THE FIRST POSITIONS':
+    frame.role==='hunter'?'HUNTER MOVEMENT':'MONSTER MOVEMENT';
+  return '<div class="app-shell end-mode replay-mode">'+titleBar(false,view)+
+    '<main class="replay-screen" aria-label="Post-game movement replay">'+
+      '<header class="replay-heading"><div>'+
+        '<span class="eyebrow">THE HUNT IS OVER · MOVEMENT REVEALED</span>'+
+        '<h1>THE HUNT, <em>REPLAYED</em></h1>'+
+        '<p>Follow each recorded movement in order. The Monster’s hiding places are revealed only now that the game has finished.</p>'+
+      '</div><div class="replay-outcome">'+outcome+'</div></header>'+
+      '<div class="replay-layout">'+
+        '<div class="replay-map">'+mapFrame(replayMapView(view,frame))+'</div>'+
+        '<aside class="replay-panel">'+
+          '<span class="eyebrow">'+role+' · '+replayFrameCaption(frame,frames.length)+'</span>'+
+          '<div class="replay-progress-caption"><strong>'+esc(frame.heading)+'</strong>'+
+            '<span>'+replayState.index+' / '+(frames.length-1)+'</span></div>'+
+          '<p id="replay-description" class="replay-story" aria-live="polite">'+esc(frame.description)+'</p>'+
+          '<div class="replay-locations">'+
+            '<div><span class="replay-dot hunter-dot">H</span><span><small>HUNTER</small><strong>'+esc(nameOf(frame.hunter))+'</strong></span></div>'+
+            '<div><span class="replay-dot monster-dot">M</span><span><small>'+esc(monster.toUpperCase())+'</small><strong>'+esc(nameOf(frame.monster))+'</strong></span></div>'+
+          '</div>'+
+          '<label class="replay-scrub-label" for="replay-progress">MOVE BY MOVE · SCRUB THE TIMELINE</label>'+
+          '<input id="replay-progress" type="range" min="0" max="'+(frames.length-1)+
+            '" value="'+replayState.index+'" step="1" aria-label="Replay position, from starting positions to final move"/>'+
+          '<div class="replay-buttons">'+
+            '<button id="replay-prev" type="button" '+(replayState.index===0?'disabled':'')+' aria-label="Previous movement">← BACK</button>'+
+            '<button id="replay-play-pause" type="button" '+(final?'disabled':'')+'>'+
+              (replayState.playing?'Ⅱ PAUSE':'▶ PLAY')+'</button>'+
+            '<button id="replay-next" type="button" '+(final?'disabled':'')+' aria-label="Next movement">NEXT →</button>'+
+          '</div>'+
+          '<div class="replay-secondary-actions">'+
+            '<button id="replay-restart" type="button">↺ FROM START</button>'+
+            '<button id="replay-speed" type="button" aria-label="Toggle playback speed">'+
+              (replayState.speed===1250?'1× SPEED':'2× SPEED')+'</button>'+
+          '</div>'+
+          (final?'<p class="replay-complete">The final move is revealed. Review the outcome or replay the chase.</p>':'')+
+          '<button id="replay-skip" type="button" class="primary-button">'+
+            (final?'SEE FINAL RESULTS →':'SKIP REPLAY · SEE RESULTS →')+'</button>'+
+        '</aside>'+
+      '</div>'+
+    '</main></div>';
+}
+function bindReplay(){
+  if(!replayState||replayState.skipped)return;
+  const last=replayState.frames.length-1;
+  const manual=index=>{
+    replayState.index=Math.max(0,Math.min(last,index));
+    replayState.playing=false;render();
+  };
+  document.getElementById('replay-prev')?.addEventListener('click',()=>manual(replayState.index-1));
+  document.getElementById('replay-next')?.addEventListener('click',()=>manual(replayState.index+1));
+  document.getElementById('replay-progress')?.addEventListener('input',e=>manual(Number(e.target.value)));
+  document.getElementById('replay-play-pause')?.addEventListener('click',()=>{
+    replayState.playing=!replayState.playing;render();
+  });
+  document.getElementById('replay-speed')?.addEventListener('click',()=>{
+    replayState.speed=replayState.speed===1250?625:1250;render();
+  });
+  document.getElementById('replay-restart')?.addEventListener('click',()=>{
+    replayState.index=0;replayState.playing=true;render();
+  });
+  document.getElementById('replay-skip')?.addEventListener('click',()=>{
+    replayState.playing=false;replayState.skipped=true;
+    if(replayTimeout!==null)clearTimeout(replayTimeout);
+    replayTimeout=null;
+    render();
+  });
+}
+
 function overHtml(view) {
   const hunterWin=view.winner==='hunter';
   const route=view.trail.map(t=>nameOf(t.node)).join(' → ');
@@ -1156,7 +1287,7 @@ function overHtml(view) {
       '</div></div>' +
       '<div class="end-map">'+mapFrame(view)+'</div>' +
       '<div class="final-route"><h3>Monster route revealed</h3><p>'+esc(route)+'</p></div>' +
-      '<div class="end-actions"><button id="play-again" class="primary-button">PLAY AGAIN →</button><button id="main-menu" class="secondary-button">RETURN TO MENU</button></div>' +
+      '<div class="end-actions"><button id="replay-watch-again" class="secondary-button">↺ WATCH THE HUNT AGAIN</button><button id="play-again" class="primary-button">PLAY AGAIN →</button><button id="main-menu" class="secondary-button">RETURN TO MENU</button></div>' +
     '</main></div>';
 }
 
@@ -1270,6 +1401,7 @@ function bindCommon() {
     event.preventDefault();
     if (confirm('Leave this game and return to the menu? Progress will be lost.')) {
       Object.assign(game, createGame());
+      resetReplay();
       monsterIntroOpen=false;searchReportOpen=false;
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
       render();
@@ -1284,6 +1416,7 @@ function saveAndExit() {
     return;
   }
   Object.assign(game,createGame());
+  resetReplay();
   monsterIntroOpen=false;searchReportOpen=false;
   nodeMarks.clear();fieldNotes='';selectedClueIds=null;plotClue=false;tutorialOpen=false;
   difficultyPicker=false;scenarioPicker=false;
@@ -1392,18 +1525,31 @@ function render() {
     return;
   }
   if(view.phase==='over') {
-    mount.innerHTML=overHtml(view)+encounterOverlay(view);
+    initialiseReplay(view);
+    const showReplay=replayState && !replayState.skipped;
+    mount.innerHTML=(showReplay?replayScreenHtml(view):overHtml(view))+encounterOverlay(view);
     bindEncounters();
     bindCommon();
     bindMapZoom();
-    document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty,game.scenario));
-    document.getElementById('main-menu').addEventListener('click',()=>{
-      Object.assign(game,createGame());
-      monsterIntroOpen=false;searchReportOpen=false;
-      nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
-      difficultyPicker = false;
-      render();
-    });
+    if(showReplay){
+      bindReplay();
+      scheduleReplay();
+    }else{
+      document.getElementById('replay-watch-again')?.addEventListener('click',()=>{
+        if(!replayState)return;
+        replayState.index=0;replayState.skipped=false;replayState.playing=true;
+        mapZoom=1;render();
+      });
+      document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty,game.scenario));
+      document.getElementById('main-menu').addEventListener('click',()=>{
+        Object.assign(game,createGame());
+        resetReplay();
+        monsterIntroOpen=false;searchReportOpen=false;
+        nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
+        difficultyPicker = false;mapZoom=1;
+        render();
+      });
+    }
     return;
   }
   mount.innerHTML=playHtml(view)+encounterOverlay(view);
