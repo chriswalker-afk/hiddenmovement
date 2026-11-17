@@ -52,7 +52,7 @@ function titleBar(mode, view) {
   return '<header class="app-header">' +
     '<a class="brand" href="#" id="brand-link" aria-label="Return to Shadow Bearings home">' +
     '<span class="brand-symbol" aria-hidden="true">✦</span><span>SHADOW <em>BEARINGS</em></span></a>' +
-    '<div class="header-right"><span class="eyebrow">THE HOLLOW MOOR</span>' +
+    '<div class="header-right"><span class="eyebrow">'+esc(currentMap().title.toUpperCase())+'</span>' +
     (mode ? '<span class="round-indicator">' + esc(view.round || 1) + ' <span>/ ' +
       esc(view.maxRounds || SETTINGS.maxRounds) + ' ROUNDS</span></span>' : '') +
     '</div></header>';
@@ -122,6 +122,12 @@ function sectorShape(origin,center,half) {
 }
 
 function mapSvg(view) {
+  const terrainNames = {
+    moor: ['BLACKPINE WOODS','ASH RIDGE','HOLLOW MARSHES','THE STANDING STONES'],
+    woodland: ['THORNWOOD FOREST','THE HILL TRAIL','FOXGLOVE MEADOW','THE OLD VALLEY'],
+    marsh: ['SILVER WATER','NORTHERN DELTA','THE REED FIELDS','LOWLAND FOG'],
+    eclipse: ['RUINED HIGHLANDS','ASHEN SKY','DARK CITADEL','THE ECLIPSE'],
+  }[currentMap().theme];
   const isMonster=view.phase==='monster' || view.phase==='monster-setup';
   const isOver=view.phase==='over';
   const paths = currentMap().edges.map(([a,b]) => {
@@ -159,14 +165,14 @@ function mapSvg(view) {
     if(possibleStart)cls.push('spawnable');
     if(selected)cls.push('selected');
     if(hasClue)cls.push('has-clue');
-    const nodeBody='<circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
+    const nodeBody='<title>'+esc(n.name)+'</title><circle r="15" class="node-ring"/><circle r="8" class="node-core"/>' +
       (isMonsterHere?'<text y="4" text-anchor="middle" class="person-symbol">◆</text>':
        isHunter?'<text y="4" text-anchor="middle" class="person-symbol">✦</text>':'')+
-      '<text y="-23" class="node-label" text-anchor="middle">'+esc(n.name)+'</text>';
+      '<text y="-23" class="node-label" text-anchor="middle">'+esc(Object.keys(currentMap().nodes).length > 18 ? (n.label || n.name) : n.name)+'</text>';
     if(possibleStart) return '<g role="button" tabindex="0" aria-label="Choose '+esc(n.name)+' as monster starting position" class="'+cls.join(' ')+'" data-spawn="'+n.id+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
     return '<g class="'+cls.join(' ')+'" transform="translate('+n.x+' '+n.y+')">'+nodeBody+'</g>';
   }).join('');
-  return '<svg class="world-svg" viewBox="0 0 1000 720" aria-label="Connected map of fourteen locations in the Hollow Moor. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
+  return '<svg class="world-svg theme-'+esc(currentMap().theme)+'" viewBox="0 0 1000 720" aria-label="Connected map of '+Object.keys(currentMap().nodes).length+' locations in '+esc(currentMap().title)+'. North is up." role="img" xmlns="http://www.w3.org/2000/svg">' +
     '<defs>' +
       '<linearGradient id="moor-bg" x2="1" y2="1"><stop stop-color="#1a353b"/><stop offset=".52" stop-color="#243e3d"/><stop offset="1" stop-color="#172b38"/></linearGradient>' +
       '<pattern id="moor-grain" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="8" cy="10" r="1" fill="#b7c8b7" opacity=".075"/><circle cx="25" cy="26" r="1" fill="#b7c8b7" opacity=".08"/></pattern>' +
@@ -182,10 +188,10 @@ function mapSvg(view) {
     '<ellipse cx="864" cy="588" rx="128" ry="70" fill="#547063" opacity=".27"/>' +
     '<g>'+trees+'</g>' +
     '<path d="M280 570L335 525L355 552L410 520L455 590" fill="none" stroke="#a0a995" stroke-width="2" opacity=".24"/>' +
-    '<text x="65" y="70" class="terrain-label">BLACKPINE WOODS</text>' +
-    '<text x="633" y="53" class="terrain-label">ASH RIDGE</text>' +
-    '<text x="41" y="691" class="terrain-label">HOLLOW MARSHES</text>' +
-    '<text x="691" y="691" class="terrain-label">THE STANDING STONES</text>' +
+    '<text x="65" y="70" class="terrain-label">'+esc(terrainNames[0])+'</text>' +
+    '<text x="633" y="53" class="terrain-label">'+esc(terrainNames[1])+'</text>' +
+    '<text x="41" y="691" class="terrain-label">'+esc(terrainNames[2])+'</text>' +
+    '<text x="691" y="691" class="terrain-label">'+esc(terrainNames[3])+'</text>' +
     '<g class="roads">'+paths+'</g>' +
     '<g>'+plotted+'</g>' +
     hunterPath+monsterPath+
@@ -197,16 +203,22 @@ function mapSvg(view) {
 }
 
 function mapFrame(view) {
+  const map = currentMap();
+  const large = Object.keys(map.nodes).length > 18;
+  const index = large ? '<details class="location-index"><summary>LOCATION INDEX · TAP TO SEE NUMBERED PLACES</summary>' +
+    '<div class="location-index-grid">' + Object.values(map.nodes).map(n =>
+    '<span><b>' + esc(n.label) + '</b> ' + esc(n.name) + '</span>').join('') +
+    '</div></details>' : '';
   return '<div class="map-section">' +
-    '<div class="map-heading"><div><span class="eyebrow">CHAPTER I · THE HOLLOW MOOR</span><h2>Map of the moor</h2></div>' +
+    '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>Map of ' + esc(map.title) + '</h2></div>' +
     '<span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span></div>' +
     '<div class="map-frame">'+mapSvg(view)+'</div>' +
     '<div class="map-key">' +
       '<span><i class="key-spot key-hunter"></i> Hunter</span>' +
       ((view.phase==='monster'||view.phase==='over')?'<span><i class="key-spot key-monster"></i> Monster</span>':'') +
-      '<span><i class="key-spot key-route"></i> Connected route</span>' +
+      '<span><i class="key-spot key-route"></i> Connected road</span>' +
       ((view.phase==='monster-setup')?'<span><i class="key-spot key-available"></i> Eligible start</span>':'')+
-    '</div></div>';
+    '</div>'+index+'</div>';
 }
 
 function movementForm(view) {
@@ -225,28 +237,41 @@ function movementForm(view) {
       '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="045" pattern="[0-9]{3}°?" '+(left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span><button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>' +
       '<small id="bearing-help">Clockwise from north · within ±6° of a connected road</small>' +
     '</form>' +
-    (!monster ? '<button id="end-turn" class="secondary-button">FINISH HUNTER TURN <span aria-hidden="true">→</span></button>' : '') +
+    (!monster ? '<button id="end-turn" class="secondary-button">'+(view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' <span aria-hidden="true">→</span></button>' : '') +
     '</section>';
 }
 
 function clueSentence(clue) {
   const place=nameOf(clue.place);
+  const observation = esc(roundCaption(clue.observedRound));
+  const precise = clue.halfWidth === 0;
+  const range = precise ?
+    'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.' :
+    'was between <strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+esc(clue.bounds[1])+'</strong>.';
+  if (clue.type === 'sighting')
+    return 'A watcher reports: the bearing of the <b>monster</b> from <b>'+esc(place)+
+      '</b> '+observation+' '+range;
   const orientation=clue.kind==='reverse' ?
     'Bearing of <b>'+esc(place)+'</b> from the <b>monster</b>' :
     'Bearing of the <b>monster</b> from <b>'+esc(place)+'</b>';
-  return orientation + ' ' + esc(roundCaption(clue.observedRound)) + ' was between ' +
-    '<strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+esc(clue.bounds[1])+'</strong>.';
+  return orientation+' '+observation+' '+range;
 }
 
 function notebook(view) {
   return '<section class="panel notebook-panel">' +
     '<div class="panel-top"><span class="eyebrow">YOUR EVIDENCE</span><span class="steps-badge">'+view.clues.length+' '+(view.clues.length===1?'CLUE':'CLUES')+'</span></div>' +
     '<h3>Field notebook</h3>' +
-    (view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+(plotClue?'HIDE':'PLOT')+' NEWEST CLUE ON MAP <span aria-hidden="true">↗</span></button>' +
+    (view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+
+      (plotClue?'HIDE':'PLOT')+' NEWEST CLUE ON MAP <span aria-hidden="true">↗</span></button>' +
       '<div class="clue-list">'+view.clues.map((c,i)=>
-        '<article class="clue-card"><div class="clue-meta"><span>CLUE '+(view.clues.length-i)+'</span><span>TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound)+'</span></div>' +
+        '<article class="clue-card '+(c.type==='sighting'?'sighting-card':'')+'"><div class="clue-meta"><span>'+
+        (c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i))+'</span><span>'+
+        (c.type==='sighting'?'PUBLIC SIGNAL':(c.ageLabel ? esc(c.ageLabel) :
+          'TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound)))+'</span></div>' +
         '<p>'+clueSentence(c)+'</p>' +
-        '<small>Discovered round '+c.foundRound+(c.kind==='reverse'?' · Consider the reverse bearing':' · Bearing from the trace')+'</small></article>').join('')+'</div>' :
+        '<small>Discovered round '+c.foundRound+
+        (c.kind==='reverse'?' · Consider the reverse bearing':' · Bearing from the marked origin')+
+        '</small></article>').join('')+'</div>' :
       '<p class="muted empty-evidence">No traces yet. Follow the old roads and search locations where the monster may have been.</p>')+
     '</section>';
 }
@@ -267,7 +292,7 @@ function playHtml(view) {
   const isMonster = view.phase==='monster';
   return '<div class="app-shell '+(isMonster?'monster-mode':'hunter-mode')+'">' + titleBar(true,view) +
     '<main class="play-content">' +
-      '<div class="status-row"><div><span class="role-tag">'+(isMonster?'◆ THE MONSTER':'✦ THE HUNTER')+'</span>' +
+      '<div class="status-row"><div><span class="role-tag">'+(isMonster?'◆ THE MONSTER':(view.mode==='solo'?'✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER'))+'</span>' +
         '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1>' +
         '<p>'+(isMonster?'The Hunter is at '+esc(nameOf(view.hunter))+'. Your position is secret.' :
           'Move up to two roads. Gather clues where the monster has passed.')+'</p></div>' +
