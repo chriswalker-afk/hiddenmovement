@@ -28,7 +28,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 5, clueHalfWidth: 0, distanceBandHalfWidth: 0,
     sightingInterval: 2, sightingHalfWidth: 25, openingPulse: true,
     clueAgeStyle: 'exact',
-    summary: 'Small map, exact trail clues, a wandering monster and frequent sightings.'
+    summary: 'Small map and exact earned trail clues; guided play adds frequent sightings.'
   }),
   apprentice: Object.freeze({
     id: 'apprentice', name: 'Apprentice', tagline: 'The woods grow darker',
@@ -36,7 +36,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 4, clueHalfWidth: 15, distanceBandHalfWidth: 1,
     sightingInterval: 3, sightingHalfWidth: 35, openingPulse: true,
     clueAgeStyle: 'exact',
-    summary: 'A larger woodland, ±15° trail clues and a wary opponent.'
+    summary: 'A larger woodland, ±15° earned trail clues and a wary opponent.'
   }),
   tracker: Object.freeze({
     id: 'tracker', name: 'Tracker', tagline: 'Follow the faintest trace',
@@ -44,7 +44,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 3, clueHalfWidth: 30, distanceBandHalfWidth: null,
     sightingInterval: 4, sightingHalfWidth: 55, openingPulse: true,
     clueAgeStyle: 'approximate',
-    summary: 'Broad ±30° clues, fading tracks and a more elusive opponent.'
+    summary: 'Broad ±30° earned clues, fading tracks and an elusive opponent.'
   }),
   expert: Object.freeze({
     id: 'expert', name: 'Expert', tagline: 'Face the eclipse',
@@ -52,7 +52,7 @@ export const DIFFICULTIES = Object.freeze({
     trailLifetime: 2, clueHalfWidth: 45, distanceBandHalfWidth: null,
     sightingInterval: 5, sightingHalfWidth: 75, openingPulse: true,
     clueAgeStyle: 'vague',
-    summary: 'An extensive network, ±45° clues, short-lived tracks and cunning AI.'
+    summary: 'Extensive map, ±45° earned clues, short tracks and cunning AI.'
   })
 });
 
