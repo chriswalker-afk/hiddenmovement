@@ -1,0 +1,48 @@
+/**
+ * Public monster personalities. These are *identities*, not secret state.
+ * Portrait SVGs are original bundled game assets and require no image CDN.
+ * Monster abilities apply to the matching Solo difficulty; human Pass & Play
+ * currently uses the Intro board and its powerless Lantern Wisp.
+ */
+export const MONSTERS=Object.freeze({
+  intro:Object.freeze({
+    id:'lantern-wisp',name:'The Lantern Wisp',title:'The Lost Light',
+    home:'The Hollow Moor',art:'./assets/monsters/lantern-wisp.svg',
+    flavour:'A lonely glow dances between the standing stones. Follow its trail before the final light goes out.',
+    powerTitle:'No special power',powerText:'A straightforward first hunt: learn the roads, read bearing clues and catch the Wisp.',
+    teleport:null,decoy:null,tint:'#e7d49e'
+  }),
+  apprentice:Object.freeze({
+    id:'briar-shade',name:'The Briar Shade',title:'The Vanishing Thorn',
+    home:'Thornwood Vale',art:'./assets/monsters/briar-shade.svg',
+    flavour:'The trees whisper when it passes. The Briar Shade slips from one thicket to another.',
+    powerTitle:'Briar Step',powerText:'Can leap 2–3 roads every 4 monster turns. Its previous location is revealed each time.',
+    teleport:Object.freeze({firstRound:4,cooldown:4,minHops:2,maxHops:3}),decoy:null,tint:'#b2d1a0'
+  }),
+  tracker:Object.freeze({
+    id:'mire-mimic',name:'The Mire Mimic',title:'The False Witness',
+    home:'The Sunken Lowlands',art:'./assets/monsters/mire-mimic.svg',
+    flavour:'Its reflection wears familiar faces. People report sightings that may never have happened.',
+    powerTitle:'False Sighting',powerText:'Can plant an unconfirmed location report every 4 monster turns. Visit the place to expose it.',
+    teleport:null,decoy:Object.freeze({firstRound:3,cooldown:4}),tint:'#9ed0cd'
+  }),
+  expert:Object.freeze({
+    id:'eclipse-herald',name:'The Eclipse Herald',title:'The Twin Deception',
+    home:'The Eclipse Marches',art:'./assets/monsters/eclipse-herald.svg',
+    flavour:'When the moon darkens, even witnesses disagree. One shadow moves; another only pretends to.',
+    powerTitle:'Eclipse Shift & Phantom Echo',
+    powerText:'Can leap 2–3 roads, revealing its origin (5-turn cooldown), or plant a false sighting (4-turn cooldown).',
+    teleport:Object.freeze({firstRound:4,cooldown:5,minHops:2,maxHops:3}),
+    decoy:Object.freeze({firstRound:3,cooldown:4}),tint:'#d4afd7'
+  })
+});
+
+export function monsterFor(difficulty='intro'){
+  return MONSTERS[difficulty]||MONSTERS.intro;
+}
+
+export function initialMonsterCooldowns(difficulty='intro'){
+  const m=monsterFor(difficulty);
+  return {teleportReadyRound:m.teleport?.firstRound??null,
+    decoyReadyRound:m.decoy?.firstRound??null};
+}
