@@ -136,10 +136,18 @@ function resumeHunt() {
     ?(validTourStage(restored.ui.tourStage)?restored.ui.tourStage:
       (game.round===1?DEFAULT_TOUR_STAGE:'done'))
     :'done';
-  hudTab=game.guided?'coach':'clues';
+  hudTab=game.guided&&['read-bearing','enable-deduction',
+    'explain-deduction','independent'].includes(tourStage)?'clues':
+    game.guided?'coach':'clues';
   coachAnswerVisible=false;
-  protractorVisible=false;
-  protractorPosition=null;
+  // Reopen the manual ruler for the relevant saved lesson. Without this,
+  // a resumed "read the bearing" lesson could point to a missing tool.
+  protractorVisible=game.guided&&[
+    'place-protractor','open-clue','read-bearing','enable-deduction',
+    'explain-deduction','first-move','search-report','second-move'
+  ].includes(tourStage);
+  protractorPosition=tourStage==='place-protractor'
+    ?initialRulerPosition(currentMap().nodes[game.hunter]):null;
   protractorBearing=0;
   selectedClueIds=restored.ui.selectedClueIds===null?null:new Set(restored.ui.selectedClueIds);
   difficultyPicker=false;
