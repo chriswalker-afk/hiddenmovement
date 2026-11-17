@@ -97,6 +97,8 @@ test('each node has an original named, distinctive illustrated urban landmark',(
   assert.match(art,/<linearGradient id="region-marsh"/);
   assert.match(art,/<pattern id="rookgate-cobble"/);
   assert.match(art,/rookgate-quay-details/);
+  assert.match(art,/clip-path="url\(#rookgate-scene-clip\)"/);
+  assert.match(art,/<clipPath id="rookgate-scene-clip">/);
   const entries=[...art.matchAll(/data-landmark-id="(T\d\d)" data-landmark-kind="([^"]+)"/g)]
     .map(m=>[m[1],m[2]]);
   assert.deepEqual(entries,EXPECTED.map(r=>[r[0],r[4]]));
