@@ -239,3 +239,17 @@
 - Record visual observations and limitations in [FOUR_WORLD_VISUAL_QA.md](FOUR_WORLD_VISUAL_QA.md).
 
 **Next after PR19:** a student-led real-device and projector legibility trial. Automated browser checks are not evidence that actual students already found the icons easy to recognise.
+
+
+## PR20 — On-map guided first-turn tutorial (18 November 2026)
+
+- Replace static Coach-only guidance with a complete optional **interactive Guided Hunt** onboarding sequence for each of the four levels. Keep the illustrated pre-level briefings and four independent bearings field-training exercises.
+- Direct students to activate the manually operated protractor, then physically place its centre on their custom Hunter piece. Provide an explicit **CENTER** button alternative for keyboard or touch accessibility.
+- Highlight the actual public **Clues** tab and first time-stamped watcher clue. Teach the “bearing of A from B” origin, clockwise-from-north angle, exact bearings versus ranges, and the fact that an earlier observation is not the Monster's live position.
+- Flash the Guided-only **Deduction Overlay** button, keeping plotting opt-in, and explain how publicly dated clues constrain possible positions.
+- Walk students through bearing entry for two legal road moves, the search report, and the **END TURN** control. The next Hunter phase explains how the Monster moved secretly and directs students to updated clues; a final **you are now on your own** step releases the player.
+- On Guided Pass & Play Monster turns, show a **role-safe movement prompt only on the revealed Monster screen**. Sealed handoffs are strictly opaque.
+- Use accessible pulsating targets, fixed-position arrows, skip controls, responsive bubble positioning, reduced-motion support and saved walkthrough progress without storing hidden Monster data in the tutorial.
+- Test transitions, evidence semantics, local resume, privacy, all four maps and desktop/phone full browser action walkthroughs. No gameplay, clues, ability powers, board geometry or victory rules are altered.
+
+**Next:** Student usability trial of the onboarding: can learners enable/position a protractor, interpret a clue, optionally use deduction and move correctly without oral teacher instructions? Refine arrow visibility and explanation wording based on feedback.
