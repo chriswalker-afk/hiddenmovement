@@ -2,7 +2,7 @@
 
 **A hidden-movement adventure that makes three-figure bearings part of the strategy.**
 
-One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and can combine these with occasional public sightings in solo mode.
+One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and may combine them with additional sightings only when playing in optional Guided mode.
 
 ## Playable modes (PR1 + PR2 + PR3 + PR4)
 
@@ -10,14 +10,14 @@ One player is the **Hunter**, following an unseen **Monster** through connected 
 
 On the title screen, choose **Solo Hunt**, then one of four difficulty levels. The Monster automatically takes a hidden move after each completed Hunter turn. The Hunter sees only public information and does not need to pass the device.
 
-| Difficulty | Locations | Trail clue accuracy | Trail lasts | Sightings | Monster style | Maximum rounds |
+| Difficulty | Locations | Trail clue accuracy | Trail lasts | Guided sightings | Monster style | Maximum rounds |
 |---|---:|---|---:|---|---|---:|
 | Intro | 14 — Hollow Moor | Exact | 5 rounds | Every 2 rounds | Wandering | 13 |
 | Apprentice | 18 — Thornwood Vale | ±15° | 4 rounds | Every 3 rounds | Wary | 15 |
 | Tracker | 26 — Sunken Lowlands | ±30° | 3 rounds | Every 4 rounds | Elusive | 18 |
 | Expert | 36 — Eclipse Marches | ±45° | 2 rounds | Every 5 rounds | Cunning | 21 |
 
-All solo difficulties begin with a public sighting at round 0. Its direction is approximate, with uncertainty that increases at higher levels. Subsequent sightings are calculated **after the Monster moves** and stamped with the observed round. Traces still award separate clues only when the Hunter reaches a recent Monster visit.
+**Standard play is the default and gives no opening or periodic watcher sightings.** Students must measure bearings and earn evidence by finding the Monster’s recent tracks. In **Guided / Tutorial mode**, the previous opening sighting and difficulty-specific periodic sightings return, each dated to its observation round. Traces still award clues when the Hunter reaches a recent Monster visit in either mode.
 
 Monster AI uses legal roads, the publicly visible Hunter location and history, and its own private recent trail. Four AI profiles vary evasion, avoidance of recent traces, route look-ahead and randomness. **The AI cannot see the Hunter's future decisions.** Given the same seed and moves, its decisions are reproducible for tests.
 
@@ -31,17 +31,31 @@ The original 14-location Hollow Moor mode remains available. The Monster picks a
 
 **Handoff privacy:** all board, clue and position information is replaced by an entirely blank role-transition view containing only the requested handoff text and a reveal button. Switching away from the page re-seals an active two-player role view. In Solo Hunt, the Monster never has a visible role view.
 
+## Single-screen HUD, optional protractor and teaching support (PR6)
+
+The active game is designed around a **single viewport**, rather than a vertically scrolling page. On desktop and projector screens, the map fills the left side; current location, remaining moves and bearing entry remain on the right. A compact status strip always shows the round and public mission objective. On portrait tablets/phones, the map is above a compact two-column control and information dock. You can browse long clue histories **within** the Clues tab, without scrolling the entire game. Tabs expose Clues, Notes and Mission details (and live mathematical Feedback in Guided mode); none of these can reveal the Monster's private location.
+
+**Manual protractor:** Select **Protractor** above the map at any time during a movement turn. The translucent 360° instrument starts at the active player's location, with 000° north. **Drag its gold tip** to rotate the measuring arm clockwise; **drag its centre** to reposition the ring. Use the +/− buttons for precise one-degree adjustments and **Center** to align it with the current location again. Read the three-figure value and *enter it yourself* to move. The protractor does not choose roads, snap to exits, autofill the input or disclose a correct answer. Hide it whenever you wish.
+
+**Standard (default):** no free watcher sightings, automatically revealed road bearings, route-distance bands or coloured next-road hints. Errors ask the player to re-measure without giving the solution. **Earned track clues**, public mission events, and the one-use **Signal Lantern** ability are still part of the game.
+
+**Guided / Tutorial mode:** select **Enable Tutorial Help** on the title screen, mission selection or difficulty selection before starting. It restores opening and periodic watcher sightings in solo play, helpful road names, success-angle feedback, route-distance bands on easier solo levels and the optional clue-combination overlay. It is for practising or teacher demonstrations, not the default challenge.
+
+The existing four-question interactive Bearings Field Training is available separately from the menu and from either role’s navigation panel. Guided mode is a setting for the game itself, not a replacement for the training sequence.
+
+Saved games remember whether help was enabled. Older solo saves that predate the Standard/Guided split continue in Guided mode, preserving their original clue behaviour.
+
 ## Learning and deduction tools (PR3)
 
-**Interactive field training.** Select **Interactive Bearings Training** on the home screen or **Compass & Reverse Bearing Training** during the Hunter turn. Four exercises cover clockwise-from-north bearings, opposite bearings, careful "bearing of A from B" wording, and ranges wrapping across 000°. Every exercise checks a three-figure answer and explains the method.
+**Interactive field training.** Select **Interactive Bearings Training** on the home screen or **Bearings Field Training** during the movement turn. Four exercises cover clockwise-from-north bearings, opposite bearings, careful "bearing of A from B" wording, and ranges wrapping across 000°. Every exercise checks a three-figure answer and explains the method.
 
-**Combine clues optionally.** In the Hunter's notebook, choose **Combine clues on the map**. Tick or untick observations to see their rays/sectors, highlight possible Monster locations, and list remaining candidate places. The analysis uses only *public observations*: for each time-stamped clue it finds possible locations at the recorded round, advances those possibilities through the correct number of single-road Monster moves, then intersects the sets. It does NOT overlap old clues as if the Monster remained stationary. The overlay may be turned off to restore unaided problem solving.
+**Combine clues in Guided mode.** In the Hunter's Clues tab, choose **Combine clues on the map**. Tick or untick observations to see their rays/sectors, highlight possible Monster locations, and list remaining candidate places. The analysis uses only *public observations*: for each time-stamped clue it finds possible locations at the recorded round, advances those possibilities through the correct number of single-road Monster moves, then intersects the sets. It does NOT overlap old clues as if the Monster remained stationary. The overlay may be turned off to restore unaided problem solving.
 
 **Mark and annotate the map.** Click a location or use keyboard/Enter to cycle it through *suspected*, *ruled out*, and unmarked. A location selector offers the same action on phones or when keyboard navigation is preferred. The Hunter can keep written working in a private note area during the current game. Personal marks do not automatically change the mathematically computed candidate set. Marks and notes never appear on Monster or handoff screens and clear when a new game starts.
 
-**Route-distance hints.** In solo Intro, discovered traces also show exact shortest-path road distance at their observation time. Apprentice gives a ±1-road band. Tracker and Expert stay direction-only. These refer to connected roads, not straight-line screen distance.
+**Guided route-distance hints.** When Guided is enabled, solo Intro traces also show exact shortest-path road distance at their observation time. Apprentice gives a ±1-road band. Tracker and Expert stay direction-only. These refer to connected roads, not straight-line screen distance.
 
-**Mathematics feedback.** Each successful route reports how far the entered bearing differed from the actual road direction. Invalid bearings never cost a movement. A Hunter progress panel shows successful routes, corrections and average angular error, with a short summary after the game.
+**Guided mathematics feedback.** With Guided assistance enabled, each successful route reports how far the entered bearing differed from the actual road direction. Invalid bearings never cost a movement. A Hunter progress panel shows successful routes, corrections and average angular error, with a short summary after the game.
 
 See the [Teacher's Guide](docs/TEACHING_GUIDE.md) for curriculum alignment and suggested activities.
 
@@ -66,7 +80,7 @@ Standard Long Hunt intentionally has no special powers, preserving the original 
 
 ## Saving and returning to a hunt (PR4)
 
-Games are automatically saved **to the current device's browser storage** while active. You can also choose **Save & Return to Menu** on an active Hunter or Monster screen. A home-screen card presents the mission, game mode and round with a **Resume Safely** button.
+Games are automatically saved **to the current device's browser storage** while active. You can also choose the compact **Save** control at the bottom of an active Hunter or Monster screen. A home-screen card presents the mission, game mode and round with a **Resume Safely** button.
 
 In **Pass & Play**, loading a saved game always shows the opaque **handoff screen** first, even when it was saved in the middle of a private turn. This prevents a reopened tab from immediately revealing the prior player's map. Hunter's hand-written notes and manual annotations are restored only within the Hunter view; they never appear during Monster or handoff turns.
 
@@ -92,7 +106,7 @@ See [Deployment Guide](docs/DEPLOYMENT.md) for the exact review, launch and roll
 - The Hunter moves **up to two roads per turn**, stopping early if desired. A human or computer Monster moves **one road after the Hunter finishes**.
 - Reaching the Monster's current location wins immediately. The Monster wins if the Hunter finishes the final round without capture.
 - Recent visit traces trigger a bearing clue, sometimes worded in reverse (the bearing of the trace location *from* the Monster). Observation rounds are explicitly labelled.
-- The clue notebook can draw exact rays or sectors, combine evidence from different rounds, and optionally identify candidate locations. On larger maps, use the **Location Index** to match numbered locations to names.
+- In Guided mode, the clue notebook can draw exact rays or sectors, combine evidence from different rounds, and optionally identify candidate locations. On larger maps, use the **Location Index** to match numbered locations to names.
 - At the end of the game, the full Monster trail is revealed.
 
 ## Running locally
@@ -118,7 +132,7 @@ npm run simulate
 npm run build:site
 ```
 
-`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, distance hints, tutorial answers, mathematical feedback, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
+`npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, Guided hints versus Standard play, drag protractor maths, responsive HUD markup, tutorial answers, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
 
 `npm run simulate` runs **60 fixed-seed games per difficulty** with a baseline Hunter bot. That bot uses only its public view, not the Monster's hidden position. Override the sample size with `SIM_GAMES=200 npm run simulate`. The results report capture rates, average rounds, trace discoveries and sightings. They are debugging benchmarks, **not evidence of classroom balance**; student playtesting is still needed.
 
@@ -129,7 +143,8 @@ The application remains dependency-free at runtime. Sources:
 - `src/ai.mjs` — deterministic random generator, spawning and evasion logic
 - `src/scenarios.mjs` — original mission goals, public landmarks and legal spawns
 - `src/scenery.mjs` — four original vector landscapes and title illustration
-- `src/persistence.mjs` — validated local saves and safely resealed resume
+- `src/persistence.mjs` — validated local saves, Guided setting and safely resealed resume
+- `src/protractor.mjs` — manually rotatable SVG 360° bearings measuring tool
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
 - `src/tutorial.mjs` — four interactive bearings practice activities
 - `src/engine.mjs` — game rules and strictly role-specific view projections
