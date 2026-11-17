@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="520" viewBox="0 0 480 520" role="img" aria-labelledby="title desc">
 <title id="title">The Briar Shade</title><desc id="desc">An antlered thorn spirit with a hood of roots and pale green eyes beneath dark forest branches.</desc>
 <defs><radialGradient id="bg"><stop stop-color="#47664e"/><stop offset=".65" stop-color="#203b3d"/><stop offset="1" stop-color="#0d1e2a"/></radialGradient>
 <linearGradient id="cloak" x1=".3" y1="0" x2=".7" y2="1"><stop stop-color="#46584c"/><stop offset=".45" stop-color="#253d35"/><stop offset="1" stop-color="#0d252b"/></linearGradient>
