@@ -69,7 +69,7 @@ test('complete pass-and-play capture replays starting positions, every Hunter mo
   assert.match(frames[0].description,/unseen/);
   assert.match(frames[3].description,/remains at/);
   assert.match(frames[4].description,/secretly travels/);
-  assert.equal(frames[5].description.includes('The Monster'),true);
+  assert.match(frames[5].description,/Round 2: the Hunter travels/);
   assert.equal(replayFrameCaption(frames[0],frames.length),'Move 0 of 5 · Starting positions');
   assert.equal(replayFrameCaption(frames.at(-1),frames.length),'Move 5 of 5 · Round 2');
 
