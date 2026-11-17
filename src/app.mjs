@@ -402,24 +402,34 @@ function movementForm(view) {
       '<label for="bearing-input">Your next three-figure bearing</label>' +
       '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="045" pattern="[0-9]{3}°?" '+(left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span><button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>' +
       '<small id="bearing-help">Clockwise from north · within ±6° of a connected road</small>' +
+      (monster && view.powers?.veilCharges>0?
+        '<label class="veil-option"><input id="veil-move" type="checkbox" /> USE THE VEIL · HIDE THIS NEW TRAIL (ONCE)</label>':'')+
     '</form>' +
     (!monster ? '<button id="end-turn" class="secondary-button">'+(view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' <span aria-hidden="true">→</span></button>' +
+      (view.powers?.lanternCharges>0?
+        '<button id="use-lantern" class="lantern-button" '+(left===0?'disabled':'')+
+        '>✧ SIGNAL LANTERN · ONE USE, COSTS ONE MOVE</button>':'')+
       '<button id="open-tutorial-game" class="field-guide-link">COMPASS &amp; REVERSE BEARING TRAINING ↗</button>' : '') +
     '</section>';
 }
 
 function clueSentence(clue) {
   const place=nameOf(clue.place);
-  const observation = esc(roundCaption(clue.observedRound));
-  const precise = clue.halfWidth === 0;
-  const range = precise ?
-    'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.' :
+  const observation=esc(roundCaption(clue.observedRound));
+  if(clue.type==='beacon')
+    return 'A beacon fell at <strong>'+esc(nameOf(clue.pointNode))+'</strong> at the end of round '+
+      clue.observedRound+'. The Monster was at this exact location <b>then</b>, but may have moved since.';
+  const precise=clue.halfWidth===0;
+  const range=precise?
+    'was exactly <strong>'+esc(clue.bounds[0])+'</strong>.':
     'was between <strong>'+esc(clue.bounds[0])+'</strong> and <strong>'+esc(clue.bounds[1])+'</strong>.';
-  if (clue.type === 'sighting')
-    return 'A watcher reports: the bearing of the <b>monster</b> from <b>'+esc(place)+
+  if(clue.type==='sighting'){
+    const source=clue.source==='lantern'?'Your Signal Lantern detected':'A watcher reports';
+    return source+': the bearing of the <b>monster</b> from <b>'+esc(place)+
       '</b> '+observation+' '+range;
-  const orientation=clue.kind==='reverse' ?
-    'Bearing of <b>'+esc(place)+'</b> from the <b>monster</b>' :
+  }
+  const orientation=clue.kind==='reverse'?
+    'Bearing of <b>'+esc(place)+'</b> from the <b>monster</b>':
     'Bearing of the <b>monster</b> from <b>'+esc(place)+'</b>';
   return orientation+' '+observation+' '+range;
 }
@@ -438,14 +448,16 @@ function notebook(view) {
     : plotClue ? '<p class="muted compact">Select at least one clue to check possible locations.</p>' : '';
   const cards=view.clues.map((c,i)=>{
     const chosen=active.some(a=>a.id===c.id);
-    const visit=c.type==='sighting'?'PUBLIC SIGNAL':
+    const visit=c.type==='beacon'?'PUBLIC BEACON REPORT':c.type==='sighting'?'PUBLIC SIGNAL':
       (c.ageLabel ? esc(c.ageLabel) : 'TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound));
     const routeDistance=Number.isInteger(c.distanceMin) ?
       '<p class="distance-hint">Road distance at observation: '+
       (c.distanceMin===c.distanceMax?'exactly '+c.distanceMin:
         c.distanceMin+'–'+c.distanceMax)+' connected roads</p>' : '';
-    const label=c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
-    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':'')+'">' +
+    const label=c.type==='beacon'?'BEACON EXTINGUISHED':
+      c.source==='lantern'?'SIGNAL LANTERN':
+      c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
+    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':c.type==='beacon'?'beacon-card':'')+'">' +
       '<div class="clue-meta"><span>'+label+'</span><span>'+visit+'</span></div>' +
       (plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
         '" '+(chosen?'checked':'')+'/> INCLUDE IN DEDUCTION</label>':'') +
@@ -509,6 +521,34 @@ function monsterTrailPanel(view) {
     '</section>';
 }
 
+function missionPanel(view) {
+  if(view.scenario==='classic')return '';
+  const mission=SCENARIOS[view.scenario];
+  const events=(view.publicEvents||[]).slice(-4).reverse();
+  const line=event=>{
+    if(event.type==='beacon')return 'Round '+event.round+': '+esc(nameOf(event.node))+' fell dark';
+    if(event.type==='veil')return 'Round '+event.round+': the Monster used its Veil';
+    if(event.type==='lantern')return 'Round '+event.round+': the Hunter lit a Signal Lantern';
+    return '';
+  };
+  const progress=view.scenario==='escape'?
+    '<p class="mission-highlight">Gate: <b>'+esc(nameOf(view.objectives.exitNode))+'</b> · Opens round 5</p>':
+    '<p class="mission-highlight">Beacons extinguished: <b>'+view.beaconVisits.length+' / '+
+      view.objectives.beacons.length+'</b></p>';
+  return '<section class="panel mission-panel"><span class="eyebrow">STORY MISSION</span>'+
+    '<h3>'+esc(mission.name)+'</h3>'+
+    '<p class="muted compact">'+esc(mission.short)+'.</p>'+progress+
+    (events.length?'<div class="mission-events">'+events.map(e=>
+      '<span>'+line(e)+'</span>').join('')+'</div>':'')+
+    '<p class="muted compact">The Monster has one Veil to hide a new trail. The Hunter can spend one move on a Signal Lantern.</p>'+
+    '</section>';
+}
+
+function savePanel() {
+  return '<section class="save-panel"><button type="button" id="save-exit" class="secondary-button">SAVE &amp; RETURN TO MENU</button>'+
+    '<p class="muted compact">Saved only on this device. In Pass &amp; Play, resuming always shows the handoff screen.</p></section>';
+}
+
 function playHtml(view) {
   const isMonster = view.phase==='monster';
   return '<div class="app-shell '+(isMonster?'monster-mode':'hunter-mode')+'">' + titleBar(true,view) +
@@ -516,12 +556,14 @@ function playHtml(view) {
       '<div class="status-row"><div><span class="role-tag">'+(isMonster?'◆ THE MONSTER':(view.mode==='solo'?'✦ SOLO HUNT · '+esc(view.difficulty.toUpperCase()):'✦ THE HUNTER'))+'</span>' +
         '<h1>'+(isMonster?'Travel unseen':'Follow the trail')+'</h1>' +
         '<p>'+(isMonster?'The Hunter is at '+esc(nameOf(view.hunter))+'. Your position is secret.' :
-          'Move up to two roads. Gather clues where the monster has passed.')+'</p></div>' +
+          'Move up to two roads. Gather clues where the monster has passed.')+'</p>'+
+        (view.scenario!=='classic'?'<span class="mission-hud-tag">'+esc(SCENARIOS[view.scenario].name)+'</span>':'')+'</div>' +
         '<div class="turn-marker"><small>ROUND</small><strong>'+view.round+' <span>/ '+view.maxRounds+'</span></strong></div></div>' +
       '<div class="game-grid">'+mapFrame(view)+
-        '<aside class="sidebar">'+movementForm(view) +
+        '<aside class="sidebar">'+missionPanel(view)+movementForm(view) +
         (isMonster?monsterTrailPanel(view):notebook(view)+annotationsPanel()+progressPanel(view)) +
         '<p id="game-feedback" class="feedback" role="status" aria-live="polite">'+esc(view.feedback||'Use the map to work out your bearing.')+'</p>' +
+        savePanel() +
         '</aside></div>' +
     '</main></div>';
 }
@@ -551,7 +593,10 @@ function overHtml(view) {
     '<main class="play-content"><div class="end-header">' +
       '<span class="eyebrow">THE HUNT HAS ENDED</span><div class="result-symbol">'+(hunterWin?'✦':'◆')+'</div>' +
       '<h1>'+(hunterWin?'THE HUNTER PREVAILS':'THE MONSTER ESCAPES')+'</h1>' +
-      '<p>'+(hunterWin?'The monster has been found before the final lantern went dark.':'The monster survived every round without being captured.')+'</p>' +
+      '<p>'+(hunterWin?'The monster has been found before the final lantern went dark.':
+        view.finishReason==='escape'?'The Monster slipped through the open Escape Gate.':
+        view.finishReason==='beacons'?'Both signal beacons were extinguished.':
+        'The Monster survived every round without being captured.')+'</p>' +
       '<div class="end-stats"><span>ROUND '+view.round+' / '+view.maxRounds+'</span><span>'+view.clues.length+' CLUES FOUND</span>' +
       (view.stats?'<span>'+view.stats.successful+' ACCURATE ROUTES</span><span>'+
         (view.stats.meanAngularError===null?'NO ROUTES':view.stats.meanAngularError.toFixed(1)+'° MEAN ERROR')+'</span>':'')+
@@ -637,7 +682,7 @@ function render() {
   if(view.phase==='over') {
     mount.innerHTML=overHtml(view);
     bindCommon();
-    document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty));
+    document.getElementById('play-again').addEventListener('click',()=>start(game.mode,game.difficulty,game.scenario));
     document.getElementById('main-menu').addEventListener('click',()=>{
       Object.assign(game,createGame());
       nodeMarks.clear(); fieldNotes=''; selectedClueIds=null; plotClue=false; tutorialOpen=false;
