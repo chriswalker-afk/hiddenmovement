@@ -25,7 +25,8 @@ async function measure(page,label){
         right:Math.round(box.right),height:Math.round(box.height),width:Math.round(box.width)};
     };
     const selectors=['.hud-screen','.hud-grid','.map-frame','.hud-move-panel',
-      '#bearing-input','#end-turn','.hud-tabs','.hud-footer','#protractor-toggle'];
+      '#bearing-input','.bearing-entry button[type="submit"]','#end-turn',
+      '.hud-tabs','.hud-footer','#protractor-toggle'];
     return {
       width:innerWidth,height:innerHeight,
       scrollHeight:document.scrollingElement.scrollHeight,
@@ -40,11 +41,19 @@ async function measure(page,label){
     label+' document scrolls vertically ('+state.scrollHeight+' > '+state.height+')');
   assert.ok(state.roadCount>0,label+' missing map roads');
   assert.ok(state.nodeCount>=14,label+' missing map locations');
-  for(const selector of ['.map-frame','#bearing-input','#end-turn','.hud-tabs','.hud-footer','#protractor-toggle']){
+  for(const selector of ['.map-frame','#bearing-input',
+    '.bearing-entry button[type="submit"]','#end-turn',
+    '.hud-tabs','.hud-footer','#protractor-toggle']){
     const box=state.parts[selector];
     assert.ok(box && box.height>5,label+' missing important control '+selector);
     assert.ok(box.top>=-3 && box.bottom<=state.height+3,
       label+' control '+selector+' clipped vertically: '+JSON.stringify(box));
+  }
+  const parent=state.parts['.hud-move-panel'];
+  for(const selector of ['#bearing-input','.bearing-entry button[type="submit"]']){
+    const box=state.parts[selector];
+    assert.ok(box.left>=parent.left-3 && box.right<=parent.right+3,
+      label+' bearing entry clipped horizontally: '+selector+' '+JSON.stringify({box,parent}));
   }
   assert.ok(state.parts['.map-frame'].height>=90,label+' map is too small to use');
 }
