@@ -57,6 +57,8 @@ try{
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="expert"]').click();
     await page.locator('.hud-screen').waitFor({state:'visible'});
+    assert.equal(await page.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0,
+      'Default screen must not auto-plot clue bearings');
     await measure(page,size.name+'-expert');
     await page.screenshot({path:'visual/'+size.name+'-expert.png',fullPage:false});
     await page.locator('#protractor-toggle').click();
@@ -74,8 +76,10 @@ try{
     await page.locator('#start-solo-select').click();
     await page.locator('[data-difficulty="'+difficulty+'"]').click();
     assert.equal(await page.locator('.nodes>.node').count(),count);
-    assert.equal(await page.getByText('WATCHER SIGHTING').count(),0,
-      'Standard play should have no free opening sighting');
+    assert.ok(await page.locator('.clue-card').count()>0,
+      'All modes should retain public opening sighting clues');
+    assert.equal(await page.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0,
+      'Bearings must never be drawn automatically on the map');
     await measure(page,'map-'+difficulty);
     await page.screenshot({path:'visual/map-'+difficulty+'.png',fullPage:false});
   }
