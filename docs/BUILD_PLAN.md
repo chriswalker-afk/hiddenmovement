@@ -228,3 +228,14 @@
 
 **Next milestone after PR18:** four-map visual consistency and in-class playtest. Focus on recognisability at default size, mobile label readability, zoom and bridge/river alignment before introducing new mechanics.
 
+
+## PR19 — Four-world visual consistency and public Location Finder (18 November 2026)
+
+- Compare all four completed worlds at identical desktop and phone viewports, keeping their distinct countryside, village, city and regional identities while standardising navigation and high-contrast marker presentation.
+- Preserve all **94 canonical named illustrated nodes**, 173 road connections, exact map coordinates, bearings, monster powers, mission objectives and replay.
+- Add a **public Location Finder to each map** so students can look up readable full place names at mobile overview scale. Selecting a place highlights its real node with a shared gold ring and pans a zoomed frame; this never moves the Hunter or alters private information, marks or rounds.
+- Give Blackfen and Duskmere decorative scenery the same scene-only clipping as Rookgate and Ravenmarch, without masking roads, tokens or interactive overlays.
+- Guard original art identity and geography with **four-world tests** (94 unique ID/name/kind matches, distinct palettes, safe waterways, route/bridge graph integrity) plus browser screenshot QA and Finder privacy/regression assertions on desktop, portrait and landscape.
+- Record visual observations and limitations in [FOUR_WORLD_VISUAL_QA.md](FOUR_WORLD_VISUAL_QA.md).
+
+**Next after PR19:** a student-led real-device and projector legibility trial. Automated browser checks are not evidence that actual students already found the icons easy to recognise.
