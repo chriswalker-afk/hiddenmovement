@@ -1873,7 +1873,7 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
 /* PR21: no exhausted-move form. The Monster does not act until the Hunter
    explicitly confirms the handoff; make that one action unmistakable. */
 .hud-move-panel.hunter-turn-complete{
-  display:flex;flex-direction:column;justify-content:center;gap:9px;
+  display:flex;flex-direction:column;justify-content:flex-start;gap:9px;
   padding:17px 15px;border:2px solid #d6b877;border-radius:8px;
   background:linear-gradient(155deg,#233e40 0%,#172d35 64%,#26372e 100%);
   box-shadow:0 3px 18px #061820aa,inset 0 0 0 1px #efd8a322;
