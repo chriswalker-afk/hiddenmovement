@@ -161,7 +161,7 @@ test('source keeps replay optional, responsive, and outside live and sealed role
   const engine=readFileSync(new URL('../src/engine.mjs',import.meta.url),'utf8');
   for(const id of ['replayScreenHtml','replay-play-pause','replay-prev','replay-next',
     'replay-progress','replay-speed','replay-skip','replay-watch-again','replay-restart',
-    'replay-actor-hunter','replay-actor-monster'])
+    'data-replay-actor'])
     assert.ok(app.includes(id),id+' must exist');
   assert.match(app,/if\(view\.phase==='over'\) \{\s*initialiseReplay\(view\)/);
   assert.match(app,/if\(view\.phase\.startsWith\('pass-'\)\)/);
@@ -171,5 +171,7 @@ test('source keeps replay optional, responsive, and outside live and sealed role
   assert.match(css,/\.replay-mode\s*\{/);
   assert.match(css,/\.replay-layout\s*\{/);
   assert.match(css,/\.replay-teleport-line\s*\{/);
+  assert.match(css,/\.replay-actor-hunter circle\s*\{/);
+  assert.match(css,/\.replay-actor-monster circle\s*\{/);
   assert.match(engine,/replayHistory:game\.history\.map/);
 });
