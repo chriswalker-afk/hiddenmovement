@@ -62,7 +62,7 @@ test('browser UI: solo selection, hidden AI turns and sealed two-player handoffs
   const submit=callbacks.get('move-form:submit');
   assert.equal(typeof submit,'function');
   submit({preventDefault(){}});
-  assert.match(html(),/No connected route is within/);
+  assert.match(html(),/Enter a three-figure bearing/);
 
   // The original pass-and-play mode must still offer a fully sealed handoff.
   click('brand-link');
