@@ -43,3 +43,14 @@
 
 - Genuine two-device multiplayer with a server-authoritative role-specific state API and reconnect logic; never ship the complete secret Monster path to a Hunter-controlled client in that mode.
 - Optional teacher-configurable lesson mode and custom maps.
+
+
+## PR1 implementation outcome (17 November 2026)
+
+**Implemented in pull request #1** on branch \`design/initial-game-spec\`:
+- Static browser game with original illustrated 14-node map, bearings input, hunter and monster turns, secret spawning, clues, notebook and endgame route reveal.
+- Role-specific view projection and fully blank role handoff (except instruction and necessary reveal button), including re-sealing when the app is backgrounded.
+- Deterministic test scenarios for geometry, turn order, secrets, trails, reverse bearings, capture and a completed 13-round game.
+- A GitHub Actions test workflow.
+
+**Scope decisions:** Solo AI and selectable difficulty remain PR2. Full onboarding, advanced deduction and accessibility polish remain PR3. Hosting/deployment and artwork polish remain PR4. This is an early gameplay prototype and has not yet been classroom-playtested.
