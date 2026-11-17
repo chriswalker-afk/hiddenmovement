@@ -321,7 +321,8 @@ try{
         scrollHeight:document.scrollingElement.scrollHeight,
         map:rect('.replay-map .map-frame'),
         panel:rect('.replay-panel'),skip:rect('#replay-skip'),
-        previous:rect('#replay-prev'),next:rect('#replay-next')};
+        previous:rect('#replay-prev'),next:rect('#replay-next'),
+        story:rect('.replay-story'),locations:rect('.replay-locations')};
     });
     assert.ok(geometry.scrollHeight<=geometry.height+3,
       viewport.name+' endgame replay scrolled the full page');
@@ -333,6 +334,10 @@ try{
         viewport.name+' replay control clipped '+key+': '+JSON.stringify(b));
     }
     assert.ok(geometry.map.height>=75,viewport.name+' replay map too small');
+    assert.ok(geometry.story && geometry.locations &&
+      geometry.story.bottom<=geometry.locations.top+2,
+      viewport.name+' replay narrative overlaps the actor location cards: '+
+        JSON.stringify({story:geometry.story,locations:geometry.locations}));
     await replay.screenshot({
       path:'visual/replay-'+viewport.name+'-initial.png',fullPage:false});
     await replay.locator('#replay-next').click();
