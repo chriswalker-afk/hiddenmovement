@@ -43,6 +43,7 @@ jobs:
           node --check src/monster-powers.mjs
           node --check src/hunter-guide.mjs
           node --check src/guided-walkthrough.mjs
+          node --check src/turn-transition.mjs
           node --check src/hunter-forge.mjs
           node --check src/hunt-replay.mjs
           node --check src/persistence.mjs
