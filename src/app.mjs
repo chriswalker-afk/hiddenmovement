@@ -66,15 +66,14 @@ function howToHtml() {
 
 function handoffHtml(phase) {
   const toMonster = phase !== 'pass-hunter';
-  const role = toMonster ? 'monster' : 'hunter';
   const message = toMonster
     ? 'Pass this device to the monster and look away'
     : 'Pass this device to the hunter and look away';
+  // Only the handoff instruction and the necessary reveal control are visible.
   return '<main class="handoff-screen"><div class="handoff-content">' +
-    '<div class="handoff-icon" aria-hidden="true"><svg viewBox="0 0 84 84" width="74" height="74" fill="none"><path d="M8 42s12-19 34-19 34 19 34 19-12 19-34 19S8 42 8 42Z" stroke="currentColor" stroke-width="3"/><circle cx="42" cy="42" r="9" stroke="currentColor" stroke-width="3"/><path d="m13 71 59-59" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg></div>' +
     '<h1>' + esc(message) + '</h1>' +
-    '<p>No map or secret information is displayed during a handoff.</p>' +
-    '<button id="reveal" class="reveal-button">I am the ' + (toMonster ? 'Monster' : 'Hunter') + ' — reveal my turn <span aria-hidden="true">→</span></button>' +
+    '<button id="reveal" class="reveal-button">I am the ' +
+    (toMonster ? 'Monster' : 'Hunter') + ' — reveal my turn</button>' +
     '</div></main>';
 }
 
