@@ -1600,3 +1600,17 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .replay-locations strong{font-size:.7rem}
   .replay-buttons button{min-height:28px}
 }
+
+/* Short landscape phones give the map a real width, not a tiny stacked strip. */
+@media(max-height:500px) and (max-width:800px) and (orientation:landscape){
+  .replay-screen{padding:4px 8px 5px;gap:4px}
+  .replay-heading h1{font-size:1rem}
+  .replay-layout{grid-template-columns:minmax(0,1fr) minmax(265px,.77fr);
+    grid-template-rows:minmax(0,1fr);gap:6px}
+  .replay-panel{padding:8px}
+  .replay-locations{margin:0 0 4px}
+  .replay-story{font-size:.64rem;line-height:1.3}
+  .replay-progress-caption strong{font-size:.78rem}
+  .replay-panel #replay-skip{min-height:30px;font-size:.58rem}
+}
+.replay-panel #replay-skip{position:sticky;bottom:0;z-index:2}
