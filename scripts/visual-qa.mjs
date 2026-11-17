@@ -181,7 +181,10 @@ try{
     assert.equal(await page.locator('.hunter-board-piece').count(),1,
       difficulty+' requires one identifiable Hunter figurine on its full map');
     const decks=await page.locator('.river-bridges .river-bridge').count();
-    if(['tracker','expert'].includes(difficulty))
+    if(difficulty==='tracker')
+      assert.equal(decks,9,
+        'Rookgate must paint exactly four north-canal and five south-canal bridges');
+    else if(difficulty==='expert')
       assert.ok(decks>=4 && decks<=18,
         difficulty+' must mark crossings as bridges instead of floating roads');
     else if(difficulty==='intro')
@@ -224,6 +227,31 @@ try{
       const bridge=await page.locator('.duskmere-landmark-stone-bridge').getAttribute('transform');
       assert.equal(bridge,'translate(438.4 565.8)',
         'Named Stone Bridge must align with the existing A13 to A17 creek crossing');
+    }
+    if(difficulty==='tracker'){
+      assert.equal(MAPS.tracker.title,'Rookgate District');
+      assert.equal(await page.locator('.illustrated-scenery[data-world="rookgate"]').count(),1);
+      assert.equal(await page.locator('.rookgate-landmark').count(),26,
+        'Every Rookgate city location must have original matching landmark art');
+      assert.equal(await page.locator('.rookgate-landmark').evaluateAll(items=>
+        new Set(items.map(el=>el.dataset.landmarkId)).size),26);
+      for(const kind of ['bell-tower','barracks','cloth-market','north-gate','canal-steps',
+        'ropewalk','salt-wharf','customs','east-wharf','west-watch','tanners',
+        'lantern-square','guildhall','foundry','east-gate','rat-alley','crow-market',
+        'mint','physic-garden','prison','bastion','ferry','south-watch',
+        'miller-wharf','flood-lock','fen-gate'])
+        assert.equal(await page.locator('.rookgate-landmark-'+kind).count(),1,
+          'Missing or duplicated named city landmark '+kind);
+      assert.equal(await page.locator('.world-svg .road-top').count(),46,
+        'Rookgate must preserve all 46 valid bearing roads');
+      assert.equal(await page.locator('.rookgate-city-bridge').count(),9,
+        'Only the nine real road/canal crossings receive city bridge decks');
+      assert.equal(await page.locator('.rookgate-quay-details').count(),1);
+      assert.match(await page.locator('.map-heading h2').textContent(),/Rookgate District/);
+      assert.equal(await page.locator('.world-svg .terrain-label').count(),0);
+      assert.equal(await page.locator('.rookgate-landmark-flood-lock')
+        .getAttribute('transform'),'translate(677.9 571)',
+        'Flood Lock gates must actually sit across the southern canal');
     }
     const expectedNames=Object.values(MAPS[difficulty].nodes).map(n=>n.name);
     const displayedNames=await page.locator('.nodes>.node .node-label').allTextContents();
@@ -331,6 +359,46 @@ try{
     await village.screenshot({path:'visual/duskmere-'+viewport.name+'-zoom.png',fullPage:false});
     assert.deepEqual(errors,[],viewport.name+' Duskmere browser errors');
     await village.close();
+  }
+
+  // PR17: review the full gothic canal city on phone portrait and landscape.
+  // The nine bridge decks must coincide with real roads, while marker labels
+  // remain tappable and the Hunter avatar stays on the correct public node.
+  for(const viewport of [
+    {name:'mobile',width:390,height:844},
+    {name:'landscape',width:844,height:390}
+  ]){
+    const city=await browser.newPage({viewport:{
+      width:viewport.width,height:viewport.height}});
+    const errors=[];
+    city.on('pageerror',error=>errors.push(String(error)));
+    await city.goto(url,{waitUntil:'domcontentloaded'});
+    await city.locator('#start-solo-select').click();
+    await city.locator('[data-difficulty="tracker"]').click();
+    assert.match(await city.locator('.encounter-copy').textContent(),/ROOKGATE DISTRICT/i);
+    await city.locator('#intro-begin').click();
+    await city.locator('.hud-screen').waitFor({state:'visible'});
+    assert.equal(await city.locator('.illustrated-scenery[data-world="rookgate"]').count(),1);
+    assert.equal(await city.locator('.rookgate-landmark').count(),26);
+    assert.equal(await city.locator('.rookgate-landmark').evaluateAll(landmarks=>
+      new Set(landmarks.map(item=>item.dataset.landmarkId)).size),26);
+    assert.equal(await city.locator('.rookgate-city-bridge').count(),9);
+    assert.equal(await city.locator('.world-svg .node-label').count(),26);
+    assert.equal(await city.locator('.hunter-board-piece').count(),1);
+    assert.equal(await city.locator('.node[data-node-note="T04"]').count(),1);
+    assert.equal(await city.locator('.node[data-node-note="T23"]').count(),1);
+    assert.equal(await city.locator('.node[data-node-note="T25"]').count(),1);
+    assert.equal(await city.locator('.rookgate-landmark-flood-lock').count(),1);
+    assert.equal(await city.locator('.illustrated-scenery').getAttribute('aria-hidden'),'true');
+    assert.equal(await city.locator('.world-svg .clue-ray, .world-svg .clue-sector').count(),0);
+    await measure(city,'rookgate-'+viewport.name);
+    await city.screenshot({path:'visual/rookgate-'+viewport.name+'-map.png',fullPage:false});
+    await city.locator('#map-zoom-in').click();
+    await city.locator('#map-zoom-in').click();
+    await measure(city,'rookgate-'+viewport.name+'-detail');
+    await city.screenshot({path:'visual/rookgate-'+viewport.name+'-zoom.png',fullPage:false});
+    assert.deepEqual(errors,[],viewport.name+' Rookgate rendering errors');
+    await city.close();
   }
 
   // PR11 Hunter Forge: each selected part and palette persists, and the same
