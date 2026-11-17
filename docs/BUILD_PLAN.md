@@ -31,13 +31,13 @@
 - Bearing-angle accuracy, corrections and successful movements in Hunter view and end-game report.
 - Accessible keyboard/touch map annotation controls, labelled form inputs and low-motion styling; real-device classroom QA remains ongoing.
 
-## PR4 — polish and variety
+## PR4 — polish and variety (implemented in PR #4; pending review)
 
-- Original cohesive art and atmospheric effects without reducing clarity.
-- Scenario variety / map themes / distinct objectives.
-- Additional Monster abilities and fair stealth powers (with counterplay); initial AI behavior profiles are part of PR2.
-- Save/resume designed to keep roles sealed.
-- Deploy GitHub Pages and test desktop/mobile/projector.
+- Original themed SVG scenery for four regions, illustrated title art, colour/accessibility and legibility refinements.
+- Three scenarios: Long Hunt, Last Gate, Lanternfall, with public objective markers and timed beacon clues.
+- One-use Monster Veil and Hunter Signal Lantern with visible use, limited charges, fair opportunity costs and direct-capture precedence.
+- Validated device-local save/resume (automatic and manual), with forced role re-sealing on refresh.
+- Provide a GitHub Pages deployment workflow, allowlisted static packaging, preview artifact, mobile/projector zoom controls and CI checks. Live hosting requires enabling Pages and merging PR4.
 
 ## Future (separate scope)
 
@@ -84,3 +84,19 @@
 - New Teacher's Field Guide with worked bearings examples, 20-minute lesson structure and AO1/AO2/AO3 suggestions.
 
 **Still not covered:** final classroom balance, device-matrix accessibility QA, hosted deployment, server-authoritative online multiplayer, saved progress or richer art/scenarios (PR4 and future work).
+
+
+## PR4 implementation outcome (17 November 2026)
+
+**PR #3 was squashed into main before PR4 work began.** PR #4 is the follow-up branch feature/pr4-polish-scenarios-save-pages and is **not merged** as part of this milestone.
+
+- Added original region-specific SVG art, ornamental home illustration, responsive mission cards, visible mission goal markers, map zoom controls and an icon/manifest.
+- Added two original scenarios: **The Last Gate** (public escape gate opens from round 5) and **Lanternfall** (Monster must extinguish two publicly known beacons). The original **Long Hunt** remains unchanged by default.
+- Added once-per-mission Monster **Veil** to conceal one destination trace (public notice), plus Hunter **Signal Lantern** to trade one move for an approximate, time-stamped sighting. Capture still takes priority over Veil.
+- Integrated scenario targets into the seeded solo AI and ensured beacon reports participate in observation-time-aware deduction.
+- Implemented validated browser-local saving with explicit Save & Return, automatic updates, safe Resume, and full shared-device role resealing. No cloud saves or anti-cheat claims.
+- Added explicit deployable-site package script, PR preview ZIP workflow and GitHub Pages publishing workflow restricted to main.
+- Added regression and scenario-specific tests; see PR4 Checks for latest verification.
+- Added deployment and rollback guidance; a public site URL is **not confirmed live until Pages is enabled and the main-branch deployment succeeds**.
+
+**Remaining after PR4:** real classroom difficulty tuning; optional server-authoritative two-device multiplayer; additional locations, narrative variety and accessibility certification.

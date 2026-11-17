@@ -1,4 +1,5 @@
 import { graphDistance } from './geometry.mjs';
+import { eligibleMonsterStarts, nextAiGoal } from './scenarios.mjs';
 
 /**
  * Deterministic PRNG for repeatable debugging. The seed and AI state remain
@@ -20,8 +21,7 @@ const AI_STYLES = Object.freeze({
 
 export function chooseMonsterSpawn(game) {
   const map = game.map;
-  const choices = Object.keys(map.nodes)
-    .filter(id => graphDistance(map.hunterStart, id, map) >= 3);
+  const choices = eligibleMonsterStarts(map,game.scenario||'classic',game.objectives);
   if (!choices.length) throw new Error('No legal monster spawning location on ' + map.id);
   const distanceWeight = game.difficulty === 'intro' ? 0 : game.difficulty === 'expert' ? 1.2 : .4;
   const weighted = choices.map(id => ({
@@ -55,6 +55,7 @@ export function chooseMonsterMove(game) {
   const style = AI_STYLES[game.difficulty] || AI_STYLES.apprentice;
   const recent = new Set(game.monsterTrail.slice(-4).map(t => t.node));
   const hunterRecent = new Set(game.hunterTrail.slice(-3));
+  const goal = nextAiGoal(game);
   const scores = allowed.map(id => {
     const dist = graphDistance(id, game.hunter, map);
     const exitCount = map.adjacency[id]
@@ -66,6 +67,13 @@ export function chooseMonsterMove(game) {
       - (hunterRecent.has(id) ? 2 * style.danger : 0)
       + exitCount * style.options
       + bestNextDistance * style.future;
+    if (goal) {
+      const progress = graphDistance(game.monster, goal, map) - graphDistance(id, goal, map);
+      score += progress * (game.scenario === 'escape' ? 7 : 6);
+      // Visiting the gate before it opens is allowed but isn't an immediate win.
+      if (game.scenario === 'escape' && id === goal && game.round < 5) score -= 4;
+      if (game.scenario === 'beacons' && id === goal) score += 12;
+    }
     return {id, score};
   });
   const max = Math.max(...scores.map(s=>s.score));
@@ -80,4 +88,17 @@ export function describeAiStyle(difficulty) {
   return ({
     intro:'Wandering',apprentice:'Wary',tracker:'Elusive',expert:'Cunning'
   })[difficulty] ?? 'Wary';
+}
+
+
+/**
+ * Veil is a once-per-hunt risk/reward decision: conceal one destination trace,
+ * but publicly announce that the Veil was used. It never hides a capture or an
+ * objective beacon being extinguished. No random draws are needed.
+ */
+export function shouldAiUseVeil(game, destination) {
+  if (!game.objectivePowers || game.veilCharges <= 0) return false;
+  const distance = graphDistance(destination, game.hunter, game.map);
+  const recentHunterTrail = game.hunterTrail.slice(-3);
+  return distance <= 2 || recentHunterTrail.includes(destination);
 }

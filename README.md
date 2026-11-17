@@ -4,7 +4,7 @@
 
 One player is the **Hunter**, following an unseen **Monster** through connected locations. Both roles travel using three-figure clockwise bearings measured from north. The Hunter discovers time-stamped clues by entering places recently visited by the Monster and can combine these with occasional public sightings in solo mode.
 
-## Playable modes (PR1 + PR2 + PR3)
+## Playable modes (PR1 + PR2 + PR3 + PR4)
 
 ### Solo Hunt — Hunter versus Monster AI
 
@@ -45,6 +45,46 @@ The original 14-location Hollow Moor mode remains available. The Monster picks a
 
 See the [Teacher's Guide](docs/TEACHING_GUIDE.md) for curriculum alignment and suggested activities.
 
+## Story missions and counterplay (PR4)
+
+Choose **Explore Story Missions** on the main menu. All three missions work in Solo Hunt or Pass & Play.
+
+| Mission | Monster wins by | Hunter's strategic focus |
+|---|---|---|
+| **The Long Hunt** | Evading capture through the last round | Decode the trail and intercept |
+| **The Last Gate** | Reaching a *publicly marked escape gate* on or after round 5, or surviving the round limit | Guard the gate, cut off road junctions, use the dated clues |
+| **Lanternfall** | Visiting both *publicly marked signal beacons*, or surviving the round limit | Protect the beacons and exploit the confirmed sighting from each extinguished beacon |
+
+The gate and beacon locations are deliberately visible to both roles. Monster spawns cannot start directly on the mission objectives. A beacon extinguished by the Monster creates a **public location clue**, labelled with its observation round; historical clues still need movement-time propagation before they can be combined with current evidence.
+
+Special missions give each player one meaningful power:
+
+- **Monster Veil:** once per hunt, check **Use the Veil** when entering a road bearing. It consumes the Veil and hides the new trail *at the arrival location*. The Hunter sees a public notice that the Veil was used, without learning the location. A Veil never defeats direct capture or conceals the loss of a public beacon.
+- **Hunter Signal Lantern:** once per hunt, trade **one remaining movement action** for a new approximate compass-sector sighting. The observation is dated, accurate within its stated interval, and works even if the Monster hid a trail with its Veil.
+
+Standard Long Hunt intentionally has no special powers, preserving the original simpler rules.
+
+## Saving and returning to a hunt (PR4)
+
+Games are automatically saved **to the current device's browser storage** while active. You can also choose **Save & Return to Menu** on an active Hunter or Monster screen. A home-screen card presents the mission, game mode and round with a **Resume Safely** button.
+
+In **Pass & Play**, loading a saved game always shows the opaque **handoff screen** first, even when it was saved in the middle of a private turn. This prevents a reopened tab from immediately revealing the prior player's map. Hunter's hand-written notes and manual annotations are restored only within the Hunter view; they never appear during Monster or handoff turns.
+
+A save is not tied to a user account, is not synced between devices, and is lost if browser storage is cleared. A person with access to developer tools or browser storage can inspect the hidden state; the shared-device privacy mechanism is an **honour-based classroom safeguard**, not cryptographic anti-cheat. No private game data is uploaded to GitHub.
+
+## New original scenery and responsive maps
+
+The Hollow Moor, Thornwood Vale, Sunken Lowlands and Eclipse Marches have different original SVG scenery: woods, water, reeds, ruins and twilight landmarks. Public objective nodes are highlighted on the maps. The map has **+/− zoom controls**, a scrollable larger view on small screens, descriptive location labels, a numbered location index on larger boards and reduced-motion support.
+
+## Preview and publishing
+
+The repository is a fully static browser game; there is no backend. Two GitHub Actions workflows are included:
+
+- **Build reviewable Shadow Bearings preview:** runs tests and packages a downloadable preview ZIP on PRs. The archive contains the allowlisted website files and no test code or browser save data. Unzip and serve it with a local HTTP server to play.
+- **Publish Shadow Bearings to GitHub Pages:** on pushes to main (or manually), runs tests and publishes the website at the Pages URL. In repository **Settings → Pages**, select **GitHub Actions** as the publishing source if GitHub Pages has not been enabled. The publishing run must succeed before a live URL can be claimed.
+
+See [Deployment Guide](docs/DEPLOYMENT.md) for the exact review, launch and rollback workflow.
+
 ## Movement and winning
 
 - Use exactly **three digits** such as `035`, `180` or `270`, clockwise from north. `360` is treated as north, `000`.
@@ -75,6 +115,7 @@ Node.js 20+ is used for development checks:
 npm test
 npm run check
 npm run simulate
+npm run build:site
 ```
 
 `npm test` covers bearings, map validity, north wrapping, clue provenance, quantized uncertainty, exact graph-step propagation, distance hints, tutorial answers, mathematical feedback, solo AI, role privacy and browser-UI smoke tests. GitHub Actions runs this test suite on pull requests.
@@ -86,15 +127,19 @@ The application remains dependency-free at runtime. Sources:
 - `src/geometry.mjs` — bearings, angle ranges, graph distance
 - `src/map.mjs` — four connected maps with validation
 - `src/ai.mjs` — deterministic random generator, spawning and evasion logic
+- `src/scenarios.mjs` — original mission goals, public landmarks and legal spawns
+- `src/scenery.mjs` — four original vector landscapes and title illustration
+- `src/persistence.mjs` — validated local saves and safely resealed resume
 - `src/deduction.mjs` — public-clue sector checks and time-aware candidate intersections
 - `src/tutorial.mjs` — four interactive bearings practice activities
 - `src/engine.mjs` — game rules and strictly role-specific view projections
 - `src/app.mjs` — screens, movement controls, clues and illustrated SVG maps
 - `scripts/simulate.mjs` — reproducible public-information playtest baseline
+- `scripts/package-site.mjs` — allowlisted deployable-site builder
 
 ## Future work
 
-**PR4:** further original artwork, scenarios, save/resume, and hosted deployment. Keyboard and mobile accessibility still need real-device classroom validation.
+**Post-PR4:** classroom difficulty calibration, more narrative maps, genuine server-authoritative two-device online multiplayer, and real-device accessibility improvements. The GitHub Pages workflow publishes once PR4 reaches main and Pages is enabled.
 
 **Security note:** pass-and-play is a practical classroom look-away safeguard, not protection against a malicious person inspecting browser memory or developer tools. Competitive two-device online play would require server-authoritative hidden state.
 
