@@ -29,7 +29,7 @@ test('browser UI: solo selection, hidden AI turns and sealed two-player handoffs
   const click = id => {
     const callback=callbacks.get(id+':click');
     assert.equal(typeof callback,'function','Missing '+id+' click event');
-    callback();
+    callback({preventDefault(){}});
   };
   const html = () => elt('app').innerHTML;
   await import('../src/app.mjs');
