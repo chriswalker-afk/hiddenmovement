@@ -764,7 +764,7 @@ try{
     }else{
       // The CENTER control is a genuinely supported non-drag alternative
       // for touch, keyboard, reduced dexterity and small screens.
-      await guided.locator('#protractor-center').click();
+      await guided.locator('#guided-tour-center').click();
     }
     await step('open-clue');
     assert.equal(await guided.locator('.guided-tour-companion').count(),0);
