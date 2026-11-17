@@ -20,6 +20,9 @@ export function quantizeBearing(trueBearing, halfWidth) {
 
 /** Return candidate Monster nodes at the observation round of a clue. */
 export function locationsAtObservation(map, clue) {
+  // A witnessed beacon is a public location fix, not a directional clue.
+  if (clue.type === 'beacon' && Object.hasOwn(map.nodes,clue.pointNode))
+    return [clue.pointNode];
   const origin = map.nodes[clue.place];
   if (!origin) return [];
   const bearingCenter = Number.isFinite(clue.sectorCenter)
@@ -93,6 +96,9 @@ export function analyseClues(map, clues, currentRound, options = {}) {
 /** A compact explanation for interactive teaching displays. */
 export function clueMathExplanation(clue, round) {
   const elapsed = Math.max(0,round-1-clue.observedRound);
+  if (clue.type === 'beacon') return 'The Monster was publicly seen at this beacon at the end of round '+
+    clue.observedRound+'. It could have moved along exactly '+elapsed+
+    ' road'+(elapsed===1?'':'s')+' since then.';
   const angle = clue.kind === 'reverse' ? 'Reverse the clue bearing by 180° first. ' : '';
   const when = clue.observedRound === 0 ? 'at the beginning of the hunt' :
     'at the end of round ' + clue.observedRound;
