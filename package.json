@@ -1,0 +1,14 @@
+{
+  "name": "shadow-bearings",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "An original hidden-movement game for learning three-figure bearings.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/app.mjs && node --check src/engine.mjs && node --check src/map.mjs && node --check src/geometry.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
