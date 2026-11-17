@@ -68,3 +68,63 @@ export function riverCenterlineDistance(point, channel, subdivisions=250) {
   }
   return closest;
 }
+
+
+function cubicPoint([p0,p1,p2,p3],t) {
+  const u=1-t;
+  return {
+    x:u*u*u*p0[0]+3*u*u*t*p1[0]+3*u*t*t*p2[0]+t*t*t*p3[0],
+    y:u*u*u*p0[1]+3*u*u*t*p1[1]+3*u*t*t*p2[1]+t*t*t*p3[1]
+  };
+}
+
+function segmentIntersection(a,b,c,d) {
+  const rx=b.x-a.x,ry=b.y-a.y;
+  const sx=d.x-c.x,sy=d.y-c.y;
+  const cross=rx*sy-ry*sx;
+  if(Math.abs(cross)<0.00001)return null;
+  const qx=c.x-a.x,qy=c.y-a.y;
+  const t=(qx*sy-qy*sx)/cross;
+  const u=(qx*ry-qy*rx)/cross;
+  if(t<=0.03||t>=0.97||u<0||u>1)return null;
+  return {x:a.x+t*rx,y:a.y+t*ry,roadX:rx,roadY:ry,
+    riverX:sx,riverY:sy};
+}
+
+/**
+ * Identify actual road/painted-channel crossings for a small bridge symbol.
+ * These are just decorations on *existing* legal roads: no extra connections,
+ * forced crossings or route hints are introduced.
+ */
+export function riverRoadCrossings(map) {
+  const channels=WATERWAYS[map.theme]||[];
+  const crosses=[];
+  for(const [from,to] of map.edges){
+    const a=map.nodes[from],b=map.nodes[to];
+    for(const channel of channels){
+      let last=null;
+      for(const segment of channel.segments) {
+        let previous=cubicPoint(segment,0);
+        const samples=64;
+        for(let i=1;i<=samples;i++){
+          const current=cubicPoint(segment,i/samples);
+          const hit=segmentIntersection(a,b,previous,current);
+          if(hit && (!last||Math.hypot(hit.x-last.x,hit.y-last.y)>15)) {
+            const roadLen=Math.hypot(hit.roadX,hit.roadY);
+            const riverLen=Math.hypot(hit.riverX,hit.riverY);
+            const perpendicular=Math.abs(hit.roadX*hit.riverY-hit.roadY*hit.riverX)/
+              (roadLen*riverLen);
+            const span=Math.min(135,(channel.width+16)/Math.max(0.65,perpendicular));
+            last={from,to,channel:channel.id,
+              x:+hit.x.toFixed(2),y:+hit.y.toFixed(2),
+              angle:+(Math.atan2(hit.roadY,hit.roadX)*180/Math.PI).toFixed(2),
+              span:+span.toFixed(1)};
+            crosses.push(last);
+          }
+          previous=current;
+        }
+      }
+    }
+  }
+  return crosses;
+}
