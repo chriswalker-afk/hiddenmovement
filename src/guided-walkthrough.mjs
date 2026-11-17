@@ -3,6 +3,8 @@
  * Hunter projection: NEVER the game object, secret Monster node or AI trail.
  * This does not change a legal road, angle, clue or victory condition.
  */
+import { hunterTurnTransition } from './turn-transition.mjs';
+
 export const TOUR_STAGES=Object.freeze([
   'enable-protractor','place-protractor','open-clue','read-bearing',
   'enable-deduction','explain-deduction','first-move','search-report',
@@ -159,7 +161,11 @@ export function tourStep(view,map,stage){
     },
     'end-turn':{
       heading:'Finish your Hunter turn',
-      text:'Press END TURN. Your Hunter stays on the map, but the Monster gets its own movement phase. It may take a hidden road, or use a publicly announced special power. Its landing place stays secret.',
+      text:'Your Hunter has finished moving. '+
+        (hunterTurnTransition(view)?.hint||'No Hunter moves remain.')+
+        ' Look for the large gold button: '+
+        (hunterTurnTransition(view)?.button||'BEGIN MONSTER’S HIDDEN MOVEMENT')+
+        '. The Monster does not start moving until you press it.',
       target:'#end-turn',counter:'10 / 12'
     },
     'monster-moved':{

@@ -1868,3 +1868,85 @@ h1,h2,h3{font-family:'Cinzel',Georgia,serif;letter-spacing:.012em}
   .hud-screen .guided-tour-target{outline:3px solid #fff0b2;outline-offset:3px}
   .guided-tour-arrow{filter:none}
 }
+
+
+/* PR21: no exhausted-move form. The Monster does not act until the Hunter
+   explicitly confirms the handoff; make that one action unmistakable. */
+.hud-move-panel.hunter-turn-complete{
+  display:flex;flex-direction:column;justify-content:flex-start;gap:9px;
+  padding:17px 15px;border:2px solid #d6b877;border-radius:8px;
+  background:linear-gradient(155deg,#233e40 0%,#172d35 64%,#26372e 100%);
+  box-shadow:0 3px 18px #061820aa,inset 0 0 0 1px #efd8a322;
+}
+.turn-complete-kicker{
+  color:#ffe5ab;font-size:.67rem;font-weight:800;letter-spacing:.09em;
+  display:flex;align-items:center;gap:8px;
+}
+.turn-complete-mark{
+  display:inline-grid;place-items:center;width:25px;height:25px;
+  border-radius:50%;background:#d9c68e;color:#173338;
+  font-size:1rem;font-weight:900;
+}
+.hunter-turn-complete h3{
+  font:700 1.18rem/1.22 'Cinzel',Georgia,serif;
+  color:#fff1cc;margin:0;
+}
+.turn-complete-location{margin:0;color:#e4eadf;font-size:.75rem;line-height:1.42}
+.turn-complete-location strong{color:#fff4d0}
+.turn-complete-explainer{
+  margin:0;color:#e2f1e9;font-size:.79rem;line-height:1.55;
+}
+.monster-turn-cta{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;min-height:67px;padding:12px 11px;margin:5px 0 2px;
+  border:2px solid #fff1c2;border-radius:8px;
+  color:#183136;background:linear-gradient(125deg,#f3d88f,#f7e8b0 60%,#e9c773);
+  box-shadow:0 6px 0 #685638,0 8px 21px #040f1780;
+  cursor:pointer;text-align:center;overflow-wrap:anywhere;
+  transition:transform .13s ease,filter .13s ease;
+  animation:monster-turn-cta-glow 2.4s ease-in-out infinite;
+}
+.monster-turn-cta strong{
+  font:900 .83rem/1.27 'DM Sans',system-ui,sans-serif;
+  letter-spacing:.05em;flex:1 1 auto;min-width:0;
+}
+.monster-turn-cta-symbol{font-size:1.2rem;flex:0 0 auto}
+.monster-turn-cta-arrow{font-size:1.5rem;flex:0 0 auto}
+.monster-turn-cta:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.monster-turn-cta:active{transform:translateY(3px);box-shadow:0 3px 0 #685638}
+.monster-turn-cta:focus-visible{outline:3px solid #fff;outline-offset:4px}
+.turn-complete-footnote{
+  color:#b7d3c1;font-size:.65rem;line-height:1.4;margin:0;text-align:center
+}
+.hud-move-panel .turn-early-hint{
+  margin:2px 0;color:#b8c9c5;font-size:.65rem;line-height:1.36
+}
+@keyframes monster-turn-cta-glow{
+  0%,100%{box-shadow:0 6px 0 #685638,0 8px 17px #040f1780}
+  50%{box-shadow:0 6px 0 #685638,0 4px 23px #f2d38d77}
+}
+@media(max-width:800px){
+  .hud-move-panel.hunter-turn-complete{padding:9px 8px;gap:7px}
+  .hunter-turn-complete h3{font-size:.96rem}
+  .turn-complete-explainer{font-size:.68rem;line-height:1.42}
+  .turn-complete-location{font-size:.68rem}
+  .turn-complete-kicker{font-size:.56rem;letter-spacing:.04em}
+  .monster-turn-cta{min-height:58px;gap:6px;padding:10px 6px}
+  .monster-turn-cta strong{font-size:.7rem;letter-spacing:.015em}
+  .monster-turn-cta-arrow{font-size:1.2rem}
+  .turn-complete-footnote{font-size:.59rem}
+}
+@media(max-width:490px){
+  .hunter-turn-complete h3{font-size:.84rem}
+  .turn-complete-explainer{font-size:.63rem;line-height:1.35}
+  .turn-complete-location{font-size:.62rem}
+  .turn-complete-mark{height:18px;width:18px;font-size:.78rem}
+  .monster-turn-cta{min-height:58px;gap:4px;padding:8px 5px}
+  .monster-turn-cta strong{font-size:.65rem}
+  .monster-turn-cta-symbol{font-size:.9rem}
+  .monster-turn-cta-arrow{font-size:1rem}
+  .turn-complete-footnote{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .monster-turn-cta{animation:none;transition:none}
+}

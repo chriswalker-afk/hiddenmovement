@@ -16,6 +16,7 @@ import { FORGE_CHOICES, FORGE_PALETTES, FORGE_COMPLEXIONS,
   renderHunterSvg, renderHunterBoardPiece } from './hunter-forge.mjs';
 import { riverRoadCrossings } from './waterways.mjs';
 import { renderProtractor, normalizeBearing, bearingFromPointer } from './protractor.mjs';
+import { bearingToolsAvailable, hunterTurnTransition } from './turn-transition.mjs';
 import { persistSaved, readSaved, savedSummary, clearSaved } from './persistence.mjs';
 import {
   SETTINGS, DIFFICULTIES, beginGame, createGame, endHunterTurn, hunterMove,
@@ -592,7 +593,7 @@ function mapSvg(view) {
   const actingNode=view.phase==='monster'?view.monster:view.hunter;
   const activeNode=currentMap().nodes[actingNode];
   const toolOrigin=protractorPosition || activeNode;
-  const protractor=(protractorVisible && ['hunter','monster'].includes(view.phase) && toolOrigin)
+  const protractor=(protractorVisible && bearingToolsAvailable(view) && toolOrigin)
     ?renderProtractor(toolOrigin.x,toolOrigin.y,protractorBearing):'';
   const isOver=view.phase==='over';
   const paths = currentMap().edges.map(([a,b]) => {
@@ -795,7 +796,7 @@ function mapFrame(view) {
   return '<div class="map-section">' +
     '<div class="map-heading"><div><span class="eyebrow">THE HUNT · '+esc(map.title.toUpperCase())+'</span><h2>' + '' + esc(map.title) + '</h2></div>' +
     '<div class="map-toolbar"><span class="map-chip"><span class="map-chip-dot"></span> NORTH IS UP</span>'+
-      (['hunter','monster'].includes(view.phase)?
+      (bearingToolsAvailable(view)?
         '<button type="button" id="protractor-toggle" class="protractor-toggle" aria-pressed="'+protractorVisible+'">'+
         (protractorVisible?'◉ HIDE PROTRACTOR':'◉ PROTRACTOR')+'</button>'+
         (protractorVisible?
@@ -818,7 +819,7 @@ function mapFrame(view) {
       ((view.phase==='monster-setup')?'<span><i class="key-spot key-available"></i> Eligible start</span>':'')+
       ((view.scenario==='escape')?'<span><i class="key-spot key-goal"></i> Escape Gate</span>':'')+
       ((view.scenario==='beacons')?'<span><i class="key-spot key-beacon"></i> Signal beacon</span>':'')+
-      (protractorVisible && ['hunter','monster'].includes(view.phase)
+      (protractorVisible && bearingToolsAvailable(view)
         ?'<span class="protractor-help">MEASURE: DRAG GOLD TIP · MOVE: DRAG CENTRE</span>':'')+
       ((view.phase==='hunter' && view.guided)?'<span><i class="key-spot key-available"></i> Candidate (analysis on)</span>' +
         '<span><i class="key-spot key-watch"></i> Your suspect</span><span><i class="key-spot key-ruled"></i> Your ruled-out mark</span>':'')+
@@ -829,6 +830,29 @@ function movementForm(view) {
   const monster=view.phase==='monster';
   const location=monster?view.monster:view.hunter;
   const left=monster?1:view.stepsLeft;
+  const transition=hunterTurnTransition(view);
+
+  // Once both Hunter moves have been used, there is no legal bearing to
+  // enter. Replace the *entire* movement form with the explicit start of the
+  // next phase; the Monster has not yet moved. This is a UI state change only:
+  // endHunterTurn() still runs exclusively from the user's real button click.
+  if(!monster&&transition.ready) {
+    return '<section class="panel move-panel hud-move-panel hunter-turn-complete" '+
+      'aria-label="Hunter movement complete — Monster turn confirmation">'+
+      '<div class="turn-complete-kicker"><span class="turn-complete-mark" aria-hidden="true">✓</span> '+
+        esc(transition.eyebrow)+'</div>'+
+      '<h3>'+esc(transition.title)+'</h3>'+
+      '<p class="turn-complete-location">Your Hunter is at <strong>'+esc(nameOf(location))+'</strong></p>'+
+      '<button id="end-turn" type="button" class="monster-turn-cta" aria-describedby="monster-phase-help">'+
+        '<span class="monster-turn-cta-symbol" aria-hidden="true">◆</span>'+
+        '<strong>'+esc(transition.button)+'</strong>'+
+        '<span class="monster-turn-cta-arrow" aria-hidden="true">→</span>'+
+      '</button>'+
+      '<p id="monster-phase-help" class="turn-complete-explainer">'+esc(transition.hint)+'</p>'+
+      '<p class="turn-complete-footnote">Your clues and map notes remain available while you decide.</p>'+
+    '</section>';
+  }
+
   const adjacent=currentMap().adjacency[location].map(id=>nameOf(id)).join(' · ');
   return '<section class="panel move-panel hud-move-panel">' +
     '<div class="panel-top"><span class="eyebrow">'+(monster?'MONSTER NAVIGATION':'HUNTER NAVIGATION')+'</span>'+
@@ -837,18 +861,16 @@ function movementForm(view) {
     '<p class="muted compact guided-route-help">Roads lead to: '+esc(adjacent)+'</p>'+
     '<form id="move-form" class="bearing-form">'+
       '<label for="bearing-input">Enter a three-figure bearing</label>'+
-      '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="000" pattern="[0-9]{3}°?" '+
-      (left===0?'disabled':'')+' aria-describedby="bearing-help"/><span aria-hidden="true">°</span>'+
-      '<button type="submit" '+(left===0?'disabled':'')+'>MOVE →</button></div>'+
+      '<div class="bearing-entry"><input id="bearing-input" name="bearing" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" placeholder="000" pattern="[0-9]{3}°?" aria-describedby="bearing-help"/><span aria-hidden="true">°</span>'+
+      '<button type="submit">MOVE →</button></div>'+
       '<small id="bearing-help">Clockwise from north · 000°–359°</small>'+
       (monster&&view.powers?.veilCharges>0?
         '<label class="veil-option"><input id="veil-move" type="checkbox" /> USE VEIL · CONCEAL THIS TRAIL</label>':'')+
     '</form>'+
     (!monster ? '<div class="hud-move-actions">'+
-      '<button id="end-turn" class="secondary-button">'+
-        (view.mode==='solo'?'END TURN · MONSTER MOVES':'FINISH HUNTER TURN')+' →</button>'+
-      (view.powers?.lanternCharges>0?'<button id="use-lantern" class="lantern-button" '+
-        (left===0?'disabled':'')+'>✧ SIGNAL LANTERN · USE 1 MOVE</button>':'')+
+      '<button id="end-turn" type="button" class="secondary-button">'+esc(transition.button)+' →</button>'+
+      '<p class="turn-early-hint">'+esc(transition.hint)+'</p>'+
+      (view.powers?.lanternCharges>0?'<button id="use-lantern" class="lantern-button">✧ SIGNAL LANTERN · USE 1 MOVE</button>':'')+
       '</div>' : '')+
     '<button id="open-tutorial-game" class="field-guide-link" type="button">HOW TO HUNT &amp; BEARINGS TRAINING ↗</button>'+
     '</section>';
@@ -1616,6 +1638,9 @@ function saveAndExit() {
 
 function render() {
   const view=viewForCurrentScreen(game);
+  // Exhaustion immediately removes the inactive protractor even when a
+  // search-report modal is open; it can be reenabled next Hunter round.
+  if(view.phase==='hunter'&&view.stepsLeft===0)resetProtractor();
   if(view.guided&&['hunter','over'].includes(view.phase))
     tourStage=reconcileTour(tourStage,view);
   // Keep saved games on the home screen; clear completed games.
@@ -1767,7 +1792,7 @@ function render() {
   });
   document.getElementById('coach-training')?.addEventListener('click',openTutorial);
   bindMapZoom();
-  document.getElementById('move-form').addEventListener('submit',event=>{
+  document.getElementById('move-form')?.addEventListener('submit',event=>{
     event.preventDefault();
     const value=document.getElementById('bearing-input').value;
     const before=view.phase==='hunter'?game.hunter:game.monster;

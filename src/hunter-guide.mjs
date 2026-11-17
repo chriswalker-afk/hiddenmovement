@@ -3,6 +3,7 @@
  * Monster coordinates, uncollected tracks or private decoy targets.
  */
 import { monsterFor } from './monsters.mjs';
+import { hunterTurnTransition } from './turn-transition.mjs';
 import { bearingBetween, formatBearing } from './geometry.mjs';
 
 export const GUIDE_STEPS = Object.freeze([
@@ -96,8 +97,11 @@ export function guidedCoach(view,map) {
   let stage='plan',title='Plan your next move';
   let instruction='Read your clues. They describe where the Monster WAS, not necessarily where it is now. Choose a connected road, then measure its bearing clockwise from north.';
   if(view.stepsLeft===0){
-    stage='end-turn';title='You have used both moves';
-    instruction='Now select END TURN. The Monster moves once in secret after your turn. When the next round starts, check the notebook for any new sightings.';
+    const handoff=hunterTurnTransition(view);
+    stage='end-turn';
+    title='Your Hunter has finished moving';
+    instruction=handoff.hint+' Select '+handoff.button+
+      ' to continue; the Monster has not moved until you confirm.';
   }else if(view.feedback && /does not follow|three-figure|Check the compass|not a valid/i.test(view.feedback)){
     stage='retry';title='Check your bearing and try again';
     instruction='That entry did not use a move. Start at your location, point north (000°), turn CLOCKWISE to a connected road and type all three digits. The manual protractor can help.';
