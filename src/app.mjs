@@ -13,6 +13,7 @@ let selectedSpawn = MONSTER_SPAWNS[0];
 let plotClue = false;
 let selectedClueIds = null;
 const nodeMarks = new Map();
+let fieldNotes = '';
 let tutorialOpen = false;
 let lessonStep = 0;
 let lessonOutcome = null;
@@ -32,6 +33,7 @@ function start(mode = 'multi', difficulty = 'intro') {
     plotClue = false;
     selectedClueIds = null;
     nodeMarks.clear();
+    fieldNotes = '';
     tutorialOpen = false;
     lessonStep = 0;
     lessonOutcome = null;
@@ -358,22 +360,76 @@ function clueSentence(clue) {
 }
 
 function notebook(view) {
+  const active = selectedClues(view);
+  const analysis = currentAnalysis(view);
+  const locationText=analysis?.constrained
+    ? analysis.candidates.map(id=>nameOf(id)).join(' · ') : '';
+  const overview=analysis?.constrained ?
+    '<div class="analysis-summary"><strong>'+analysis.candidates.length+' possible locations</strong>' +
+      '<span>'+analysis.eliminated+' of '+analysis.total+' locations ruled out by '+analysis.cluesUsed+
+      ' selected clue'+(analysis.cluesUsed===1?'':'s')+'</span>' +
+      '<details><summary>Which locations remain?</summary><p>'+esc(locationText || 'No locations satisfy these clues.')+'</p></details>' +
+      '<p class="muted compact">These are possible locations, not guaranteed positions. Older clues allow the monster one road of movement per elapsed round.</p></div>'
+    : plotClue ? '<p class="muted compact">Select at least one clue to check possible locations.</p>' : '';
+  const cards=view.clues.map((c,i)=>{
+    const chosen=active.some(a=>a.id===c.id);
+    const visit=c.type==='sighting'?'PUBLIC SIGNAL':
+      (c.ageLabel ? esc(c.ageLabel) : 'TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound));
+    const routeDistance=Number.isInteger(c.distanceMin) ?
+      '<p class="distance-hint">Road distance at observation: '+
+      (c.distanceMin===c.distanceMax?'exactly '+c.distanceMin:
+        c.distanceMin+'–'+c.distanceMax)+' connected roads</p>' : '';
+    const label=c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i);
+    return '<article class="clue-card '+(c.type==='sighting'?'sighting-card':'')+'">' +
+      '<div class="clue-meta"><span>'+label+'</span><span>'+visit+'</span></div>' +
+      (plotClue?'<label class="clue-check"><input type="checkbox" data-clue-toggle="'+esc(c.id)+
+        '" '+(chosen?'checked':'')+'/> INCLUDE IN DEDUCTION</label>':'') +
+      '<p>'+clueSentence(c)+'</p>'+routeDistance+
+      '<small>Discovered round '+c.foundRound+
+      (c.kind==='reverse'?' · Reverse the direction by 180°':' · Bearing starts at the stated location')+'</small>' +
+      '<details class="clue-explanation"><summary>Explain the maths</summary><p>'+
+        esc(clueMathExplanation(c,view.round))+'</p></details>' +
+      '</article>';
+  }).join('');
   return '<section class="panel notebook-panel">' +
-    '<div class="panel-top"><span class="eyebrow">YOUR EVIDENCE</span><span class="steps-badge">'+view.clues.length+' '+(view.clues.length===1?'CLUE':'CLUES')+'</span></div>' +
+    '<div class="panel-top"><span class="eyebrow">YOUR EVIDENCE</span><span class="steps-badge">'+
+      view.clues.length+' '+(view.clues.length===1?'CLUE':'CLUES')+'</span></div>' +
     '<h3>Field notebook</h3>' +
     (view.clues.length ? '<button id="plot-toggle" class="plot-toggle" aria-pressed="'+plotClue+'">'+
-      (plotClue?'HIDE':'PLOT')+' NEWEST CLUE ON MAP <span aria-hidden="true">↗</span></button>' +
-      '<div class="clue-list">'+view.clues.map((c,i)=>
-        '<article class="clue-card '+(c.type==='sighting'?'sighting-card':'')+'"><div class="clue-meta"><span>'+
-        (c.type==='sighting'?'WATCHER SIGHTING':'TRACK CLUE '+(view.clues.length-i))+'</span><span>'+
-        (c.type==='sighting'?'PUBLIC SIGNAL':(c.ageLabel ? esc(c.ageLabel) :
-          'TRACE LEFT '+(c.visitRound===0?'AT SETUP':'ROUND '+c.visitRound)))+'</span></div>' +
-        '<p>'+clueSentence(c)+'</p>' +
-        '<small>Discovered round '+c.foundRound+
-        (c.kind==='reverse'?' · Consider the reverse bearing':' · Bearing from the marked origin')+
-        '</small></article>').join('')+'</div>' :
+      (plotClue?'HIDE DEDUCTION OVERLAY':'COMBINE CLUES ON THE MAP')+
+      ' <span aria-hidden="true">↗</span></button>' +
+      overview+'<div class="clue-list">'+cards+'</div>' :
       '<p class="muted empty-evidence">No traces yet. Follow the old roads and search locations where the monster may have been.</p>')+
     '</section>';
+}
+
+function annotationsPanel() {
+  const options = Object.values(currentMap().nodes).map(node =>
+    '<option value="'+esc(node.id)+'">'+esc(node.name)+'</option>').join('');
+  const marked=[...nodeMarks.entries()];
+  const markLegend = marked.length ?
+    marked.map(([id,mark])=>'<span>'+esc(nameOf(id))+': '+(mark==='possible'?'suspected':'ruled out')+'</span>').join(' · ') :
+    'No locations marked yet';
+  return '<section class="panel annotations-panel"><span class="eyebrow">YOUR OWN NOTES</span><h3>Mark the map</h3>' +
+    '<p class="muted compact">Tap any location on the map to cycle between <b>suspect</b>, <b>ruled out</b> and unmarked. '+
+    'Your marks are personal ideas, not answers confirmed by the game.</p>' +
+    '<div class="annotation-controls"><label for="mark-location">Keyboard and touch alternative</label>' +
+    '<select id="mark-location">'+options+'</select><button id="mark-selected" class="plot-toggle">CYCLE MARK</button>' +
+    '<button id="clear-marks" class="secondary-button">CLEAR ALL MARKS</button></div>' +
+    '<p class="mark-legend" aria-live="polite">'+markLegend+'</p>' +
+    '<label class="notes-label" for="field-notes">Working and deductions (private to the Hunter screen)</label>' +
+    '<textarea id="field-notes" rows="3" maxlength="400" placeholder="What do the clues tell you?">'+esc(fieldNotes)+'</textarea></section>';
+}
+
+function progressPanel(view) {
+  const stats=view.stats;
+  const avg=stats.meanAngularError===null?'—':stats.meanAngularError.toFixed(1)+'°';
+  return '<section class="panel maths-progress-panel"><span class="eyebrow">MATHS FEEDBACK</span><h3>Your bearings</h3>'+
+    '<div class="maths-metrics"><div><strong>'+stats.successful+'</strong><span>correct routes</span></div>'+
+    '<div><strong>'+stats.errors+'</strong><span>bearings to retry</span></div>'+
+    '<div><strong>'+avg+'</strong><span>average angle error</span></div></div>'+
+    '<p class="muted compact">Angle error compares your entered bearing with the actual road direction. '+
+    'Getting a bearing wrong never uses up a move.</p></section>';
 }
 
 function monsterTrailPanel(view) {
