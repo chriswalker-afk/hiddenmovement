@@ -83,7 +83,9 @@ test('AI never steps onto the Hunter and never chooses an illegal road',()=>{
       const g=make(id,seed*103);
       for(let step=0;step<g.config.maxRounds-1;step++){
         const origin=g.monster;
+        const randomStateBeforeProbe=g.randomState;
         const selected=chooseMonsterMove(g);
+        g.randomState=randomStateBeforeProbe; // Preview must not consume the actual AI random draw.
         assert.ok(g.map.adjacency[origin].includes(selected),id+' illegal move');
         assert.notEqual(selected,g.hunter,id+' walked onto Hunter');
         assert.equal(endHunterTurn(g).ok,true);
