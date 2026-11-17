@@ -235,7 +235,7 @@ function collectClue(game, location) {
   const target = game.map.nodes[game.monster];
   const toward = bearingBetween(from, target);
   if (toward === null) return null; // Capture must already have been detected.
-  const reverse = game.clues.filter(c => c.type === 'trace').length % 2 === 1;
+  const reverse = (game.mode === 'solo' ? game.clues.filter(c => c.type === 'trace').length : game.clues.length) % 2 === 1;
   const observedRound = game.round - 1;
   const displayed = reverse ? reverseBearing(toward) : toward;
   const clue = {
